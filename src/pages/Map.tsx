@@ -4,7 +4,6 @@ import Loading from '../components/Loading';
 import InteractiveMap from '../components/InteractiveMap';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoIosArrowBack } from "react-icons/io";
 import Dock from '../components/Dock';
 
 function HomePage() {
@@ -46,10 +45,6 @@ function HomePage() {
 
         <div className="flex flex-row items-center gap-10 mb-8">
             <h1 className="text-3xl font-medium select-none">Interactive Gym Map</h1>
-            
-            <div className="flex items-center gap-1 cursor-pointer" onClick={() => navigate("/")}>
-                <IoIosArrowBack className="inline-block"/>Home
-            </div>
         </div>
 
 

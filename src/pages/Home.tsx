@@ -1,17 +1,117 @@
 import { ThemeToggle } from '../components/ThemeToggle';
 import '../styles/App.scss';
-import { useNavigate } from 'react-router-dom';
 import SplitText from '../components/SplitText';
 import ElectricBorder from '../components/ElectricBorder';
 import Dock from '../components/Dock';
+import SplashCursor from '../components/SplashCursor'
+import Silk from '../backgrounds/Silk';
+import FloatingLines from '../backgrounds/FloatingLines';
+import ColorBends from '../backgrounds/ColorBends';
+import LetterGlitch from '../backgrounds/LetterGlitch';
+import Iridescence from '../backgrounds/Iridescence';
+import FaultyTerminal from '../backgrounds/FaultyTerminal';
+import { useState, useEffect } from 'react';
 
+import { useMemo } from 'react';
+
+const backgrounds = [
+    () => (
+        <Silk
+            speed={5}
+            scale={1}
+            color="#7B7481"
+            noiseIntensity={1.5}
+            rotation={0}
+        />
+    ),
+    () => (
+        <FloatingLines 
+            enabledWaves={['top', 'middle', 'bottom']}
+            lineCount={[10, 15, 20]}
+            lineDistance={[8, 6, 4]}
+            bendRadius={5.0}
+            bendStrength={-0.5}
+            interactive={true}
+            parallax={true}
+        />
+    ),
+    () => (
+        <ColorBends
+            colors={["#ff5c7a", "#8a5cff", "#00ffd1"]}
+            rotation={0}
+            speed={0.2}
+            scale={1}
+            frequency={1}
+            warpStrength={1}
+            mouseInfluence={1}
+            parallax={0.5}
+            noise={0.1}
+            transparent
+        />
+    ),
+    () => (
+        <LetterGlitch
+            glitchColors={["#ff5c7a", "#8a5cff", "#00ffd1"]}
+            glitchSpeed={50}
+            centerVignette={true}
+            outerVignette={false}
+            smooth={true}
+            characters="ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$&*()-_+=/[]{};:<>.,0123456789"
+        />
+    ),
+    () => (
+        <Iridescence
+            color={[1, 1, 1]}
+            mouseReact={false}
+            amplitude={0.1}
+            speed={1.0}
+        />
+    ), 
+    () => (
+        <FaultyTerminal
+            scale={1.5}
+            gridMul={[2, 1]}
+            digitSize={1.2}
+            timeScale={0.5}
+            pause={false}
+            scanlineIntensity={1}
+            glitchAmount={1}
+            flickerAmount={1}
+            noiseAmp={1}
+            chromaticAberration={0}
+            dither={0}
+            curvature={0.1}
+            tint="#a7ef9e"
+            mouseReact={true}
+            mouseStrength={0.5}
+            pageLoadAnimation={false}
+            brightness={1}
+        />
+    )
+];
 
 function Home () {
-    const navigate = useNavigate();
+    const [backgroundIndex, setBackgroundIndex] = useState(0);
+
+    useEffect(() => {
+        const index = Math.floor(Math.random() * backgrounds.length);
+        setBackgroundIndex(index);
+    }, []);
+
+    const randomBackground = useMemo(() => {
+        const BackgroundComponent = backgrounds[backgroundIndex];
+        return <BackgroundComponent />;
+    }, [backgroundIndex]);
 
     return (
         <div className="min-h-screen bg-bg-primary text-text-primary duration-300 items-center justify-center flex flex-col select-none">
             <ThemeToggle />
+
+            <div className="absolute w-full h-full top-0 left-0 overflow-hidden">
+                {randomBackground}
+            </div>
+
+            <SplashCursor />
 
             <Dock
                 panelHeight={68}
@@ -20,7 +120,6 @@ function Home () {
             />
 
             <div className="flex items-center justify-center px-4">
-
                 <ElectricBorder
                     color="#7df9ff"
                     speed={1}
@@ -47,6 +146,14 @@ function Home () {
                     </div>
                 </ElectricBorder>
             </div>
+
+        <div className="absolute bottom-4 text-lg text-primary select-none" onClick={() => {
+            const nextIndex = (backgroundIndex + 1) % backgrounds.length;
+            setBackgroundIndex(nextIndex);
+        }}>
+            Change backgrounds
+        </div>
+
         </div>
     );
 }

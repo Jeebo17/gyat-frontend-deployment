@@ -5,7 +5,7 @@ export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="fixed top-4 right-4">
+    <div className="fixed top-4 right-4 z-50">
       <button
         onClick={toggleTheme}
         className="p-2 rounded-lg transition-colors bg-bg-secondary hover:bg-bg-tertiary text-text-primary"
