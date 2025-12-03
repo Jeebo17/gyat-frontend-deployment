@@ -1,3 +1,4 @@
+import { is } from '@react-three/fiber/dist/declarations/src/core/utils';
 import {
     motion,
     MotionValue,
@@ -7,8 +8,8 @@ import {
     type SpringOptions,
     AnimatePresence
 } from 'framer-motion';
-import React, { Children, cloneElement, useEffect, useMemo, useRef, useState } from 'react';
-import { IoHomeOutline, IoMapOutline, IoPencilSharp, IoSettingsOutline } from 'react-icons/io5';
+import React, { Children, cloneElement, useEffect, useRef, useState } from 'react';
+import { IoHomeOutline, IoMapOutline, IoSettingsOutline } from 'react-icons/io5';
 import { useNavigate } from 'react-router';
 
 export type DockItemData = {
@@ -63,13 +64,25 @@ function DockItem({
     const targetSize = useTransform(mouseDistance, [-distance, 0, distance], [baseItemSize, magnification, baseItemSize]);
     const size = useSpring(targetSize, spring);
 
+    const selectedPage = window.location.pathname;
+    const childArray = React.Children.toArray(children);
+    const firstChild = childArray[0] as React.ReactElement | undefined;
+    const iconType = firstChild?.props?.children?.type;
+
+    const isSelected =
+        (selectedPage === "/" && iconType === IoHomeOutline) ||
+        (selectedPage.endsWith("/map") && iconType === IoMapOutline) ||
+        (selectedPage.endsWith("/settings") && iconType === IoSettingsOutline);
+
     return (
         <motion.div
         ref={ref}
         style={{
             width: size,
             height: size,
-            backdropFilter: 'blur(2px)'
+            backdropFilter: 'blur(2px)',
+            background: isSelected ? 'rgba(255,255,255,0.1)' : undefined,
+            cursor: isSelected ? 'default' : 'pointer'
         }}
         onHoverStart={() => isHovered.set(1)}
         onHoverEnd={() => isHovered.set(0)}
@@ -154,7 +167,7 @@ export default function Dock({
     ];
     
     return (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 select-none">
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 select-none">
             <motion.div
                 onMouseMove={({ pageX }) => {
                     mouseX.set(pageX);
