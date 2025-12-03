@@ -195,7 +195,7 @@ function Tile({
                 absolute
                 select-none
                 ${editMode ? "cursor-move" : ""}
-                ${canHover && !editMode ? "hover:brightness-110 transition-all duration-75 hover:border-2 border-white" : ""}
+                ${canHover && !editMode ? "cursor-pointer hover:brightness-110 transition-all duration-75 hover:border-2 border-white" : ""}
                 ${editMode ? "ring-2 ring-white ring-opacity-50" : ""}
             `}
             style={{

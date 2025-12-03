@@ -2,7 +2,7 @@ import ShinyText from './ShinyText';
 
 function Loading() {
     return (
-        <div className="">
+        <div className="min-h-screen bg-bg-primary text-text-primary flex items-center justify-center">
             <ShinyText 
                 text="Loading..." 
                 disabled={false} 

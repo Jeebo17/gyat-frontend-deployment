@@ -1,4 +1,3 @@
-import { ThemeToggle } from '../components/ThemeToggle';
 import '../styles/App.scss';
 import SplitText from '../components/SplitText';
 import ElectricBorder from '../components/ElectricBorder';
@@ -7,14 +6,15 @@ import SplashCursor from '../components/SplashCursor'
 import Silk from '../backgrounds/Silk';
 import FloatingLines from '../backgrounds/FloatingLines';
 import ColorBends from '../backgrounds/ColorBends';
-import LetterGlitch from '../backgrounds/LetterGlitch';
 import Iridescence from '../backgrounds/Iridescence';
-import FaultyTerminal from '../backgrounds/FaultyTerminal';
 import { useState, useEffect } from 'react';
 
 import { useMemo } from 'react';
 
 const backgrounds = [
+    () => (
+        <div></div>
+    ),
     () => (
         <Silk
             speed={5}
@@ -27,7 +27,7 @@ const backgrounds = [
     () => (
         <FloatingLines 
             enabledWaves={['top', 'middle', 'bottom']}
-            lineCount={[10, 15, 20]}
+            lineCount={[5, 7, 5]}
             lineDistance={[8, 6, 4]}
             bendRadius={5.0}
             bendStrength={-0.5}
@@ -50,68 +50,35 @@ const backgrounds = [
         />
     ),
     () => (
-        <LetterGlitch
-            glitchColors={["#ff5c7a", "#8a5cff", "#00ffd1"]}
-            glitchSpeed={50}
-            centerVignette={true}
-            outerVignette={false}
-            smooth={true}
-            characters="ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$&*()-_+=/[]{};:<>.,0123456789"
-        />
-    ),
-    () => (
         <Iridescence
-            color={[1, 1, 1]}
+            color={[0.5, 0.5, 0.5]}
             mouseReact={false}
             amplitude={0.1}
             speed={1.0}
-        />
-    ), 
-    () => (
-        <FaultyTerminal
-            scale={1.5}
-            gridMul={[2, 1]}
-            digitSize={1.2}
-            timeScale={0.5}
-            pause={false}
-            scanlineIntensity={1}
-            glitchAmount={1}
-            flickerAmount={1}
-            noiseAmp={1}
-            chromaticAberration={0}
-            dither={0}
-            curvature={0.1}
-            tint="#a7ef9e"
-            mouseReact={true}
-            mouseStrength={0.5}
-            pageLoadAnimation={false}
-            brightness={1}
         />
     )
 ];
 
 function Home () {
     const [backgroundIndex, setBackgroundIndex] = useState(0);
+    const [enableSplashCursor, setEnableSplashCursor] = useState(false);
 
     useEffect(() => {
-        const index = Math.floor(Math.random() * backgrounds.length);
-        setBackgroundIndex(index);
+        setBackgroundIndex(0);
     }, []);
 
-    const randomBackground = useMemo(() => {
+    const background = useMemo(() => {
         const BackgroundComponent = backgrounds[backgroundIndex];
         return <BackgroundComponent />;
     }, [backgroundIndex]);
 
     return (
         <div className="min-h-screen bg-bg-primary text-text-primary duration-300 items-center justify-center flex flex-col select-none">
-            <ThemeToggle />
-
             <div className="absolute w-full h-full top-0 left-0 overflow-hidden">
-                {randomBackground}
+                {background}
             </div>
 
-            <SplashCursor />
+            {enableSplashCursor && <SplashCursor />}
 
             <Dock
                 panelHeight={68}
@@ -147,12 +114,18 @@ function Home () {
                 </ElectricBorder>
             </div>
 
-        <div className="absolute bottom-4 text-lg text-primary select-none" onClick={() => {
-            const nextIndex = (backgroundIndex + 1) % backgrounds.length;
-            setBackgroundIndex(nextIndex);
-        }}>
-            Change backgrounds
-        </div>
+            <div className="absolute bottom-4 left-4 text-lg text-primary select-none opacity-50 cursor-pointer hover:opacity-75 transition-all" onClick={() => {
+                const nextIndex = (backgroundIndex + 1) % backgrounds.length;
+                setBackgroundIndex(nextIndex);
+            }}>
+                Change backgrounds
+            </div>
+
+            <div className="absolute bottom-4 right-4 text-lg text-primary select-none opacity-50 cursor-pointer hover:opacity-75 transition-all" onClick={() => {
+                setEnableSplashCursor(!enableSplashCursor);
+            }}>
+                {enableSplashCursor ? "Disable" : "Enable"} Splash Cursor
+            </div>
 
         </div>
     );

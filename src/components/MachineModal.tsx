@@ -3,8 +3,8 @@ import { TileProps } from "./Tile";
 
 function MachineModal({ tile, onClose }: { tile: TileProps, onClose: () => void }) {
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50" onClick={onClose}>
-            <div className="bg-bg-secondary p-6 rounded-lg shadow-lg w-4/5 h-4/5 relative" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-40 cursor-pointer" onClick={onClose}>
+            <div className="bg-bg-secondary p-6 rounded-lg shadow-lg w-4/5 h-4/5 relative cursor-auto" onClick={e => e.stopPropagation()}>
                 <button className="absolute top-4 right-4 text-text-primary hover:text-red-500 transition-all duration-200" onClick={onClose}>
                     <RxCross2 className="w-12 h-12"/>
                 </button>

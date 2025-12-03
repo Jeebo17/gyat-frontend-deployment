@@ -98,9 +98,10 @@ function InteractiveMap() {
                         editMode={editMode}
                     />
                 ))}
-
-                {selectedMachine && <MachineModal tile={selectedMachine} onClose={() => setSelectedMachine(null)} />}
             </div>
+
+            {selectedMachine && <MachineModal tile={selectedMachine} onClose={() => setSelectedMachine(null)} />}
+                
         </div>
     );
 }

@@ -6,6 +6,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import './index.css';
 import './styles/main.scss';
 import ClickSpark from './components/ClickSpark';
+import { ThemeToggle } from './components/ThemeToggle.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -18,6 +19,7 @@ createRoot(document.getElementById('root')!).render(
           sparkCount={8}
           duration={400}
         >
+          <ThemeToggle />
         <App />
         </ClickSpark>
       </ThemeProvider>
