@@ -1,18 +1,20 @@
 import { useState, useEffect, useRef } from "react";
 import { FaArrowRotateLeft, FaArrowRotateRight } from "react-icons/fa6";
 import { TileProps } from "../types/tile";
+import { useTheme } from "../context/ThemeContext";
+
 
 type ResizeHandle = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 
-const colourClasses: Record<string, string> = {
-    red: "bg-red-500",
-    blue: "bg-blue-500",
-    green: "bg-green-500",
-    yellow: "bg-yellow-500",
-    purple: "bg-purple-500",
-    orange: "bg-orange-500",
-    gray: "bg-gray-500",
-    zinc: "bg-zinc-500"
+const colourClasses: Record<string, { light: string; dark: string }> = {
+    red: { light: "bg-red-400", dark: "bg-red-500" },
+    blue: { light: "bg-blue-400", dark: "bg-blue-500" },
+    green: { light: "bg-green-400", dark: "bg-green-500" },
+    yellow: { light: "bg-yellow-300", dark: "bg-yellow-500" },
+    purple: { light: "bg-purple-400", dark: "bg-purple-500" },
+    orange: { light: "bg-orange-400", dark: "bg-orange-500" },
+    gray: { light: "bg-gray-300", dark: "bg-gray-500" },
+    zinc: { light: "bg-zinc-300", dark: "bg-zinc-500" },
 };
 
 function Tile({
@@ -35,8 +37,15 @@ function Tile({
     const [isResizing, setIsResizing] = useState<ResizeHandle | null>(null);
     const dragStartRef = useRef({ x: 0, y: 0, tileX: 0, tileY: 0 });
     const resizeStartRef = useRef({ x: 0, y: 0, width: 0, height: 0, tileX: 0, tileY: 0 });
-
-    const colourClass = colourClasses[colour] || "bg-gray-500";
+    
+    const theme = useTheme();
+    const colourClass = colourClasses[colour]
+    ? theme.theme === 'light'
+        ? colourClasses[colour].light
+        : colourClasses[colour].dark
+    : theme.theme === 'light'
+        ? "bg-gray-300"
+        : "bg-gray-600";
 
     const handleMouseDown = (e: React.MouseEvent) => {
         if (!editMode || !onUpdate) return;
@@ -176,15 +185,18 @@ function Tile({
                 absolute
                 select-none
                 ${editMode ? "cursor-move" : ""}
-                ${canHover && !editMode ? "cursor-pointer hover:brightness-110 transition-all duration-75 hover:border-2 border-white" : ""}
+                ${canHover && !editMode ? "cursor-pointer hover:brightness-110 hover:border-2 border-text-primary" : ""}
                 ${editMode ? "ring-2 ring-white ring-opacity-50" : ""}
+                ${theme.theme === 'dark' ? 'opacity-100' : 'brightness-90'}
             `}
             style={{
                 left: x,
                 top: y,
                 width,
                 height,
-                transform: `rotate(${rotation}deg)`
+                transform: `rotate(${rotation}deg)`,
+                transitionProperty: "border-color",
+                transitionDuration: "0.075s"
             }}
             onMouseDown={handleMouseDown}
             onClick={!editMode ? onClick : undefined}
