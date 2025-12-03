@@ -1,5 +1,5 @@
 import { RxCross2 } from "react-icons/rx";
-import { TileProps } from "./Tile";
+import { TileProps } from "../types/tile";
 
 function MachineModal({ tile, onClose }: { tile: TileProps, onClose: () => void }) {
     return (
@@ -9,7 +9,7 @@ function MachineModal({ tile, onClose }: { tile: TileProps, onClose: () => void 
                     <RxCross2 className="w-12 h-12"/>
                 </button>
 
-                <h1 className="text-3xl select-none">{tile.title}</h1>
+                <h1 className="text-3xl select-none">{tile.equipment.title}</h1>
 
                 {/* grid */}
 
@@ -17,7 +17,7 @@ function MachineModal({ tile, onClose }: { tile: TileProps, onClose: () => void 
                     <div className="flex flex-col row-span-2 items-center justify-center bg-bg-tertiary rounded-lg p-4">
 
                         <div className="bg-bg-secondary rounded-md flex flex-col items-center justify-center w-full aspect-square">
-                            {tile.icon && <tile.icon className="w-20 h-20 mb-4 text-text-primary" />}                            
+                            {tile.equipment.icon && <tile.equipment.icon className="w-20 h-20 mb-4 text-text-primary" />}                            
                         </div>
 
                         <div className="bg-bg-secondary rounded-md w-full mt-4 p-2">

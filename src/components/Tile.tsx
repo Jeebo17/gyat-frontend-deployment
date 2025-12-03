@@ -1,24 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { FaArrowRotateLeft, FaArrowRotateRight } from "react-icons/fa6";
-
-export interface TileProps {
-    id?: number;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    rotation: number;
-    colour: string;
-    title: string;
-    onUpdate?: (updates: Partial<TileProps>) => void;
-    icon?: React.ComponentType<{ className?: string }>;
-    canHover?: boolean;
-    onClick?: () => void;
-    editMode?: boolean;
-    scale?: number;
-    gridSize?: number;
-    snap?: (value: number) => number;
-}
+import { TileProps } from "../types/tile";
 
 type ResizeHandle = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 
@@ -34,15 +16,14 @@ const colourClasses: Record<string, string> = {
 };
 
 function Tile({
+    equipment,
     x,
     y,
     width,
     height,
     rotation,
     colour,
-    title,
     onUpdate,
-    icon: Icon,
     canHover = true,
     onClick,
     editMode,
@@ -208,8 +189,8 @@ function Tile({
             onMouseDown={handleMouseDown}
             onClick={!editMode ? onClick : undefined}
         >
-            <p className="truncate">{title}</p>
-            {Icon && <Icon className="absolute bottom-2 right-2 w-6 h-6 opacity-100" />}
+            <p className="truncate">{equipment.title}</p>
+            {equipment.icon && <equipment.icon className="absolute bottom-2 right-2 w-6 h-6 opacity-100" />}
 
             {editMode && onUpdate && (
             <div>

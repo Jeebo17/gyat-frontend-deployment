@@ -1,4 +1,4 @@
-import FuzzyText from '../components/FuzzyText';
+import FuzzyText from '../components/effects/FuzzyText';
 import { Link } from "react-router-dom";
 
 

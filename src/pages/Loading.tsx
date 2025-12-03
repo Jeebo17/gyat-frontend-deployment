@@ -1,4 +1,4 @@
-import ShinyText from './ShinyText';
+import ShinyText from '../components/effects/ShinyText';
 
 function Loading() {
     return (

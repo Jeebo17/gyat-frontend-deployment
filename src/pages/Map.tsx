@@ -1,5 +1,5 @@
 import '../styles/App.scss';
-import Loading from '../components/Loading';
+import Loading from './Loading';
 import InteractiveMap from '../components/InteractiveMap';
 import { useState, useEffect } from 'react';
 import Dock from '../components/Dock';

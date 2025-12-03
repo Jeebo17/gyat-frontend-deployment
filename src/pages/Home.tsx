@@ -1,8 +1,8 @@
 import '../styles/App.scss';
-import SplitText from '../components/SplitText';
-import ElectricBorder from '../components/ElectricBorder';
+import SplitText from '../components/effects/SplitText';
+import ElectricBorder from '../components/effects/ElectricBorder';
 import Dock from '../components/Dock';
-import SplashCursor from '../components/SplashCursor'
+import SplashCursor from '../components/effects/SplashCursor'
 import Silk from '../backgrounds/Silk';
 import FloatingLines from '../backgrounds/FloatingLines';
 import ColorBends from '../backgrounds/ColorBends';

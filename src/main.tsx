@@ -5,7 +5,7 @@ import App from './App.tsx';
 import { ThemeProvider } from './context/ThemeContext';
 import './index.css';
 import './styles/main.scss';
-import ClickSpark from './components/ClickSpark';
+import ClickSpark from './components/effects/ClickSpark.tsx';
 import { ThemeToggle } from './components/ThemeToggle.tsx';
 
 createRoot(document.getElementById('root')!).render(
