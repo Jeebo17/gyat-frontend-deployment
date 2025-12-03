@@ -16,6 +16,7 @@
   --color-border-light: #e0e0e0;
   --color-border-medium: #cccccc;
   --color-border-dark: #999999;
+  --grid-line-color: rgba(0,0,0,0.07);
 }
 
 :root.dark {
@@ -32,4 +33,5 @@
   --color-border-light: #404040;
   --color-border-medium: #555555;
   --color-border-dark: #666666;
+  --grid-line-color: rgba(255,255,255,0.07);
 }

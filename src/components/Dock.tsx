@@ -1,4 +1,3 @@
-import { is } from '@react-three/fiber/dist/declarations/src/core/utils';
 import {
     motion,
     MotionValue,
@@ -9,7 +8,7 @@ import {
     AnimatePresence
 } from 'framer-motion';
 import React, { Children, cloneElement, useEffect, useRef, useState } from 'react';
-import { IoHomeOutline, IoMapOutline, IoSettingsOutline } from 'react-icons/io5';
+import { IoHomeOutline, IoHome, IoMapOutline, IoMap, IoSettingsOutline, IoSettings } from 'react-icons/io5';
 import { useNavigate } from 'react-router';
 
 export type DockItemData = {
@@ -38,6 +37,7 @@ type DockItemProps = {
     distance: number;
     baseItemSize: number;
     magnification: number;
+    selected: boolean;
 };
 
 function DockItem({
@@ -48,7 +48,8 @@ function DockItem({
     spring,
     distance,
     magnification,
-    baseItemSize
+    baseItemSize,
+    selected,
 }: DockItemProps) {
     const ref = useRef<HTMLDivElement>(null);
     const isHovered = useMotionValue(0);
@@ -64,16 +65,6 @@ function DockItem({
     const targetSize = useTransform(mouseDistance, [-distance, 0, distance], [baseItemSize, magnification, baseItemSize]);
     const size = useSpring(targetSize, spring);
 
-    const selectedPage = window.location.pathname;
-    const childArray = React.Children.toArray(children);
-    const firstChild = childArray[0] as React.ReactElement | undefined;
-    const iconType = firstChild?.props?.children?.type;
-
-    const isSelected =
-        (selectedPage === "/" && iconType === IoHomeOutline) ||
-        (selectedPage.endsWith("/map") && iconType === IoMapOutline) ||
-        (selectedPage.endsWith("/settings") && iconType === IoSettingsOutline);
-
     return (
         <motion.div
         ref={ref}
@@ -81,8 +72,7 @@ function DockItem({
             width: size,
             height: size,
             backdropFilter: 'blur(2px)',
-            background: isSelected ? 'rgba(255,255,255,0.1)' : undefined,
-            cursor: isSelected ? 'default' : 'pointer'
+            cursor: selected ? 'default' : 'pointer'
         }}
         onHoverStart={() => isHovered.set(1)}
         onHoverEnd={() => isHovered.set(0)}
@@ -128,7 +118,7 @@ function DockLabel({ children, className = '', isHovered }: DockLabelProps) {
                 animate={{ opacity: 1, y: 10 }}
                 exit={{ opacity: 0, y: 0 }}
                 transition={{ duration: 0.2 }}
-                className={`${className} absolute -bottom-6 left-1/2 w-fit whitespace-pre rounded-md border border-neutral-700 bg-[#060010] px-2 py-0.5 text-xs text-white`}
+                className={`${className} absolute -bottom-5 left-1/2 w-fit whitespace-pre rounded-md px-2 py-0.5 text-sm font-semibold text-text-primary`}
                 role="tooltip"
                 style={{ x: '-50%' }}
                 >
@@ -160,10 +150,27 @@ export default function Dock({
     const mouseX = useMotionValue(Infinity);
     const navigate = useNavigate();
 
+    const selectedPage = window.location.pathname;
+
     const items = [
-        { icon: <IoHomeOutline />, label: 'Home', onClick: () => navigate("/") },
-        { icon: <IoMapOutline />, label: 'Map', onClick: () => navigate("/map") },
-        { icon: <IoSettingsOutline />, label: 'Settings', onClick: () => navigate("/settings") },
+        {
+            icon: selectedPage === "/" ? <IoHome /> : <IoHomeOutline />,
+            label: 'Home',
+            path: '/',
+            onClick: () => navigate("/")
+        },
+        {
+            icon: selectedPage.endsWith("/map") ? <IoMap /> : <IoMapOutline />,
+            label: 'Map',
+            path: '/map',
+            onClick: () => navigate("/map")
+        },
+        {
+            icon: selectedPage.endsWith("/settings") ? <IoSettings /> : <IoSettingsOutline />,
+            label: 'Settings',
+            path: '/settings',
+            onClick: () => navigate("/settings")
+        },
     ];
     
     return (
@@ -189,6 +196,7 @@ export default function Dock({
                         distance={distance}
                         magnification={magnification}
                         baseItemSize={baseItemSize}
+                        selected={selectedPage === item.path}
                     >
                         <DockIcon>{item.icon}</DockIcon>
                         <DockLabel>{item.label}</DockLabel>

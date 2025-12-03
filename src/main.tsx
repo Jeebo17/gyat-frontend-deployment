@@ -20,7 +20,7 @@ createRoot(document.getElementById('root')!).render(
           duration={400}
         >
           <ThemeToggle />
-        <App />
+          <App />
         </ClickSpark>
       </ThemeProvider>
     </BrowserRouter>

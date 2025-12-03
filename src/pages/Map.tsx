@@ -23,7 +23,7 @@ function HomePage() {
     }
 
     return (
-        <div className="min-h-screen bg-bg-primary text-text-primary transition-colors duration-300 p-8 pr-20">
+        <div className="min-h-screen bg-bg-primary text-text-primary transition-colors duration-500 p-8 pr-20">
 
         <Dock
             panelHeight={68}
