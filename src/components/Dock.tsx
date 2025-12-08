@@ -154,19 +154,19 @@ export default function Dock({
 
     const items = [
         {
-            icon: selectedPage === "/" ? <IoHome /> : <IoHomeOutline />,
+            icon: selectedPage === "/" ? <IoHome data-testid="lucide-home" /> : <IoHomeOutline data-testid="lucide-home-outline" />,
             label: 'Home',
             path: '/',
             onClick: () => navigate("/")
         },
         {
-            icon: selectedPage.endsWith("/map") ? <IoMap /> : <IoMapOutline />,
+            icon: selectedPage.endsWith("/map") ? <IoMap data-testid="lucide-map" /> : <IoMapOutline data-testid="lucide-map-outline" />,
             label: 'Map',
             path: '/map',
             onClick: () => navigate("/map")
         },
         {
-            icon: selectedPage.endsWith("/settings") ? <IoSettings /> : <IoSettingsOutline />,
+            icon: selectedPage.endsWith("/settings") ? <IoSettings data-testid="lucide-settings" /> : <IoSettingsOutline data-testid="lucide-settings-outline" />,
             label: 'Settings',
             path: '/settings',
             onClick: () => navigate("/settings")

@@ -55,7 +55,7 @@ describe('ThemeToggle', () => {
         expect(toggleThemeMock).toHaveBeenCalled();
     });
 
-    it('has correct aria-label', () => {
+    it('has correct aria-label for accessibility', () => {
         vi.mocked(useTheme).mockReturnValue({
             theme: 'light',
             toggleTheme: vi.fn(),

@@ -71,7 +71,7 @@ describe('ToggleSwitch', () => {
         expect(sliderDiv).not.toHaveClass('translate-x-full');
     });
 
-    it('has correct aria-label', () => {
+    it('has correct aria-label for accessibility', () => {
         render(<ToggleSwitch checked={false} onChange={vi.fn()} />);
         const input = screen.getByRole('checkbox', { name: /toggle switch/i });
         expect(input).toBeInTheDocument();
