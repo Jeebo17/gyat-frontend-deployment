@@ -1,12 +1,10 @@
-import { useState } from 'react'
-
 interface ToggleSwitchProps {
     checked: boolean;
     onChange: (checked: boolean) => void;
     highlight?: boolean;
 }
 
-const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ checked, onChange, highlight = true }) => {
+const ToggleSwitch = ({ checked, onChange, highlight = true }: ToggleSwitchProps) => {
     return (
         <label className='flex cursor-pointer select-none items-center'>
             <div className='relative'>

@@ -12,9 +12,9 @@ export function ThemeToggle() {
         aria-label="Toggle theme"
       >
         {theme === 'light' ? (
-          <Moon size={20} />
+          <Moon size={20} data-testid="lucide-moon" />
         ) : (
-          <Sun size={20} />
+          <Sun size={20} data-testid="lucide-sun" />
         )}
       </button>
     </div>
