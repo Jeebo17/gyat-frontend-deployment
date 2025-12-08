@@ -13,6 +13,7 @@ const ToggleSwitch = ({ checked, onChange, highlight = true }: ToggleSwitchProps
                     checked={checked}
                     onChange={() => onChange(!checked)}
                     className='sr-only'
+                    aria-label="Toggle switch"
                 />
                 <div
                     className={`box block h-8 w-14 rounded-full ${

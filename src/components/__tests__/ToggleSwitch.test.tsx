@@ -70,4 +70,11 @@ describe('ToggleSwitch', () => {
         const sliderDiv = container.querySelector('div.absolute');
         expect(sliderDiv).not.toHaveClass('translate-x-full');
     });
+
+    it('has correct aria-label', () => {
+        render(<ToggleSwitch checked={false} onChange={vi.fn()} />);
+        const input = screen.getByRole('checkbox', { name: /toggle switch/i });
+        expect(input).toBeInTheDocument();
+    });
+
 });
