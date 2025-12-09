@@ -23,21 +23,15 @@ function HomePage() {
     }
 
     return (
-        <div className="min-h-screen bg-bg-primary text-text-primary transition-colors duration-500 p-8 pr-20">
+        <div className="fixed inset-0 h-full w-full bg-bg-primary text-text-primary transition-colors duration-500 p-4 flex flex-col">
 
-        <Dock
-            panelHeight={68}
-            baseItemSize={50}
-            magnification={70}
-        />
+            <Dock
+                panelHeight={68}
+                baseItemSize={50}
+                magnification={70}
+            />
 
-
-        <div className="flex flex-row items-center gap-10 mb-8">
-            <h1 className="text-3xl font-medium select-none">Interactive Gym Map</h1>
-        </div>
-
-
-        <InteractiveMap />
+            <InteractiveMap />
 
         </div>
     );

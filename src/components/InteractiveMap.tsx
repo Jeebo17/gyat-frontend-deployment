@@ -52,14 +52,14 @@ function InteractiveMap() {
     };
 
     return (
-        <div className="relative w-full h-full flex items-center justify-center">
+        <div className="relative overflow-visible w-full h-full justify-center items-center flex p-4 md:pt-0 pt-2">
             <div
                 ref={containerRef}
-                className="relative bg-bg-secondary rounded-2xl overflow-hidden shadow-lg transition-colors duration-500"
+                className="relative bg-bg-secondary rounded-2xl overflow-visible shadow-lg transition-colors duration-500"
                 style={{
                     width: BASE_WIDTH,
                     height: BASE_HEIGHT,
-                    transform: `scale(${scale})`,
+                    // transform: `scale(${scale})`,
                     transformOrigin: 'center center',
                     backgroundImage: `
                         linear-gradient(to right, var(--grid-line-color, rgba(255,255,255,0.07)) 1px, transparent 1px),
@@ -68,6 +68,12 @@ function InteractiveMap() {
                     backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`
                 }}
             >
+                <div className="absolute -top-8 left-2 z-20 w-full flex">
+                    <h1 className="text-xl font-medium select-none">
+                        Interactive Gym Map
+                    </h1>
+                </div>
+
                 <div className="absolute top-4 left-4 z-10 flex flex-row items-center gap-4">
                     <ToggleSwitch checked={editMode} onChange={(checked) => { setEditMode(checked); setSnapToGrid(true); }} />
                     {!editMode && <span className="text-sm select-none">Edit Mode</span>}

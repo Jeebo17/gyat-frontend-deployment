@@ -7,7 +7,7 @@ function MachineModal({ tile, onClose }: { tile: TileProps, onClose: () => void 
             <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm select-none"></div>
 
             <div
-                className="relative z-50 backdrop-blur-2xl border-2 border-white/30 p-6 rounded-2xl shadow-lg w-4/5 h-4/5 cursor-auto"
+                className="relative z-50 backdrop-blur-2xl border-2 border-white/30 p-4 md:p-6 rounded-2xl shadow-lg w-11/12 sm:w-4/5 h-4/5 cursor-auto overflow-y-auto"
                 onClick={e => e.stopPropagation()}
             >
                 <button className="absolute top-4 right-4 text-white hover:text-red-500 transition-all duration-200" onClick={onClose}>
@@ -18,7 +18,7 @@ function MachineModal({ tile, onClose }: { tile: TileProps, onClose: () => void 
 
                 {/* grid */}
 
-                <div className="grid grid-cols-3 grid-rows-2 gap-6 mt-6">
+                <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-2 xl:grid-cols-3 xl:grid-rows-2">
                     <div className="flex flex-col row-span-2 items-center justify-center bg-black/20 rounded-lg p-4">
 
                         <div className="bg-black/20 rounded-lg flex flex-col items-center justify-center w-full aspect-square">
