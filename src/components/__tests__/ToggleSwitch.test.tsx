@@ -76,5 +76,4 @@ describe('ToggleSwitch', () => {
         const input = screen.getByRole('checkbox', { name: /toggle switch/i });
         expect(input).toBeInTheDocument();
     });
-
 });
