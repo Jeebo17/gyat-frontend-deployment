@@ -99,7 +99,7 @@ type DockLabelProps = {
     isHovered?: MotionValue<number>;
 };
 
-function DockLabel({ children, className = '', isHovered }: DockLabelProps) {
+export function DockLabel({ children, className = '', isHovered }: DockLabelProps) {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {

@@ -200,6 +200,7 @@ function Tile({
             }}
             onMouseDown={handleMouseDown}
             onClick={!editMode ? onClick : undefined}
+            aria-label={equipment.title}
         >
             <p className="truncate">{equipment.title}</p>
             {equipment.icon && <equipment.icon className="absolute bottom-2 right-2 w-6 h-6 opacity-100" />}
