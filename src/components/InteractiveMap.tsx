@@ -74,13 +74,7 @@ function InteractiveMap() {
     };
 
     return (
-        <div className="relative overflow-visible w-full h-full justify-center items-center flex md:pt-0 pt-2">
-            <div className="absolute top-2 left-2 z-20 w-full flex">
-                <h1 className="text-xl font-medium select-none">
-                    Interactive Gym Map
-                </h1>
-            </div>
-
+        <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-2 mt-20">
             {/* Map container */}
             <div
                 ref={containerRef}

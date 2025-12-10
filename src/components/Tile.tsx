@@ -205,28 +205,31 @@ function Tile({
             {editMode && onUpdate && (
             <div>
                 <div
-                className="absolute top-2 right-2 transform w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
-                onMouseDown={(e) => {
-                    e.stopPropagation();
-                    if (onUpdate) {
-                        onUpdate({ rotation: (rotation + 90) % 360 });
-                    }
-                }}
-                >
-                    <FaArrowRotateRight className="w-5 h-5 text-primary"/>
-                </div>
+                    className="absolute top-2 right-2 transform w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
+                    onMouseDown={(e) => {
+                        e.stopPropagation();
+                        if (onUpdate) {
+                            onUpdate({ width: height, height: width, rotation: rotation });
+                            // onUpdate({ rotation: (rotation + 90) % 360 });
+                        }
+                    }}
+                    >
+                        <FaArrowRotateRight className="w-5 h-5 text-primary"/>
+                    </div>
 
-            <div
-                className="absolute top-2 left-2 transform w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
-                onMouseDown={(e) => {
-                    e.stopPropagation();
-                    if (onUpdate) {
-                        onUpdate({ rotation: (rotation - 90) % 360 });
-                    }
-                }}
-                >
-                    <FaArrowRotateLeft className="w-5 h-5 text-primary"/>
-                </div>
+                {/* Temporary fix to rotation */}
+                {/* <div
+                    className="absolute top-2 left-2 transform w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
+                    onMouseDown={(e) => {
+                        e.stopPropagation();
+                        if (onUpdate) {
+                            onUpdate({ width: height, height: width, rotation: rotation });
+                            onUpdate({ rotation: (rotation - 90) % 360 });
+                        }
+                    }}
+                    >
+                        <FaArrowRotateLeft className="w-5 h-5 text-primary"/>
+                </div> */}
             </div>
             )}
 
