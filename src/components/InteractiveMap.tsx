@@ -117,7 +117,9 @@ function InteractiveMap() {
                         backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
                         position: "absolute",
                         top: 0,
-                        left: 0
+                        left: 0,
+                        border: "3px solid var(--grid-line-color)",
+                        borderRadius: "8px"
                     }}
                 >
                     {tiles.map(tile => (

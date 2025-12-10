@@ -194,7 +194,6 @@ function Tile({
                 width,
                 height,
                 transform: `rotate(${rotation}deg)`,
-                transitionDuration: "0.075s"
             }}
             onMouseDown={handleMouseDown}
             onClick={!editMode ? onClick : undefined}
