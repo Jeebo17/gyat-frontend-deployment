@@ -7,6 +7,8 @@ import { getInitialTiles } from "../services/tileService";
 import ZoomControls from "./ZoomControls";
 import { useTheme } from "../context/ThemeContext";
 
+import { isAdminTEST } from "../services/isAdmin";
+
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
 const GRID_SIZE = 20;
@@ -18,11 +20,20 @@ function InteractiveMap() {
     const [tiles, setTiles] = useState<TileProps[]>(getInitialTiles());
     const [snapToGrid, setSnapToGrid] = useState(true);
     const [gridSize, setGridSize] = useState(GRID_SIZE);
-
     const [scale, setScale] = useState(1);
     const [autoScale, setAutoScale] = useState(true);
 
     const { theme } = useTheme();
+
+    const [userIsAdmin, setUserIsAdmin] = useState(false);
+
+    useEffect(() => {
+        const checkAdmin = async () => {
+            const isAdmin = await isAdminTEST("test");
+            setUserIsAdmin(isAdmin);
+        }
+        checkAdmin();
+    }, []);
 
     useEffect(() => {
         setGridSize(snapToGrid ? GRID_SIZE : 1);
@@ -78,22 +89,26 @@ function InteractiveMap() {
             <div
                 style={{
                     position: "absolute",
-                    width: BASE_WIDTH,
-                    height: BASE_HEIGHT,
+                    width: "min(95vw, " + BASE_WIDTH + "px)",
+                    height: "min(95vh, " + BASE_HEIGHT + "px)",
                     backgroundColor: "transparent",
                 }}
             >
-                <div className="absolute top-4 left-4 z-10 flex flex-row items-center gap-4">
-                    <ToggleSwitch checked={editMode} onChange={(checked) => { setEditMode(checked); setSnapToGrid(true); }} />
-                    {!editMode && <span className="text-sm select-none">Edit Mode</span>}
-                </div>
+                {userIsAdmin && (
+                    <>
+                        <div className="absolute top-4 left-4 z-10 flex flex-row items-center gap-4">
+                            <ToggleSwitch checked={editMode} onChange={(checked) => { setEditMode(checked); setSnapToGrid(true); }} />
+                            {!editMode && <span className="text-sm select-none">Edit Mode</span>}
+                        </div>
 
-                {editMode && 
-                    <div className="absolute top-4 right-4 z-10 flex flex-row items-center gap-4">
-                        <span className="text-sm select-none">Snap to grid</span>             
-                        <ToggleSwitch checked={snapToGrid} onChange={setSnapToGrid} />
-                    </div>
-                }
+                        {editMode && 
+                            <div className="absolute top-4 right-4 z-10 flex flex-row items-center gap-4">
+                                <span className="text-sm select-none">Snap to grid</span>             
+                                <ToggleSwitch checked={snapToGrid} onChange={setSnapToGrid} />
+                            </div>
+                        }
+                    </>
+                )}
 
                 <ZoomControls
                     scale={scale}
