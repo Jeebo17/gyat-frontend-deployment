@@ -81,6 +81,7 @@ function InteractiveMap() {
                 </h1>
             </div>
 
+            {/* Map container */}
             <div
                 ref={containerRef}
                 className="relative bg-bg-secondary rounded-2xl overflow-auto shadow-lg transition-colors duration-500"
@@ -104,6 +105,7 @@ function InteractiveMap() {
                     </div>
                 }
 
+                {/* Internal map */}
                 <div
                     style={{
                         transform: `scale(${scale})`,
@@ -118,22 +120,30 @@ function InteractiveMap() {
                         position: "absolute",
                         top: 0,
                         left: 0,
-                        border: "3px solid var(--grid-line-color)",
-                        borderRadius: "8px"
+                        borderRadius: "16px",
                     }}
                 >
-                    {tiles.map(tile => (
-                        <Tile
-                            key={tile.id}
-                            {...tile}
-                            scale={scale}
-                            gridSize={gridSize}
-                            snap={snap}
-                            onUpdate={(updates) => editMode && tile.id !== undefined && updateTile(tile.id, updates)}
-                            onClick={!editMode ? () => setSelectedMachine({ ...tile, onUpdate: () => {} }) : undefined}
-                            editMode={editMode}
-                        />
-                    ))}
+                    {/* Border */}
+                    <div style={{
+                        boxSizing: "border-box",
+                        border: "4px inset var(--grid-line-color)",
+                        borderRadius: "16px",
+                        height: "100%",
+                        width: "100%",
+                    }}>
+                        {tiles.map(tile => (
+                            <Tile
+                                key={tile.id}
+                                {...tile}
+                                scale={scale}
+                                gridSize={gridSize}
+                                snap={snap}
+                                onUpdate={(updates) => editMode && tile.id !== undefined && updateTile(tile.id, updates)}
+                                onClick={!editMode ? () => setSelectedMachine({ ...tile, onUpdate: () => {} }) : undefined}
+                                editMode={editMode}
+                            />
+                        ))}
+                    </div>
                 </div>
             </div>
 
