@@ -12,7 +12,7 @@ interface ZoomControlsProps {
 const ZoomControls: FC<ZoomControlsProps> = ({ onZoomIn, onZoomOut, onReset }) => {
     const { theme } = useTheme();
 
-    const buttonClasses = `p-2 rounded-lg shadow hover:bg-text-secondary transition bg-text-primary ${
+    const buttonClasses = `p-2 rounded-lg shadow hover:bg-text-secondary transition duration-500 bg-text-primary ${
         theme === "dark" ? "text-black" : "text-white"
     }`;
 

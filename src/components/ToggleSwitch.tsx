@@ -23,7 +23,7 @@ const ToggleSwitch = ({ checked, onChange, highlight = true }: ToggleSwitchProps
                     }`}
                 ></div>
                 <div
-                    className={`absolute left-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-text-primary transition ${
+                    className={`absolute left-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-text-primary transition duration-500 ${
                         checked ? 'translate-x-full' : ''
                     }`}
                 ></div>

@@ -74,19 +74,15 @@ function InteractiveMap() {
     };
 
     return (
-        <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-2 mt-20">
-            {/* Map container */}
+        <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-2 mt-16">
             <div
-                ref={containerRef}
-                className="relative bg-bg-secondary rounded-2xl overflow-auto shadow-lg transition-colors duration-500"
                 style={{
+                    position: "absolute",
                     width: BASE_WIDTH,
                     height: BASE_HEIGHT,
-                    scrollbarColor: theme === 'dark' ? '#999999 transparent' : '#808080 transparent',
-                    scrollbarWidth: 'thin'
+                    backgroundColor: "transparent",
                 }}
             >
-
                 <div className="absolute top-4 left-4 z-10 flex flex-row items-center gap-4">
                     <ToggleSwitch checked={editMode} onChange={(checked) => { setEditMode(checked); setSnapToGrid(true); }} />
                     {!editMode && <span className="text-sm select-none">Edit Mode</span>}
@@ -99,11 +95,30 @@ function InteractiveMap() {
                     </div>
                 }
 
+                <ZoomControls
+                    scale={scale}
+                    onZoomIn={zoomIn}
+                    onZoomOut={zoomOut}
+                    onReset={resetZoom}
+                />
+            </div>
+            {/* Map container */}
+            <div
+                ref={containerRef}
+                className="relative bg-bg-secondary rounded-2xl overflow-auto shadow-lg transition-colors duration-500"
+                style={{
+                    width: BASE_WIDTH,
+                    height: BASE_HEIGHT,
+                    scrollbarColor: theme === 'dark' ? '#999999 transparent' : '#808080 transparent',
+                    scrollbarWidth: 'thin'
+                }}
+            >
+
                 {/* Internal map */}
                 <div
                     style={{
                         transform: `scale(${scale})`,
-                        transformOrigin: "center center",
+                        transformOrigin: "top left",
                         width: BASE_WIDTH,
                         height: BASE_HEIGHT,
                         backgroundImage: `
@@ -143,12 +158,7 @@ function InteractiveMap() {
 
             {selectedMachine && <MachineModal tile={selectedMachine} onClose={() => setSelectedMachine(null)} />}
 
-            <ZoomControls
-                scale={scale}
-                onZoomIn={zoomIn}
-                onZoomOut={zoomOut}
-                onReset={resetZoom}
-            />
+
 
         </div>
     );
