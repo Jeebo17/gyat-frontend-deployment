@@ -117,6 +117,7 @@ function InteractiveMap() {
                     onReset={resetZoom}
                 />
             </div>
+            
             {/* Map container */}
             <div
                 ref={containerRef}
