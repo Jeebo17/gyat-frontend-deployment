@@ -186,7 +186,6 @@ function Tile({
                 select-none
                 ${editMode ? "cursor-move" : ""}
                 ${canHover && !editMode ? "cursor-pointer hover:brightness-110 hover:border-2 border-text-primary" : ""}
-                ${editMode ? "ring-2 ring-white ring-opacity-50" : ""}
                 ${theme.theme === 'dark' ? 'opacity-100' : 'brightness-90'}
             `}
             style={{
@@ -195,7 +194,6 @@ function Tile({
                 width,
                 height,
                 transform: `rotate(${rotation}deg)`,
-                transitionProperty: "border-color",
                 transitionDuration: "0.075s"
             }}
             onMouseDown={handleMouseDown}
@@ -236,7 +234,7 @@ function Tile({
             {editMode && onUpdate && resizeHandles.map(({ handle, cursor, className }) => (
                 <div
                     key={handle}
-                    className={`absolute ${className} bg-white rounded-full z-10 hover:bg-blue-400 transition-colors`}
+                    className={`absolute ${className} bg-text-primary rounded-full z-10 hover:bg-blue-400 transition-colors`}
                     style={{ cursor }}
                     onMouseDown={(e) => handleResizeMouseDown(handle, e)}
                 />
