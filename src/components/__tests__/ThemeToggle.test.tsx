@@ -27,7 +27,7 @@ describe('ThemeToggle', () => {
         });
 
         render(<ThemeToggle />);
-        const moonIcon = screen.getByTestId('lucide-moon');
+        const moonIcon = screen.getByTestId('io5-moon-outline');
         expect(moonIcon).toBeInTheDocument();
     });
 
@@ -37,7 +37,7 @@ describe('ThemeToggle', () => {
             toggleTheme: vi.fn(),
         });
         render(<ThemeToggle />);
-        const sunIcon = screen.getByTestId('lucide-sun');
+        const sunIcon = screen.getByTestId('io5-sunny-outline');
         expect(sunIcon).toBeInTheDocument();
     });
 

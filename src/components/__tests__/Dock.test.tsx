@@ -21,9 +21,9 @@ describe('Dock Component', () => {
                 <Dock />
             </MemoryRouter>
         );
-        expect(screen.getByTestId('lucide-home')).toBeInTheDocument();
-        expect(screen.getByTestId('lucide-map-outline')).toBeInTheDocument();
-        expect(screen.getByTestId('lucide-settings-outline')).toBeInTheDocument();
+        expect(screen.getByTestId('io5-home')).toBeInTheDocument();
+        expect(screen.getByTestId('io5-map-outline')).toBeInTheDocument();
+        expect(screen.getByTestId('io5-settings-outline')).toBeInTheDocument();
     });
 
     it('has correct aria-label for accessibility', () => {
