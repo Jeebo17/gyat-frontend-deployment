@@ -1,45 +1,71 @@
 # the gyat
 
-A modern, interactive gym app built with React, TypeScript, and Vite. This project features an interactive gym map with equipment tracking etc.
+This is the frontend for our Gym application. It is built using **React**, **TypeScript**, **Vite**, and **Tailwind CSS**.
 
-## Prerequisites
+Follow these instructions exactly to get the project running on your device.
 
-Before you begin, make sure you have the following installed on your computer:
+## Important: Before You Start
 
-- **Node.js** (version 16 or higher) - [Download here](https://nodejs.org/)
-- Node.js includes npm (Node Package Manager) which we'll use to install dependencies
-- **Git** (optional, for version control) - [Download here](https://git-scm.com/)
+If you are working from home, **you must be connected to the University VPN** to communicate with the GitLab repository. **Setup Guide:** [https://www.bath.ac.uk/guides/setting-up-vpn-on-your-device/](https://www.bath.ac.uk/guides/setting-up-vpn-on-your-device/)
 
-To check if Node.js is installed, open your terminal/command prompt and run:
-```bash
-node --version
-npm --version
-```
+You need a **University GitLab Personal Access Token** to download this code.
+1. Go to [https://gitlab.bath.ac.uk/-/user_settings/personal_access_tokens](https://gitlab.bath.ac.uk/-/user_settings/personal_access_tokens)
+2. Log in with your university details.
+3. Click "Add New Token".
+    - **Name:** `Frontend-Access`
+    - **Scopes:** Check `read_repository` and `write_repository`.
+4. Click **Create Personal Access Token**.
+5. **Copy the token code immediately.** Save it somewhere (e.g. in a .txt file).
 
-(My current versions are Node.js v22.11.0 and npm v10.9.2, so if it doesn't work for you that's your fault)
+---
 
-## Installation
+## 1. Install Prerequisites
 
-Follow these steps to set up the project on your local machine:
+You need the following software installed on your computer:
 
-### 1. Clone or Download the Project
+1. **Node.js** (version 16 or higher)
+   * Download here: [https://nodejs.org/](https://nodejs.org/)
+   * Node.js includes npm (Node Package Manager) which we'll use to install dependencies
 
-If using Git:
-```bash
-git clone https://gitlab.bath.ac.uk/nw714/group-2-swe.git
-cd group-2-swe
-```
+2.  **Git** (Required to download the code)
+    * Download here: [https://git-scm.com/downloads](https://git-scm.com/downloads)
+    * Run the installer and keep the default settings (just keep clicking "Next").
 
-Or download the ZIP file and extract it to wherever you please.
+3. A code editor of your choice
+   * [Visual Studio Code](https://code.visualstudio.com/)
+   * From now on, I will assume you are using VS Code.
 
-### 2. Install Dependencies
+---
 
-Open your terminal in the project folder and run the **big** command:
+## 2. Installation
 
+1. Open up **VS Code**.
+2. Open up the Explorer menu on the left and click "Open Folder".
+3. Choose a location on your computer where you want to store the project (e.g., Desktop or Documents) and create a new folder called `gym-frontend`. Select this folder and click "Select Folder".
+4. Open the terminal in VS Code by going to the menu at the top and selecting `Terminal` > `New Terminal`.
+5. Check that you have **Node.js** installed by opening a new terminal in VS Code (`Ctrl + `) and running:
+   ```bash
+   node --version
+   npm --version
+   ```
+   If you see version numbers, you're good to go. If not, install Node.js from the link above.
+* (My current versions are Node.js v22.11.0 and npm v10.9.2, so if it doesn't work for you that's your fault)
+6. Using the terminal, clone the repository by running:
+   ```bash
+   git clone https://gitlab.bath.ac.uk/nw714/group-2-swe.git .
+   ```
+7. **Authentication:**
+    * It will ask for a username and password.
+    * **Username:** Your university username (e.g., `nw714`).
+    * **Password:** The **Personal Access Token** you copied in the "Before You Start" section.
+
+---
+
+## 3. Install Dependencies
+With the terminal still open, run the **big** command:
 ```bash
 npm install
 ```
-
 This command will install all the required packages listed in `package.json`, including:
 - **React** - JavaScript library for building user interfaces
 - **TypeScript** - Adds type safety to JavaScript
@@ -52,14 +78,10 @@ This command will install all the required packages listed in `package.json`, in
 - And whatevers left...
 
 This process will probably take a few minutes depending on your internet connection.
-### 3. Set Up Environment Variables
 
-If the project requires environment variables (for example, API keys or configuration settings), create a `.env` file in the root directory.
-If you need help, ask nathan, but I'm probably not going to know myself. (But currently there are no env variables needed)
+---
 
-## Running the Application
-
-### Development Mode
+## 4. Running the Application
 
 To start the development server with hot-reload:
 
@@ -70,39 +92,111 @@ npm run dev
 This will start the application at `http://localhost:5173` (or another port if 5173 is busy). The page will automatically reload when you make changes to the code.
 (Hot-reloading is the best thing since sliced bread (I actually don't even like bread that much icl), thanks to Vite)
 
-### Building for Production
+---
 
-To create an optimised production build (You probably won't ever need this until deployment):
+## 5. Contributing
 
-```bash
-npm run build
-```
+⚠️ **CRITICAL RULE:** Never push code directly to the `main` branch. Always use a separate branch for your changes.
 
-The built files will be in the `dist` folder.
 
-### Preview Production Build
 
-To preview the production build locally (again probably not needed):
+### Step 1: Create a New Branch
+Before you write a single line of code:
+1.  In VS Code, open the Source Control panel by clicking the branch icon on the left sidebar.
+2.  At the top, to the right of "Changes", click the 3 dots (More Actions...) and select **Checkout to...**.
+3. In the popup, select **Create new branch**.
+4. Enter a name for your branch following the naming conventions below:
+   * `feat/add-login-page` (for new features)
+   * `fix/navbar-responsive` (for bug fixes)
+   * `docs/typo-in-homepage` (for documentation)
+   * `style/update-button-theme` (for styling changes)
+   * `refactor/sidebar-component` (for code refactoring)
+5.  Press Enter to create and switch to the new branch.
+6.  Now you can make your changes in this branch.
 
-```bash
-npm run preview
-```
+### Step 2: Write Code & Commit
+1.  Make your changes to the code.
+**💡 Tip:** Commit often - whenever you finish a small feature, fix a bug, or add something significant. This makes it easier to track changes and avoid losing work.
+2.  Once you're ready to save your changes, go to the Source Control panel.
+3.  Enter a descriptive commit message summarising your changes.
+4.  Click the **Commit** to commit your changes.
+5.  Alternatvely, you can use the terminal:
+   ```bash
+   git add .
+   git commit -m "Your descriptive commit message"
+   ```
 
-### Type Checking
+### Step 3: Pull Latest Changes (Avoid Conflicts)
+Before pushing, check if your teammates updated the code while you were working.
+1. Verify which branch you’re on:
+   ```bash
+   git branch
+   ```
+2. Pull the latest commits from the remote for your branch:
+   ```bash
+   git pull origin <your-branch-name>
+   ```
+   * This fetches and merges the latest changes from the remote.
+   * If there are conflicts, Git will prompt you to resolve them.
 
-To check for TypeScript errors without running the app:
+### Step 4: Push to GitLab
+1. After resolving any conflicts, push your branch to GitLab:
+   ```bash
+   git push origin <your-branch-name>
+   ```
 
-```bash
-npm run typecheck
-```
+### Step 5: Merge Request (The Final Step)
+1.  Go to the GitLab repository in your web browser.
+2.  You should see a banner at the top: *"You pushed to feat/add-login-page just now."*
+3.  Click **Create Merge Request**.
+4.  Add a title and description.
+5.  **Assignee:** Assign it to yourself.
+6.  **Reviewer:** Select Nathan Wong or a teammate to check your code.
+7.  Click **Create Merge Request**.
 
-### Linting
 
-To check code quality and find potential errors:
+---
 
-```bash
-npm run lint
-```
+## Resources for Learning
+
+### JavaScript & TypeScript
+- [JavaScript.info](https://javascript.info/) - Comprehensive JavaScript tutorial
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/) - Official TypeScript guide
+
+### React
+- [React Official Tutorial](https://react.dev/learn) - Best place to start
+- [React TypeScript Cheatsheet](https://react-typescript-cheatsheet.netlify.app/) - React with TypeScript patterns
+
+### Tailwind CSS
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs) - Complete utility class reference
+- [Tailwind Play](https://play.tailwindcss.com/) - Online playground to experiment
+
+### Vite
+- [Vite Guide](https://vitejs.dev/guide/) - Official Vite documentation
+
+---
+
+## Next Steps
+
+After installation, I recommend:
+
+1. Read the documentation files:
+   - `TYPES.md` - Understanding TypeScript types used in the project
+   - `COMPONENTS.md` - Guide to all reusable components
+   - `PAGES.md` - Understanding page structure and routing
+
+2. Explore the code:
+   - Start with `src/main.tsx` to see how the app initializes
+   - Look at `src/App.tsx` to understand routing
+   - Explore `src/pages/Home.tsx` for a simple page example
+
+3. Make a small change:
+   - Try changing text on the home page
+   - Modify colors in `src/index.css`
+   - Add a console.log to see how data flows
+
+---
+
 
 ## Project Structure
 
@@ -113,11 +207,14 @@ project-root/
 ├── src/                      # Source code
 │   ├── backgrounds/          # Background visual effects components
 │   ├── components/           # Reusable UI components
+│   │   ├── __tests__/        # Unit tests for components
 │   │   └── effects/          # Special effect components
 │   ├── constants/            # Constant values (colors, configs)
 │   ├── context/              # React context providers
 │   ├── pages/                # Page components
+│   ├── services/             # API and data fetching logic
 │   ├── styles/               # Global styles and SCSS files
+│   ├── test/                 # Test utilities and mocks
 │   ├── types/                # TypeScript type definitions
 │   ├── App.tsx               # Main app component with routing
 │   ├── main.tsx              # Application entry point
@@ -128,8 +225,10 @@ project-root/
 ├── package.json              # Project dependencies and scripts
 ├── tsconfig.json             # TypeScript configuration
 ├── vite.config.ts            # Vite build configuration
+├── vitest.config.ts          # Vitest testing configuration
 └── tailwind.config.js        # Tailwind CSS configuration
 ```
+---
 
 ## Key Technologies
 
@@ -159,12 +258,16 @@ project-root/
 - **Why we use it**: Handles page navigation and URL routing
 - **Usage**: See `App.tsx` for route definitions
 
+---
+
 ## Available Pages
 
 - **Home** (`/`) - Landing page with animated text and background effects
 - **Map** (`/map`) - Interactive gym equipment map
 - **Settings** (`/settings`) - Application settings (to be implemented)
 - **404 Page** (`*`) - Shows when a route doesn't exist
+
+---
 
 ## Common Issues & Solutions
 
@@ -195,6 +298,8 @@ If Tailwind CSS classes aren't working:
 2. Restart the development server
 3. Check browser console for errors
 
+---
+
 ## Getting Help
 
 - Check the documentation files in the `docs/` folder for detailed explanations
@@ -202,51 +307,7 @@ If Tailwind CSS classes aren't working:
 - Search for error messages online or again ask chatgpt
 - Use TypeScript error messages - they usually tell you exactly what's wrong
 
-## Next Steps
-
-After installation, I recommend:
-
-1. Read the documentation files:
-   - `TYPES.md` - Understanding TypeScript types used in the project
-   - `COMPONENTS.md` - Guide to all reusable components
-   - `PAGES.md` - Understanding page structure and routing
-
-2. Explore the code:
-   - Start with `src/main.tsx` to see how the app initializes
-   - Look at `src/App.tsx` to understand routing
-   - Explore `src/pages/Home.tsx` for a simple page example
-
-3. Make a small change:
-   - Try changing text on the home page
-   - Modify colors in `src/index.css`
-   - Add a console.log to see how data flows
-
-## Contributing
-
-Before making changes:
-1. Create a new branch for your feature (I BEG DO NOT PUSH DIRECTLY TO MAIN)
-2. Make your changes
-3. Test thoroughly in development mode
-4. Run `npm run typecheck` and `npm run lint` (or don't, I don't care, and I never use it myself)
-5. Create a pull request for review
-
-## Resources for Learning
-
-### JavaScript & TypeScript
-- [JavaScript.info](https://javascript.info/) - Comprehensive JavaScript tutorial
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/) - Official TypeScript guide
-
-### React
-- [React Official Tutorial](https://react.dev/learn) - Best place to start
-- [React TypeScript Cheatsheet](https://react-typescript-cheatsheet.netlify.app/) - React with TypeScript patterns
-
-### Tailwind CSS
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs) - Complete utility class reference
-- [Tailwind Play](https://play.tailwindcss.com/) - Online playground to experiment
-
-### Vite
-- [Vite Guide](https://vitejs.dev/guide/) - Official Vite documentation
-
+---
 
 ## Contact
 

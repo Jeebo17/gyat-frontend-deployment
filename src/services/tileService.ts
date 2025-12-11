@@ -5,9 +5,32 @@ import { GiWeightLiftingUp  } from "react-icons/gi";
 import { IoBarbell  } from "react-icons/io5";
 import { GrYoga } from "react-icons/gr";
 
+const treadmillEquipment = {
+    title: "Treadmill",
+    icon: TbTreadmill,
+    description: "An indoor running platform for walking, jogging, or running. Adjustable speed and incline allow modulation of intensity, engaging cardiovascular and lower-body musculature.",
+    musclesTargeted: [
+        "Quadriceps (knee extension)",
+        "Hamstrings (hip extension and knee flexion)",
+        "Gluteus maximus (hip extension)",
+        "Gastrocnemius and soleus (push-off)",
+        "Core stabilisers (postural control)"
+    ],
+    benefits: [
+        "Enhances cardiorespiratory fitness by improving VO₂ max and heart efficiency",
+        "Promotes lower body muscular endurance and strength",
+        "Supports weight management and caloric expenditure",
+        "Reduces joint impact compared to outdoor running due to cushioned deck",
+        "Allows for structured interval training and controlled gait analysis"
+    ],
+    videoUrl: "https://www.example.com/treadmill-demo" // optional
+}
+
+
+
 export function getInitialTiles(): TileProps[] {
     return [
-        { id: 1, x: 20, y: 160, width: 240, height: 100, rotation: 0, colour: "red", equipment: { title: "Treadmill", icon: TbTreadmill } },
+        { id: 1, x: 20, y: 160, width: 240, height: 100, rotation: 0, colour: "red", equipment: treadmillEquipment },
         { id: 2, x: 20, y: 280, width: 240, height: 100, rotation: 0, colour: "red", equipment: { title: "Treadmill", icon: TbTreadmill } },
         { id: 3, x: 20, y: 400, width: 240, height: 100, rotation: 0, colour: "red", equipment: { title: "Treadmill", icon: TbTreadmill } },
         { id: 4, x: 20, y: 540, width: 240, height: 100, rotation: 0, colour: "blue", equipment: { title: "Rowing Machine", icon: MdRowing } },

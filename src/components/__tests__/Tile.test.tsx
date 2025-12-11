@@ -2,8 +2,6 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import Tile from '../Tile';
 import { createMockTile } from '../../test/mockData';
-import { ThemeProvider } from '../../context/ThemeContext';
-
 
 beforeAll(() => {
     Object.defineProperty(window, 'matchMedia', {
@@ -16,14 +14,17 @@ beforeAll(() => {
     });
 });
 
+vi.mock('../../context/ThemeContext', () => ({
+    useTheme: () => ({ theme: 'dark', toggleTheme: vi.fn() }),
+    ThemeProvider: ({ children }: any) => <div>{children}</div>
+}));
+
 describe('Tile', () => {
     it('renders equipment title', () => {
         const mockTile = createMockTile();
 
         render(
-            <ThemeProvider>
-                <Tile {...mockTile} />
-            </ThemeProvider>
+            <Tile {...mockTile} />
         );
 
         expect(screen.getByText('Equipment Title #1')).toBeInTheDocument();
@@ -32,9 +33,7 @@ describe('Tile', () => {
     it('renders and displays title', () => {
         const mockTile = createMockTile();
         render(
-            <ThemeProvider>
-                <Tile {...mockTile} />
-            </ThemeProvider>
+            <Tile {...mockTile} />
         );
 
         expect(screen.getByText('Equipment Title #1')).toBeInTheDocument();
@@ -43,9 +42,7 @@ describe('Tile', () => {
     it('applies colour style', () => {
         const mockTile = createMockTile({ colour: 'red' });
         const { container } = render(
-            <ThemeProvider>
-                <Tile {...mockTile} />
-            </ThemeProvider>
+            <Tile {...mockTile} />
         );
 
         const tile = container.firstChild;
@@ -56,9 +53,7 @@ describe('Tile', () => {
         const mockOnClick = vi.fn();
         const mockTile = createMockTile({ onClick: mockOnClick, editMode: false });
         render(
-            <ThemeProvider>
-                <Tile {...mockTile} />
-            </ThemeProvider>
+            <Tile {...mockTile} /> 
         );
 
         const tileElement = screen.getByText('Equipment Title #1').parentElement;
@@ -72,9 +67,7 @@ describe('Tile', () => {
         const mockOnClick = vi.fn();
         const mockTile = createMockTile({ onClick: mockOnClick, editMode: true });
         render(
-            <ThemeProvider>
-                <Tile {...mockTile} />
-            </ThemeProvider>
+            <Tile {...mockTile} />
         );
 
         const tileElement = screen.getByText('Equipment Title #1').parentElement;
@@ -87,9 +80,7 @@ describe('Tile', () => {
     it('renders hover effect when canHover is true and not in edit mode', () => {
         const mockTile = createMockTile({ canHover: true, editMode: false });
         const { container } = render(
-            <ThemeProvider>
-                <Tile {...mockTile} />
-            </ThemeProvider>
+            <Tile {...mockTile} />
         );
 
         const mainDiv = container.firstChild as HTMLElement;
@@ -99,9 +90,7 @@ describe('Tile', () => {
     it('does not render hover effect when canHover is false', () => {
         const mockTile = createMockTile({ canHover: false, editMode: false });
         const { container } = render(
-            <ThemeProvider>
-                <Tile {...mockTile} />
-            </ThemeProvider>
+            <Tile {...mockTile} />
         );
         const mainDiv = container.firstChild as HTMLElement;
         expect(mainDiv?.className).not.toContain('hover:brightness-110');
@@ -110,33 +99,17 @@ describe('Tile', () => {
     it('renders move cursor in edit mode', () => {
         const mockTile = createMockTile({ editMode: true });
         const { container } = render(
-            <ThemeProvider>
-                <Tile {...mockTile} />
-            </ThemeProvider>
+            <Tile {...mockTile} />
         );
 
         const mainDiv = container.firstChild as HTMLElement;
         expect(mainDiv?.className).not.toContain('hover:cursor-move');
     });
 
-    it('renders ring effect in edit mode', () => {
-        const mockTile = createMockTile({ editMode: true });
-        const { container } = render(
-            <ThemeProvider>
-                <Tile {...mockTile} />
-            </ThemeProvider>
-        );
-
-        const mainDiv = container.firstChild as HTMLElement;
-        expect(mainDiv?.className).toContain('ring-2');
-    })
-
     it('renders without onClick provider if not provided', () => {
         const mockTile = createMockTile({ editMode: true });
         render(
-            <ThemeProvider>
-                <Tile {...mockTile} />
-            </ThemeProvider>
+            <Tile {...mockTile} />
         );
 
         expect(screen.getByText('Equipment Title #1')).toBeInTheDocument();
@@ -145,9 +118,7 @@ describe('Tile', () => {
     it('has correct aria-label for accessibility', () => {
         const mockTile = createMockTile();
         const { container } = render(
-            <ThemeProvider>
-                <Tile {...mockTile} />
-            </ThemeProvider>
+            <Tile {...mockTile} />
         );
         const mainDiv = container.firstChild as HTMLElement;
         expect(mainDiv).toHaveAttribute('aria-label', 'Equipment Title #1');

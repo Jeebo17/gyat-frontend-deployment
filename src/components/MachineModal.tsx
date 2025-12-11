@@ -16,30 +16,36 @@ function MachineModal({ tile, onClose }: { tile: TileProps, onClose: () => void 
 
                 <h1 className="text-3xl select-none text-white">{tile.equipment.title}</h1>
 
-                {/* grid */}
-
                 <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-2 xl:grid-cols-3 xl:grid-rows-2">
                     <div className="flex flex-col row-span-2 items-center justify-center bg-black/20 rounded-lg p-4">
-
+                        {/* Equipment image */}
                         <div className="bg-black/20 rounded-lg flex flex-col items-center justify-center w-full aspect-square">
                             {tile.equipment.icon && <tile.equipment.icon className="w-20 h-20 mb-4 text-white" />}                            
                         </div>
-
+                        {/* Equipment description */}
                         <div className="w-full mt-4 p-2 text-white">
-                            <h3 className="text-xl mb-2 select-none font-semibold">Why to use it?</h3>
-                            <p className="select-none">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam elementum vulputate turpis, at lacinia ipsum pulvinar at. Sed ultricies bibendum vulputate. Ut vel dapibus orci. Nam non elementum leo.</p>   
+                            <h3 className="text-xl mb-2 select-none font-semibold">Description</h3>
+                            <p className="select-none">{tile.equipment.description}</p>   
                         </div>
                     </div>
+
                     <div className="rounded-lg p-4 overflow-y-auto row-span-2 text-white bg-black/20">
-                        <h3 className="text-xl mb-2 select-none font-semibold">Description</h3>
-                        <p className="select-none">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam elementum vulputate turpis, at lacinia ipsum pulvinar at. Sed ultricies bibendum vulputate. Ut vel dapibus orci. Nam non elementum leo. Vestibulum bibendum magna at tellus tristique, eget congue tellus varius. Morbi finibus, quam at posuere ultricies, magna ipsum cursus massa, sed porta dui tortor sit amet tortor. Vestibulum diam nisi, efficitur aliquam est nec, condimentum sollicitudin dui.</p>
+                        {/* Benefits */}
+                        <h3 className="text-xl mb-2 select-none font-semibold">Why to use it?</h3>
+                            <ul className="list-disc list-outside pl-5 space-y-2">
+                                {tile.equipment.benefits?.map((benefit: string, idx: number) => (
+                                    <li key={idx}>{benefit}</li>
+                                ))}
+                            </ul>
                     </div>
+                    
                     <div className="rounded-lg p-4 overflow-y-auto text-white bg-black/20">
+                        {/* Muscles trained */}
                         <h3 className="text-xl mb-2 select-none font-semibold">Muscles trained</h3>
-                        <ul className="list-disc list-inside select-none">
-                            <li>Bum</li>
-                            <li>Toes</li>
-                            <li>Forehead</li>
+                        <ul className="list-disc list-outside pl-5 space-y-2">
+                            {tile.equipment.musclesTargeted?.map((muscle: string, idx: number) => (
+                                <li key={idx}>{muscle}</li>
+                            ))}
                         </ul>
                     </div>
                     
@@ -49,7 +55,7 @@ function MachineModal({ tile, onClose }: { tile: TileProps, onClose: () => void 
                             <iframe
                                 width="100%"
                                 height="100%"
-                                src="https://www.youtube.com/embed/dQw4w9WgXcQ?list=RDdQw4w9WgXcQ&start_radio=1&autoplay=1"
+                                src={tile.equipment.videoUrl}
                                 title=""
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
