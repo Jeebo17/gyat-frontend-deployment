@@ -98,8 +98,6 @@ This will start the application at `http://localhost:5173` (or another port if 5
 
 ⚠️ **CRITICAL RULE:** Never push code directly to the `main` branch. Always use a separate branch for your changes.
 
-
-
 ### Step 1: Create a New Branch
 Before you write a single line of code:
 1.  In VS Code, open the Source Control panel by clicking the branch icon on the left sidebar.
