@@ -1,5 +1,5 @@
 import '../styles/App.scss';
-import Loading from './Loading';
+import { LoadingPage } from '../pages';
 import InteractiveMap from '../components/InteractiveMap';
 import { useState, useEffect } from 'react';
 import Dock from '../components/Dock';
@@ -17,7 +17,7 @@ function HomePage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-bg-primary text-text-primary transition-colors duration-300">
-                <Loading />
+                <LoadingPage />
             </div>
         );
     }

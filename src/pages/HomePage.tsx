@@ -59,7 +59,7 @@ const backgrounds = [
     )
 ];
 
-function Home () {
+function HomePage () {
     const [backgroundIndex, setBackgroundIndex] = useState(0);
     const [enableSplashCursor, setEnableSplashCursor] = useState(false);
 
@@ -131,4 +131,4 @@ function Home () {
     );
 }
 
-export default Home;
+export default HomePage;
