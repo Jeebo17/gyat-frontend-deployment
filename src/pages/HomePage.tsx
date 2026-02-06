@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
 import { IoMapOutline, IoFitnessOutline, IoLocationOutline, IoTimeOutline } from 'react-icons/io5';
 import ShinyText from '../components/effects/ShinyText';
+import Silk from '../backgrounds/Silk';
+
+
 
 function HomePage() {
     const navigate = useNavigate();
@@ -32,14 +35,25 @@ function HomePage() {
     ];
 
     return (
-        <div className="min-h-screen bg-bg-primary text-text-primary transition-colors duration-300 select-none">
+        <div className="min-h-screen text-text-primary transition-colors duration-300 select-none">
             <Dock
                 panelHeight={68}
                 baseItemSize={50}
                 magnification={70}
             />
 
-            <div className="flex flex-row items-center justify-center h-full w-full" style={{ minHeight: '100vh' }}>
+            <div className="absolute w-full h-full top-0 left-0 overflow-hidden -z-10">
+                <Silk
+                    speed={1}
+                    scale={1}
+                    color="#48454d"
+                    noiseIntensity={1.5}
+                    rotation={0}
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent to-bg-primary"></div>
+            </div>
+            
+            <div className="relative flex flex-row items-center justify-center h-full w-full" style={{ minHeight: '100vh' }}>
                 <div className="max-w-4xl mx-auto text-center">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -82,8 +96,8 @@ function HomePage() {
                     </motion.div>
                 </div>
 
-                <div className="px-6 pb-20">
-                    <div className="max-w-5xl mx-auto">
+                <div className="px-6">
+                    <div className="max-w-4xl mx-auto px-4">
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
