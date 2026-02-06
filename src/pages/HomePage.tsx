@@ -1,132 +1,122 @@
 import '../styles/App.scss';
-import SplitText from '../components/effects/SplitText';
-import ElectricBorder from '../components/effects/ElectricBorder';
 import Dock from '../components/Dock';
-import SplashCursor from '../components/effects/SplashCursor'
-import Silk from '../backgrounds/Silk';
-import FloatingLines from '../backgrounds/FloatingLines';
-import ColorBends from '../backgrounds/ColorBends';
-import Iridescence from '../backgrounds/Iridescence';
-import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router';
+import { motion } from 'framer-motion';
+import { IoMapOutline, IoFitnessOutline, IoLocationOutline, IoTimeOutline } from 'react-icons/io5';
+import ShinyText from '../components/effects/ShinyText';
 
-import { useMemo } from 'react';
+function HomePage() {
+    const navigate = useNavigate();
 
-const backgrounds = [
-    () => (
-        <div></div>
-    ),
-    () => (
-        <Silk
-            speed={5}
-            scale={1}
-            color="#7B7481"
-            noiseIntensity={1.5}
-            rotation={0}
-        />
-    ),
-    () => (
-        <FloatingLines 
-            enabledWaves={['top', 'middle', 'bottom']}
-            lineCount={[5, 7, 5]}
-            lineDistance={[8, 6, 4]}
-            bendRadius={5.0}
-            bendStrength={-0.5}
-            interactive={true}
-            parallax={true}
-        />
-    ),
-    () => (
-        <ColorBends
-            colors={["#ff5c7a", "#8a5cff", "#00ffd1"]}
-            rotation={0}
-            speed={0.2}
-            scale={1}
-            frequency={1}
-            warpStrength={1}
-            mouseInfluence={1}
-            parallax={0.5}
-            noise={0.1}
-            transparent
-        />
-    ),
-    () => (
-        <Iridescence
-            color={[0.5, 0.5, 0.5]}
-            mouseReact={false}
-            amplitude={0.1}
-            speed={1.0}
-        />
-    )
-];
-
-function HomePage () {
-    const [backgroundIndex, setBackgroundIndex] = useState(0);
-    const [enableSplashCursor, setEnableSplashCursor] = useState(false);
-
-    useEffect(() => {
-        setBackgroundIndex(0);
-    }, []);
-
-    const background = useMemo(() => {
-        const BackgroundComponent = backgrounds[backgroundIndex];
-        return <BackgroundComponent />;
-    }, [backgroundIndex]);
+    const features = [
+        {
+            icon: <IoMapOutline className="w-8 h-8" />,
+            title: "Interactive Gym Map",
+            description: "Navigate your gym with an interactive floor plan"
+        },
+        {
+            icon: <IoFitnessOutline className="w-8 h-8" />,
+            title: "Equipment Tracking",
+            description: "Find and track gym machines in real-time"
+        },
+        {
+            icon: <IoLocationOutline className="w-8 h-8" />,
+            title: "Easy Location",
+            description: "Quickly locate any equipment on the floor"
+        },
+        {
+            icon: <IoTimeOutline className="w-8 h-8" />,
+            title: "Availability Status",
+            description: "Check machine availability before heading over"
+        }
+    ];
 
     return (
-        <div className="min-h-screen bg-bg-primary text-text-primary duration-300 items-center justify-center flex flex-col select-none">
-            <div className="absolute w-full h-full top-0 left-0 overflow-hidden">
-                {background}
-            </div>
-
-            {enableSplashCursor && <SplashCursor />}
-
+        <div className="min-h-screen bg-bg-primary text-text-primary transition-colors duration-300 select-none">
             <Dock
                 panelHeight={68}
                 baseItemSize={50}
                 magnification={70}
             />
 
-            <div className="flex items-center justify-center px-4">
-                <ElectricBorder
-                    color="#7df9ff"
-                    speed={1}
-                    chaos={0.5}
-                    thickness={2}
-                    style={{ borderRadius: 16 }}
-                >
-                    <div className="w-full h-full p-10">
-                        <SplitText
-                            text="Welcome to the Gyat (The Gym App & Tracker!)"
-                            className="text-4xl font-bold text-center"
-                            delay={70}
-                            duration={0.6}
-                            ease="elastic.out(1, 0.3)"
-                            splitType="chars"
-                            from={{ opacity: 0, y: 40 }}
-                            to={{ opacity: 1, y: 0 }}
-                            threshold={0.1}
-                            rootMargin="-100px"
-                            textAlign="center"
-                        />
+            <div className="flex flex-row items-center justify-center h-full w-full" style={{ minHeight: '100vh' }}>
+                <div className="max-w-4xl mx-auto text-center">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6 }}
+                    >
+                        <h1 className="text-5xl md:text-6xl font-bold mb-4">
+                            <motion.div
+                                whileHover={{ rotate: 36000, scale: 20 }}
+                                transition={{ repeat: 2, duration: 1, ease: "linear" }}
+                            >
+                                <ShinyText 
+                                    text="GYAT" 
+                                    disabled={false} 
+                                    speed={2}
+                                    className='custom-class' 
+                                />
+                            </motion.div>
+                        </h1>
+                        <p className="text-xl md:text-2xl text-text-secondary font-medium mb-2">
+                            The Gym App & Tracker
+                        </p>
+                        <p className="text-text-tertiary max-w-xl mx-auto mt-4">
+                            Navigate your gym smarter. Find equipment, track availability, and optimise your workout experience.
+                        </p>
+                    </motion.div>
 
-                        <p style={{ margin: '6px 0 0', opacity: 0.8 }}>GYAT DAMN</p>
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="mt-10"
+                    >
+                        <button
+                            onClick={() => navigate('/map')}
+                            className="px-8 py-4 bg-accent-primary text-white font-semibold rounded-xl hover:bg-accent-hover transition-colors duration-200 shadow-lg hover:shadow-xl"
+                        >
+                            Open Gym Map
+                        </button>
+                    </motion.div>
+                </div>
+
+                <div className="px-6 pb-20">
+                    <div className="max-w-5xl mx-auto">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.6, delay: 0.3 }}
+                            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                        >
+                            {features.map((feature, index) => (
+                                <motion.div
+                                    key={index}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
+                                    className="p-6 bg-bg-secondary rounded-2xl border-2 border-neutral-700 hover:border-neutral-600 transition-colors duration-200"
+                                >
+                                    <div className="flex items-start gap-4">
+                                        <div className="p-3 bg-bg-tertiary rounded-xl text-accent-primary">
+                                            {feature.icon}
+                                        </div>
+                                        <div>
+                                            <h3 className="text-lg font-semibold mb-1">
+                                                {feature.title}
+                                            </h3>
+                                            <p className="text-text-secondary text-sm">
+                                                {feature.description}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </motion.div>
                     </div>
-                </ElectricBorder>
+                </div>
             </div>
-
-            <div className="absolute bottom-4 left-4 text-lg text-primary select-none opacity-50 cursor-pointer hover:opacity-75 transition-all" onClick={() => {
-                const nextIndex = (backgroundIndex + 1) % backgrounds.length;
-                setBackgroundIndex(nextIndex);
-            }}>
-                Change backgrounds
-            </div>
-
-            <div className="absolute bottom-4 right-4 text-lg text-primary select-none opacity-50 cursor-pointer hover:opacity-75 transition-all" onClick={() => {
-                setEnableSplashCursor(!enableSplashCursor);
-            }}>
-                {enableSplashCursor ? "Disable" : "Enable"} Splash Cursor
-            </div>
-
         </div>
     );
 }

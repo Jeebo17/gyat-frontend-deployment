@@ -3,7 +3,7 @@ import { TileProps } from "../types/tile";
 
 function MachineModal({ tile, onClose }: { tile: TileProps, onClose: () => void }) {
     return (
-        <div className="fixed inset-0 flex items-center justify-center z-40 cursor-pointer" onClick={onClose}>
+        <div className="fixed inset-0 flex items-center justify-center z-40 cursor-pointer select-none" onClick={onClose}>
             <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm select-none"></div>
 
             <div
