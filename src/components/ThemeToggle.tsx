@@ -1,4 +1,4 @@
-import { Moon, Sun } from 'lucide-react';
+import { IoSunnyOutline, IoMoonOutline } from "react-icons/io5";
 import { useTheme } from '../context/ThemeContext';
 
 export function ThemeToggle() {
@@ -12,9 +12,9 @@ export function ThemeToggle() {
         aria-label="Toggle theme"
       >
         {theme === 'light' ? (
-          <Moon size={20} />
+          <IoMoonOutline size={20} data-testid="io5-moon-outline" />
         ) : (
-          <Sun size={20} />
+          <IoSunnyOutline size={20} data-testid="io5-sunny-outline" />
         )}
       </button>
     </div>

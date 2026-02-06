@@ -1,12 +1,10 @@
-import { useState } from 'react'
-
 interface ToggleSwitchProps {
     checked: boolean;
     onChange: (checked: boolean) => void;
     highlight?: boolean;
 }
 
-const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ checked, onChange, highlight = true }) => {
+const ToggleSwitch = ({ checked, onChange, highlight = true }: ToggleSwitchProps) => {
     return (
         <label className='flex cursor-pointer select-none items-center'>
             <div className='relative'>
@@ -15,6 +13,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ checked, onChange, highligh
                     checked={checked}
                     onChange={() => onChange(!checked)}
                     className='sr-only'
+                    aria-label="Toggle switch"
                 />
                 <div
                     className={`box block h-8 w-14 rounded-full ${
@@ -24,7 +23,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ checked, onChange, highligh
                     }`}
                 ></div>
                 <div
-                    className={`absolute left-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-text-primary transition ${
+                    className={`absolute left-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-text-primary transition duration-500 ${
                         checked ? 'translate-x-full' : ''
                     }`}
                 ></div>

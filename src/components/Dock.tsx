@@ -99,7 +99,7 @@ type DockLabelProps = {
     isHovered?: MotionValue<number>;
 };
 
-function DockLabel({ children, className = '', isHovered }: DockLabelProps) {
+export function DockLabel({ children, className = '', isHovered }: DockLabelProps) {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
@@ -154,19 +154,19 @@ export default function Dock({
 
     const items = [
         {
-            icon: selectedPage === "/" ? <IoHome /> : <IoHomeOutline />,
+            icon: selectedPage === "/" ? <IoHome data-testid="io5-home" /> : <IoHomeOutline data-testid="io5-home-outline" />,
             label: 'Home',
             path: '/',
             onClick: () => navigate("/")
         },
         {
-            icon: selectedPage.endsWith("/map") ? <IoMap /> : <IoMapOutline />,
+            icon: selectedPage.endsWith("/map") ? <IoMap data-testid="io5-map" /> : <IoMapOutline data-testid="io5-map-outline" />,
             label: 'Map',
             path: '/map',
             onClick: () => navigate("/map")
         },
         {
-            icon: selectedPage.endsWith("/settings") ? <IoSettings /> : <IoSettingsOutline />,
+            icon: selectedPage.endsWith("/settings") ? <IoSettings data-testid="io5-settings" /> : <IoSettingsOutline data-testid="io5-settings-outline" />,
             label: 'Settings',
             path: '/settings',
             onClick: () => navigate("/settings")

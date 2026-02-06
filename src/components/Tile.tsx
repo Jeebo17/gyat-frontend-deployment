@@ -186,7 +186,6 @@ function Tile({
                 select-none
                 ${editMode ? "cursor-move" : ""}
                 ${canHover && !editMode ? "cursor-pointer hover:brightness-110 hover:border-2 border-text-primary" : ""}
-                ${editMode ? "ring-2 ring-white ring-opacity-50" : ""}
                 ${theme.theme === 'dark' ? 'opacity-100' : 'brightness-90'}
             `}
             style={{
@@ -195,11 +194,10 @@ function Tile({
                 width,
                 height,
                 transform: `rotate(${rotation}deg)`,
-                transitionProperty: "border-color",
-                transitionDuration: "0.075s"
             }}
             onMouseDown={handleMouseDown}
             onClick={!editMode ? onClick : undefined}
+            aria-label={equipment.title}
         >
             <p className="truncate">{equipment.title}</p>
             {equipment.icon && <equipment.icon className="absolute bottom-2 right-2 w-6 h-6 opacity-100" />}
@@ -207,35 +205,38 @@ function Tile({
             {editMode && onUpdate && (
             <div>
                 <div
-                className="absolute top-2 right-2 transform w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
-                onMouseDown={(e) => {
-                    e.stopPropagation();
-                    if (onUpdate) {
-                        onUpdate({ rotation: (rotation + 90) % 360 });
-                    }
-                }}
-                >
-                    <FaArrowRotateRight className="w-5 h-5 text-primary"/>
-                </div>
+                    className="absolute top-2 right-2 transform w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
+                    onMouseDown={(e) => {
+                        e.stopPropagation();
+                        if (onUpdate) {
+                            onUpdate({ width: height, height: width, rotation: rotation });
+                            // onUpdate({ rotation: (rotation + 90) % 360 });
+                        }
+                    }}
+                    >
+                        <FaArrowRotateRight className="w-5 h-5 text-primary"/>
+                    </div>
 
-            <div
-                className="absolute top-2 left-2 transform w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
-                onMouseDown={(e) => {
-                    e.stopPropagation();
-                    if (onUpdate) {
-                        onUpdate({ rotation: (rotation - 90) % 360 });
-                    }
-                }}
-                >
-                    <FaArrowRotateLeft className="w-5 h-5 text-primary"/>
-                </div>
+                {/* Temporary fix to rotation */}
+                {/* <div
+                    className="absolute top-2 left-2 transform w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
+                    onMouseDown={(e) => {
+                        e.stopPropagation();
+                        if (onUpdate) {
+                            onUpdate({ width: height, height: width, rotation: rotation });
+                            onUpdate({ rotation: (rotation - 90) % 360 });
+                        }
+                    }}
+                    >
+                        <FaArrowRotateLeft className="w-5 h-5 text-primary"/>
+                </div> */}
             </div>
             )}
 
             {editMode && onUpdate && resizeHandles.map(({ handle, cursor, className }) => (
                 <div
                     key={handle}
-                    className={`absolute ${className} bg-white rounded-full z-10 hover:bg-blue-400 transition-colors`}
+                    className={`absolute ${className} bg-text-primary rounded-full z-10 hover:bg-blue-400 transition-colors`}
                     style={{ cursor }}
                     onMouseDown={(e) => handleResizeMouseDown(handle, e)}
                 />

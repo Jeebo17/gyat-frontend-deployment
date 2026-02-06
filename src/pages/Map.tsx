@@ -1,5 +1,5 @@
 import '../styles/App.scss';
-import Loading from './Loading';
+import { LoadingPage } from '../pages';
 import InteractiveMap from '../components/InteractiveMap';
 import { useState, useEffect } from 'react';
 import Dock from '../components/Dock';
@@ -17,27 +17,21 @@ function HomePage() {
     if (loading) {
         return (
             <div className="min-h-screen bg-bg-primary text-text-primary transition-colors duration-300">
-                <Loading />
+                <LoadingPage />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-bg-primary text-text-primary transition-colors duration-500 p-8 pr-20">
+        <div className="fixed inset-0 h-full w-full bg-bg-primary text-text-primary transition-colors duration-500 p-4 flex flex-col">
 
-        <Dock
-            panelHeight={68}
-            baseItemSize={50}
-            magnification={70}
-        />
+            <Dock
+                panelHeight={68}
+                baseItemSize={50}
+                magnification={70}
+            />
 
-
-        <div className="flex flex-row items-center gap-10 mb-8">
-            <h1 className="text-3xl font-medium select-none">Interactive Gym Map</h1>
-        </div>
-
-
-        <InteractiveMap />
+            <InteractiveMap />
 
         </div>
     );
