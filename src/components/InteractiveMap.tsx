@@ -173,9 +173,6 @@ function InteractiveMap() {
             </div>
 
             {selectedMachine && <MachineModal tile={selectedMachine} onClose={() => setSelectedMachine(null)} />}
-
-
-
         </div>
     );
 }
