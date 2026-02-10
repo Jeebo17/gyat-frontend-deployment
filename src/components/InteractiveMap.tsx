@@ -12,12 +12,50 @@ import { isAdminTEST } from "../services/isAdmin";
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
 const GRID_SIZE = 20;
+const CELL_SIZE = 200; // spatial hash cell size (px)
+
+const rectanglesOverlap = (a: TileProps, b: TileProps) => {
+    const aRight = a.x + a.width;
+    const aBottom = a.y + a.height;
+    const bRight = b.x + b.width;
+    const bBottom = b.y + b.height;
+
+    // Edges touching are allowed; overlap requires positive shared area
+    return a.x < bRight && aRight > b.x && a.y < bBottom && aBottom > b.y;
+};
+
+const getCellsForTile = (tile: TileProps, cellSize = CELL_SIZE) => {
+    const cells: string[] = [];
+    const startCol = Math.floor(tile.x / cellSize);
+    const endCol = Math.floor((tile.x + tile.width) / cellSize);
+    const startRow = Math.floor(tile.y / cellSize);
+    const endRow = Math.floor((tile.y + tile.height) / cellSize);
+
+    for (let col = startCol; col <= endCol; col++) {
+        for (let row = startRow; row <= endRow; row++) {
+            cells.push(`${col}:${row}`);
+        }
+    }
+    return cells;
+};
+
+const buildSpatialIndex = (tiles: TileProps[]) => {
+    const index = new Map<string, TileProps[]>();
+    tiles.forEach(tile => {
+        getCellsForTile(tile).forEach(cell => {
+            if (!index.has(cell)) index.set(cell, []);
+            index.get(cell)!.push(tile);
+        });
+    });
+    return index;
+};
 
 function InteractiveMap() {
     const [selectedMachine, setSelectedMachine] = useState<TileProps | null>(null);
     const [editMode, setEditMode] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const [tiles, setTiles] = useState<TileProps[]>(getInitialTiles());
+    const spatialIndexRef = useRef<Map<string, TileProps[]>>(buildSpatialIndex(getInitialTiles()));
     const [snapToGrid, setSnapToGrid] = useState(true);
     const [gridSize, setGridSize] = useState(GRID_SIZE);
     const [scale, setScale] = useState(1);
@@ -79,9 +117,36 @@ function InteractiveMap() {
     const snap = (value: number) => Math.round(value / gridSize) * gridSize;
 
     const updateTile = (id: number, updates: Partial<TileProps>) => {
-        setTiles(prev =>
-            prev.map(t => t.id === id ? { ...t, ...updates } : t)
-        );
+        setTiles(prev => {
+            const current = prev.find(t => t.id === id);
+            if (!current) return prev;
+
+            const candidate = { ...current, ...updates } as TileProps;
+
+            const spatialIndex = spatialIndexRef.current;
+            const visited = new Set<number>();
+            let collision = false;
+
+            getCellsForTile(candidate).some(cell => {
+                const bucket = spatialIndex.get(cell);
+                if (!bucket) return false;
+                for (const tile of bucket) {
+                    if (tile.id === id || visited.has(tile.id)) continue;
+                    visited.add(tile.id);
+                    if (rectanglesOverlap(candidate, tile)) {
+                        collision = true;
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            if (collision) return prev;
+
+            const nextTiles = prev.map(t => t.id === id ? candidate : t);
+            spatialIndexRef.current = buildSpatialIndex(nextTiles);
+            return nextTiles;
+        });
     };
 
     return (
