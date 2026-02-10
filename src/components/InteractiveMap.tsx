@@ -3,7 +3,7 @@ import { TileProps } from "../types/tile";
 import { useState, useRef, useEffect } from "react";
 import MachineModal from '../components/MachineModal';
 import ToggleSwitch from "./ToggleSwitch";
-import { getInitialTiles } from "../services/tileService";
+import { getFloorsTiles, getInitialTiles } from "../services/tileService";
 import ZoomControls from "./ZoomControls";
 import { useTheme } from "../context/ThemeContext";
 
@@ -54,6 +54,7 @@ function InteractiveMap() {
     const [selectedMachine, setSelectedMachine] = useState<TileProps | null>(null);
     const [editMode, setEditMode] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
+    const [floor, setFLoor] = useState<number>(0);
     const [tiles, setTiles] = useState<TileProps[]>(getInitialTiles());
     const spatialIndexRef = useRef<Map<string, TileProps[]>>(buildSpatialIndex(getInitialTiles()));
     const [snapToGrid, setSnapToGrid] = useState(true);
@@ -62,6 +63,9 @@ function InteractiveMap() {
     const [autoScale, setAutoScale] = useState(true);
 
     const { theme } = useTheme();
+    const floorButtonClasses = `w-7 h-7 rounded-md shadow flex items-center justify-center bg-text-primary transition duration-300 ${
+        theme === "dark" ? "text-black" : "text-white"
+    } disabled:opacity-50`;
 
     const [userIsAdmin, setUserIsAdmin] = useState(false);
 
@@ -72,6 +76,10 @@ function InteractiveMap() {
         }
         checkAdmin();
     }, []);
+
+    useEffect(() => {
+        setTiles(floor === 0 ? getInitialTiles() : getFloorsTiles(floor))
+    }, [floor])
 
     useEffect(() => {
         setGridSize(snapToGrid ? GRID_SIZE : 1);
@@ -113,6 +121,9 @@ function InteractiveMap() {
     const resetZoom = () => {
         setAutoScale(true);
     };
+
+    const decrementFloor = () => setFLoor(prev => Math.max(0, prev - 1));
+    const incrementFloor = () => setFLoor(prev => prev + 1);
 
     const snap = (value: number) => Math.round(value / gridSize) * gridSize;
 
@@ -158,7 +169,30 @@ function InteractiveMap() {
                     height: "min(95vh, " + BASE_HEIGHT + "px)",
                     backgroundColor: "transparent",
                 }}
+
+                
             >
+                <div className="absolute top-4 left-4 z-10 flex flex-row items-center gap-2">
+                    <span className="text-sm select-none">Floor</span>
+                    <button
+                        type="button"
+                        className={floorButtonClasses}
+                        onClick={decrementFloor}
+                        disabled={floor <= 0}
+                        aria-label="Previous floor"
+                    >
+                        -
+                    </button>
+                    <span className="text-sm select-none w-6 text-center">{floor + 1}</span>
+                    <button
+                        type="button"
+                        className={floorButtonClasses}
+                        onClick={incrementFloor}
+                        aria-label="Next floor"
+                    >
+                        +
+                    </button>
+                </div>
                 {userIsAdmin && (
                     <>
                         <div className="absolute top-4 left-4 z-10 flex flex-row items-center gap-4">
