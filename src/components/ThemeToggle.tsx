@@ -5,16 +5,16 @@ export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="fixed top-4 right-4 z-50">
+    <div className="z-50">
       <button
         onClick={toggleTheme}
         className="p-2 rounded-lg transition-colors bg-bg-secondary hover:bg-bg-tertiary text-text-primary"
         aria-label="Toggle theme"
       >
         {theme === 'light' ? (
-          <IoMoonOutline size={20} data-testid="io5-moon-outline" />
+          <IoMoonOutline size={30} data-testid="io5-moon-outline" />
         ) : (
-          <IoSunnyOutline size={20} data-testid="io5-sunny-outline" />
+          <IoSunnyOutline size={30} data-testid="io5-sunny-outline" />
         )}
       </button>
     </div>
