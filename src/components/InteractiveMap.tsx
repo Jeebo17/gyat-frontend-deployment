@@ -172,42 +172,43 @@ function InteractiveMap() {
 
                 
             >
-                <div className="absolute top-4 left-4 z-10 flex flex-row items-center gap-2">
-                    <span className="text-sm select-none">Floor</span>
-                    <button
-                        type="button"
-                        className={floorButtonClasses}
-                        onClick={decrementFloor}
-                        disabled={floor <= 0}
-                        aria-label="Previous floor"
-                    >
-                        -
-                    </button>
-                    <span className="text-sm select-none w-6 text-center">{floor + 1}</span>
-                    <button
-                        type="button"
-                        className={floorButtonClasses}
-                        onClick={incrementFloor}
-                        aria-label="Next floor"
-                    >
-                        +
-                    </button>
-                </div>
-                {userIsAdmin && (
-                    <>
-                        <div className="absolute top-4 left-4 z-10 flex flex-row items-center gap-4">
-                            <ToggleSwitch checked={editMode} onChange={(checked) => { setEditMode(checked); setSnapToGrid(true); }} />
-                            {!editMode && <span className="text-sm select-none">Edit Mode</span>}
-                        </div>
-
-                        {editMode && 
-                            <div className="absolute top-4 right-4 z-10 flex flex-row items-center gap-4">
-                                <span className="text-sm select-none">Snap to grid</span>             
-                                <ToggleSwitch checked={snapToGrid} onChange={setSnapToGrid} />
+                <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm select-none">Floor</span>
+                        <button
+                            type="button"
+                            className={floorButtonClasses}
+                            onClick={decrementFloor}
+                            disabled={floor <= 0}
+                            aria-label="Previous floor"
+                        >
+                            -
+                        </button>
+                        <span className="text-sm select-none w-6 text-center">{floor + 1}</span>
+                        <button
+                            type="button"
+                            className={floorButtonClasses}
+                            onClick={incrementFloor}
+                            aria-label="Next floor"
+                        >
+                            +
+                        </button>
+                    </div>
+                    {userIsAdmin && (
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                {!editMode && <span className="text-sm select-none">Edit Mode</span>}
+                                <ToggleSwitch checked={editMode} onChange={(checked) => { setEditMode(checked); setSnapToGrid(true); }} />
                             </div>
-                        }
-                    </>
-                )}
+                            {editMode && (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm select-none">Snap to grid</span>
+                                    <ToggleSwitch checked={snapToGrid} onChange={setSnapToGrid} />
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
 
                 <ZoomControls
                     scale={scale}
