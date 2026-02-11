@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useState } from 'react';
 import { IoHomeOutline, IoHome, IoMapOutline, IoMap, IoSettingsOutline, IoSettings } from 'react-icons/io5';
 import { useNavigate } from 'react-router';
 import { ThemeToggle } from './ThemeToggle';
@@ -38,11 +39,15 @@ export default function Header({ className = '' }: HeaderProps) {
             role="banner"
         >
             <nav 
-                className="flex items-center px-8 h-14 border-b border-neutral-800/50 backdrop-blur-xl bg-neutral-950/80"
+                className="flex items-center justify-between pl-8 pr-2 h-14 bg-bg-secondary"
                 role="navigation"
                 aria-label="Main navigation"
             >
                 <div className="flex items-center gap-1">
+                    <h1>
+                        <span className="text-2xl text-text-primary mr-6">GYAT</span>
+                    </h1>
+
                     {items.map((item, index) => (
                         <HeaderItem
                             key={index}
@@ -54,7 +59,7 @@ export default function Header({ className = '' }: HeaderProps) {
                     ))}
                 </div>
 
-                <ThemeToggle />
+                <ThemeToggle header={true} />
             </nav>
         </header>
     );
@@ -68,9 +73,13 @@ type HeaderItemProps = {
 };
 
 function HeaderItem({ icon, label, selected, onClick }: HeaderItemProps) {
+    const [isHovered, setIsHovered] = useState(false);
+
     return (
         <motion.button
             onClick={onClick}
+            onHoverStart={() => setIsHovered(true)}
+            onHoverEnd={() => setIsHovered(false)}
             className={`
                 relative flex items-center gap-2 px-4 h-14
                 transition-colors duration-150
@@ -82,9 +91,13 @@ function HeaderItem({ icon, label, selected, onClick }: HeaderItemProps) {
             disabled={selected}
             aria-current={selected ? 'page' : undefined}
         >
-            <span className="text-md">
+            {/* <motion.div 
+                className="text-md"
+                animate={isHovered && !selected ? { rotate: [0, -20, 20, 0] } : { rotate: 0 }}
+                transition={{ duration: 0.6 }}
+            >
                 {icon}
-            </span>
+            </motion.div> */}
             <span className="text-md font-light tracking-wide">
                 {label}
             </span>

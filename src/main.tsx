@@ -19,7 +19,7 @@ function AppShell() {
       sparkCount={8}
       duration={400}
     >
-      <DropDownMenu />
+      {/* <DropDownMenu /> */}
       <App />
     </ClickSpark>
   );
