@@ -1,4 +1,6 @@
 import { Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
+import useSound from 'use-sound';
 import { 
   Map, 
   HomePage, 
@@ -7,8 +9,15 @@ import {
   LoginPage,
   SignUpPage
 } from './pages';
+import startSound from './assets/sounds/start.mp3';
 
 function App() {
+  const [play] = useSound(startSound, { volume: 0.5 });
+
+  useEffect(() => {
+    play();
+  }, [play]);
+
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />

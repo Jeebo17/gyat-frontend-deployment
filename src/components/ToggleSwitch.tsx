@@ -1,3 +1,6 @@
+import useSound from 'use-sound';
+import popSound from '../assets/sounds/pop.mp3';
+
 interface ToggleSwitchProps {
     checked: boolean;
     onChange: (checked: boolean) => void;
@@ -5,13 +8,18 @@ interface ToggleSwitchProps {
 }
 
 const ToggleSwitch = ({ checked, onChange, highlight = true }: ToggleSwitchProps) => {
+    const [play] = useSound(popSound, { volume: 0.2 });
+
     return (
         <label className='flex cursor-pointer select-none items-center'>
             <div className='relative'>
                 <input
                     type='checkbox'
                     checked={checked}
-                    onChange={() => onChange(!checked)}
+                    onChange={() => {
+                        play();
+                        onChange(!checked);
+                    }}
                     className='sr-only'
                     aria-label="Toggle switch"
                 />

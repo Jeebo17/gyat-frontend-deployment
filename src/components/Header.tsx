@@ -4,6 +4,8 @@ import { IoHomeOutline, IoHome, IoMapOutline, IoMap, IoSettingsOutline, IoSettin
 import { useNavigate } from 'react-router';
 import { ThemeToggle } from './ThemeToggle';
 import { ProfileButton } from './ProfileButton';
+import useSound from 'use-sound';
+import popSound from '../assets/sounds/pop.mp3';
 
 export type HeaderProps = {
     className?: string;
@@ -12,6 +14,7 @@ export type HeaderProps = {
 export default function Header({ className = '' }: HeaderProps) {
     const navigate = useNavigate();
     const selectedPage = window.location.pathname;
+    const [play] = useSound(popSound, { volume: 0.5 });
 
     const items = [
         {
@@ -54,7 +57,10 @@ export default function Header({ className = '' }: HeaderProps) {
                             key={index}
                             icon={item.icon}
                             label={item.label}
-                            onClick={item.onClick}
+                            onClick={() => {
+                                play();
+                                item.onClick();
+                            }}
                             selected={selectedPage === item.path}
                         />
                     ))}
