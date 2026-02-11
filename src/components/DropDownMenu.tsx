@@ -27,6 +27,7 @@ export function DropDownMenu() {
                 <motion.div
                     animate={{ rotate: menuOpen ? 180 : 0 }}
                     transition={{ duration: 0.3 }}
+                    onClick={() => toggleMenu()}
                 >
                     <IoChevronDownOutline size={30} data-testid="io5-chevron-down-outline" />
                 </motion.div>

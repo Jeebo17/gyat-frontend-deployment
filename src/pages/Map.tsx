@@ -2,7 +2,7 @@ import '../styles/App.scss';
 import { LoadingPage } from '../pages';
 import InteractiveMap from '../components/InteractiveMap';
 import { useState, useEffect } from 'react';
-import Dock from '../components/Dock';
+import Header from '../components/Header';
 
 function HomePage() {
     const [loading, setLoading] = useState(true);
@@ -25,11 +25,7 @@ function HomePage() {
     return (
         <div className="fixed inset-0 h-full w-full bg-bg-primary text-text-primary transition-colors duration-500 p-4 flex flex-col">
 
-            <Dock
-                panelHeight={68}
-                baseItemSize={50}
-                magnification={70}
-            />
+            <Header />
 
             <InteractiveMap />
 

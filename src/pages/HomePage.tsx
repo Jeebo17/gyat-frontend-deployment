@@ -1,9 +1,8 @@
 import '../styles/App.scss';
-import Dock from '../components/Dock';
 import { useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
 import { IoMapOutline, IoFitnessOutline, IoLocationOutline, IoTimeOutline } from 'react-icons/io5';
-import ShinyText from '../components/effects/ShinyText';
+import Header from '../components/Header';
 import Silk from '../backgrounds/Silk';
 import { useTheme } from '../context/ThemeContext';
 
@@ -38,11 +37,7 @@ function HomePage() {
 
     return (
         <div className="min-h-screen text-text-primary transition-colors duration-300 select-none">
-            <Dock
-                panelHeight={68}
-                baseItemSize={50}
-                magnification={70}
-            />
+            <Header />
 
             <div className="absolute w-full h-full top-0 left-0 overflow-hidden -z-10">
                 <Silk
