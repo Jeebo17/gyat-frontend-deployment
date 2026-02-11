@@ -2,6 +2,8 @@ import { IoPersonCircleOutline } from "react-icons/io5";
 import { useNavigate } from "react-router";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import useSound from 'use-sound';
+import popSound from '../assets/sounds/pop.mp3';
 
 interface ProfileButtonProps {
     header?: boolean;
@@ -10,12 +12,16 @@ interface ProfileButtonProps {
 export function ProfileButton({ header = false }: ProfileButtonProps) {
     const navigate = useNavigate();
     const [isHovered, setIsHovered] = useState(false);
+    const [play] = useSound(popSound, { volume: 0.5 });
 
     return (
         <div className="z-50">
             {header ? (
                 <button
-                    onClick={() => navigate('/login')}
+                    onClick={() => {
+                        play();
+                        navigate('/login');
+                    }}
                     className="p-2 text-text-primary flex items-center"
                     aria-label="Profile"
                     onMouseEnter={() => setIsHovered(true)}
@@ -31,7 +37,10 @@ export function ProfileButton({ header = false }: ProfileButtonProps) {
                 </button>
             ) : (
                 <button
-                    onClick={() => navigate('/login')}
+                    onClick={() => {
+                        play();
+                        navigate('/login');
+                    }}
                     className="p-2 rounded-lg transition-colors bg-bg-secondary hover:bg-bg-tertiary text-text-primary flex items-center"
                     aria-label="Profile"
                     onMouseEnter={() => setIsHovered(true)}
