@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { IoHomeOutline, IoHome, IoMapOutline, IoMap, IoSettingsOutline, IoSettings } from 'react-icons/io5';
 import { useNavigate } from 'react-router';
 import { ThemeToggle } from './ThemeToggle';
+import { ProfileButton } from './ProfileButton';
 
 export type HeaderProps = {
     className?: string;
@@ -60,6 +61,7 @@ export default function Header({ className = '' }: HeaderProps) {
                 </div>
 
                 <ThemeToggle header={true} />
+                <ProfileButton header={true} />
             </nav>
         </header>
     );
