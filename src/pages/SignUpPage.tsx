@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import Header from '../components/Header';
 
 function SignUpPage() {
     const [name, setName] = useState('');
@@ -15,6 +16,8 @@ function SignUpPage() {
 
     return (
         <div className="min-h-screen bg-bg-primary text-text-primary flex items-center justify-center">
+            <Header />
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
