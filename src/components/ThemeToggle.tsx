@@ -22,8 +22,8 @@ export function ThemeToggle({ header = false }: ThemeToggleProps) {
           onMouseLeave={() => setIsHovered(false)}
         >
           <motion.div
-            animate={isHovered ? { rotate: [0, -20, 20, 0], scale: 1.1 } : { rotate: 0, scale: 1 }}
-            transition={{ duration: 0.6 }}
+            animate={isHovered ? { rotate: [0, -10, 10, 0], scale: 1.1 } : { rotate: 0, scale: 1 }}
+            transition={{ duration: 0.4 }}
             style={{ display: 'flex', alignItems: 'center' }}
           >
             {theme === 'light' ? (
@@ -42,8 +42,8 @@ export function ThemeToggle({ header = false }: ThemeToggleProps) {
           onMouseLeave={() => setIsHovered(false)}
         >
           <motion.div
-            animate={isHovered ? { rotate: [0, -20, 20, 0], scale: 1.1 } : { rotate: 0, scale: 1 }}
-            transition={{ duration: 0.6 }}
+            animate={isHovered ? { rotate: [0, -10, 10, 0], scale: 1.1 } : { rotate: 0, scale: 1 }}
+            transition={{ duration: 0.4 }}
             style={{ display: 'flex', alignItems: 'center' }}
           >
             {theme === 'light' ? (

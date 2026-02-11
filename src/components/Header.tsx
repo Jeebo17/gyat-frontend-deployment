@@ -60,8 +60,10 @@ export default function Header({ className = '' }: HeaderProps) {
                     ))}
                 </div>
 
-                <ThemeToggle header={true} />
-                <ProfileButton header={true} />
+                <div className="flex items-center gap-2">
+                    <ThemeToggle header={true} />
+                    <ProfileButton header={true} />
+                </div>
             </nav>
         </header>
     );

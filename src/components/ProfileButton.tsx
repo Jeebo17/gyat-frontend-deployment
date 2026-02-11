@@ -22,8 +22,8 @@ export function ProfileButton({ header = false }: ProfileButtonProps) {
                     onMouseLeave={() => setIsHovered(false)}
                 >
                     <motion.div
-                        animate={isHovered ? { rotate: [0, -20, 20, 0], scale: 1.1 } : { rotate: 0, scale: 1 }}
-                        transition={{ duration: 0.6 }}
+                        animate={isHovered ? { rotate: [0, -10, 10, 0], scale: 1.1 } : { rotate: 0, scale: 1 }}
+                        transition={{ duration: 0.4 }}
                         style={{ display: 'flex', alignItems: 'center' }}
                     >
                         <IoPersonCircleOutline size={30} data-testid="io5-person-circle-outline" />
@@ -38,8 +38,8 @@ export function ProfileButton({ header = false }: ProfileButtonProps) {
                     onMouseLeave={() => setIsHovered(false)}
                 >
                     <motion.div
-                        animate={isHovered ? { rotate: [0, -20, 20, 0], scale: 1.1 } : { rotate: 0, scale: 1 }}
-                        transition={{ duration: 0.6 }}
+                        animate={isHovered ? { rotate: [0, -10, 10, 0], scale: 1.1 } : { rotate: 0, scale: 1 }}
+                        transition={{ duration: 0.4 }}
                         style={{ display: 'flex', alignItems: 'center' }}
                     >
                         <IoPersonCircleOutline size={30} data-testid="io5-person-circle-outline" />
