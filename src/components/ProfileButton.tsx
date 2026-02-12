@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import useSound from 'use-sound';
 import popSound from '../assets/sounds/pop.mp3';
+import { useAuth } from "../context/AuthContext";
 
 interface ProfileButtonProps {
     header?: boolean;
@@ -13,17 +14,24 @@ export function ProfileButton({ header = false }: ProfileButtonProps) {
     const navigate = useNavigate();
     const [isClicking, setIsClicking] = useState(false);
     const [play] = useSound(popSound, { volume: 0.5 });
+    const { isLoggedIn } = useAuth();
+
+    const handleClick = () => {
+        play();
+        if (isLoggedIn) { 
+            navigate('/profile'); 
+        } else { 
+            navigate('/login'); 
+        } 
+        setIsClicking(true); 
+        setTimeout(() => setIsClicking(false), 400); 
+    };
 
     return (
         <div className="z-50">
             {header ? (
                 <button
-                    onClick={() => {
-                        play();
-                        navigate('/login');
-                        setIsClicking(true);
-                        setTimeout(() => setIsClicking(false), 400);
-                    }}
+                    onClick={() => {handleClick(); }}
                     className="p-2 text-text-primary flex items-center"
                     aria-label="Profile"
                 >
@@ -37,12 +45,7 @@ export function ProfileButton({ header = false }: ProfileButtonProps) {
                 </button>
             ) : (
                 <button
-                    onClick={() => {
-                        play();
-                        navigate('/login');
-                        setIsClicking(true);
-                        setTimeout(() => setIsClicking(false), 400);
-                    }}
+                    onClick={() => {handleClick(); }}
                     className="p-2 rounded-lg transition-colors bg-bg-secondary hover:bg-bg-tertiary text-text-primary flex items-center"
                     aria-label="Profile"
                 >

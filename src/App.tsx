@@ -7,7 +7,8 @@ import {
   NotFoundPage, 
   SettingsPage, 
   LoginPage,
-  SignUpPage
+  SignUpPage,
+  ProfilePage
 } from './pages';
 import startSound from './assets/sounds/start.mp3';
 
@@ -26,6 +27,7 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />
       <Route path="*" element={<NotFoundPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
     </Routes>
   );
 }

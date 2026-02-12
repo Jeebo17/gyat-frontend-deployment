@@ -5,6 +5,7 @@ import SettingsPage from "./SettingsPage";
 import LoadingPage from "./LoadingPage";
 import LoginPage from "./LoginPage";
 import SignUpPage from "./SignUpPage";
+import ProfilePage from "./ProfilePage";
 
 export {
     HomePage,
@@ -13,5 +14,6 @@ export {
     SettingsPage,
     LoadingPage,
     LoginPage,
-    SignUpPage
+    SignUpPage,
+    ProfilePage
 }

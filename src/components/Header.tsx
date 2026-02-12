@@ -70,7 +70,7 @@ export default function Header({ className = '' }: HeaderProps) {
 
                 <div className="flex items-center gap-2">
                     {isLoggedIn && userName && (
-                        <span className="text-sm text-text-secondary">Hi, {userName}</span>
+                        <span className="text-sm text-text-secondary mr-2">Hi, {userName}</span>
                     )}
                     <ThemeToggle header={true} />
                     <ProfileButton header={true} />

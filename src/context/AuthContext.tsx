@@ -37,14 +37,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const value = useMemo<AuthContextValue>(() => ({
         ...state,
         login: (userName: string, isAdmin = false) => {
-        const next = { isLoggedIn: true, isAdmin, userName };
-        localStorage.setItem('auth', JSON.stringify(next));
-        setState(next);
+            const next = { isLoggedIn: true, isAdmin, userName };
+            localStorage.setItem('auth', JSON.stringify(next));
+            setState(next);
         },
         logout: () => {
-        const next = { isLoggedIn: false, isAdmin: false, userName: '' };
-        localStorage.setItem('auth', JSON.stringify(next));
-        setState(next);
+            const next = { isLoggedIn: false, isAdmin: false, userName: '' };
+            localStorage.setItem('auth', JSON.stringify(next));
+            setState(next);
         }
     }), [state]);
 
