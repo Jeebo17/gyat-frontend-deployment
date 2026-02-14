@@ -14,7 +14,7 @@ function MachineModal({ tile, onClose }: { tile: TileProps, onClose: () => void 
                     <RxCross2 className="w-12 h-12"/>
                 </button>
 
-                <h1 className="text-3xl select-none text-white flex-shrink-0">{tile.equipment.title}</h1>
+                <h1 className="text-3xl select-none text-white flex-shrink-0">{tile.equipment.name}</h1>
 
                 <div className="grid grid-cols-1 gap-6 mt-6 md:grid-cols-2 xl:grid-cols-3 xl:grid-rows-2 flex-1 min-h-0">
                     <div className="flex flex-col row-span-2 items-center justify-center bg-black/20 rounded-lg p-4 min-h-0">

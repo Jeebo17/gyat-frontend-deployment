@@ -16,6 +16,13 @@ export interface GymComponentDTO {
     description: string;
     safetyInfo: string;
     additionalInfo: string;
+
+    // Fields the frontend needs to send but the backend does NOT yet accept
+    // TODO: Ask dan to implement
+    // colour: string;           // Display colour for the tile (e.g. "red", "#ff0000")
+    // videoUrl: string;         // URL to an equipment demo video (currently only on Exercise entity)
+    // musclesTargeted: string[];// List of muscle names (currently only via Exercise → Muscle join)
+    // benefits: string[];       // List of benefit descriptions (does not exist in backend at all)
 }
 
 export interface GymFloorDTO {
@@ -44,6 +51,10 @@ export interface CreateComponentRequest {
     height: number;
     rotation: number;
     additionalInfo?: string;
+
+    // Fields the frontend needs to send but the backend does NOT yet accept
+    // TODO: Ask dan to implement
+    // colour: string;
 }
 
 export interface UpdateComponentRequest {
@@ -53,6 +64,10 @@ export interface UpdateComponentRequest {
     height: number;
     rotation: number;
     additionalInfo?: string;
+
+    // ── Fields the frontend needs to send but the backend does NOT yet accept ──
+    // TODO: Ask dan to implement
+    // colour: string;
 }
 
 export interface CreateLayoutRequest {

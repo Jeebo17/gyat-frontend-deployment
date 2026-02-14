@@ -7,9 +7,9 @@ export interface TileProps {
     //Data describing the equipment assigned to this tile.
     equipment: EquipmentProps;
 
-    // Coordinates of the tile on the canvas grid.
-    x: number;
-    y: number;
+    // Coordinates of the tile on the canvas grid (matches backend xCoord/yCoord).
+    xCoord: number;
+    yCoord: number;
 
     // Dimensions of the tile in grid in pixels
     width: number;

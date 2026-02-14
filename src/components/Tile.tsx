@@ -19,8 +19,8 @@ const colourClasses: Record<string, { light: string; dark: string }> = {
 
 function Tile({
     equipment,
-    x,
-    y,
+    xCoord,
+    yCoord,
     width,
     height,
     rotation,
@@ -55,8 +55,8 @@ function Tile({
         dragStartRef.current = {
             x: e.clientX,
             y: e.clientY,
-            tileX: x,
-            tileY: y
+            tileX: xCoord,
+            tileY: yCoord
         };
     };
 
@@ -70,8 +70,8 @@ function Tile({
             y: e.clientY,
             width,
             height,
-            tileX: x,
-            tileY: y
+            tileX: xCoord,
+            tileY: yCoord
         };
     };
 
@@ -88,7 +88,7 @@ function Tile({
                 const newX = snap(dragStartRef.current.tileX + deltaX);
                 const newY = snap(dragStartRef.current.tileY + deltaY);
 
-                onUpdate({ x: newX, y: newY });
+                onUpdate({ xCoord: newX, yCoord: newY });
             } else if (isResizing) {
                 const deltaX = (e.clientX - resizeStartRef.current.x) / scale;
                 const deltaY = (e.clientY - resizeStartRef.current.y) / scale;
@@ -139,8 +139,8 @@ function Tile({
                 }
 
                 onUpdate({
-                    x: snap(newX),
-                    y: snap(newY),
+                    xCoord: snap(newX),
+                    yCoord: snap(newY),
                     width: snap(newWidth),
                     height: snap(newHeight)
                 });
@@ -189,17 +189,17 @@ function Tile({
                 ${theme.theme === 'dark' ? 'opacity-100' : 'brightness-90'}
             `}
             style={{
-                left: x,
-                top: y,
+                left: xCoord,
+                top: yCoord,
                 width,
                 height,
                 transform: `rotate(${rotation}deg)`,
             }}
             onMouseDown={handleMouseDown}
             onClick={!editMode ? onClick : undefined}
-            aria-label={equipment.title}
+            aria-label={equipment.name}
         >
-            <p className="truncate">{equipment.title}</p>
+            <p className="truncate">{equipment.name}</p>
             {equipment.icon && <equipment.icon className="absolute bottom-2 right-2 w-6 h-6 opacity-100" />}
 
             {editMode && onUpdate && (

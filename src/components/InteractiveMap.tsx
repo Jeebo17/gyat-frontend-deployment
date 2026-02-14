@@ -15,21 +15,21 @@ const GRID_SIZE = 20;
 const CELL_SIZE = 200; // spatial hash cell size (px)
 
 const rectanglesOverlap = (a: TileProps, b: TileProps) => {
-    const aRight = a.x + a.width;
-    const aBottom = a.y + a.height;
-    const bRight = b.x + b.width;
-    const bBottom = b.y + b.height;
+    const aRight = a.xCoord + a.width;
+    const aBottom = a.yCoord + a.height;
+    const bRight = b.xCoord + b.width;
+    const bBottom = b.yCoord + b.height;
 
     // Edges touching are allowed; overlap requires positive shared area
-    return a.x < bRight && aRight > b.x && a.y < bBottom && aBottom > b.y;
+    return a.xCoord < bRight && aRight > b.xCoord && a.yCoord < bBottom && aBottom > b.yCoord;
 };
 
 const getCellsForTile = (tile: TileProps, cellSize = CELL_SIZE) => {
     const cells: string[] = [];
-    const startCol = Math.floor(tile.x / cellSize);
-    const endCol = Math.floor((tile.x + tile.width) / cellSize);
-    const startRow = Math.floor(tile.y / cellSize);
-    const endRow = Math.floor((tile.y + tile.height) / cellSize);
+    const startCol = Math.floor(tile.xCoord / cellSize);
+    const endCol = Math.floor((tile.xCoord + tile.width) / cellSize);
+    const startRow = Math.floor(tile.yCoord / cellSize);
+    const endRow = Math.floor((tile.yCoord + tile.height) / cellSize);
 
     for (let col = startCol; col <= endCol; col++) {
         for (let row = startRow; row <= endRow; row++) {
