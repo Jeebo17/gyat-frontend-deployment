@@ -322,7 +322,10 @@ function InteractiveMap({ editMode = false, snapToGrid = true }: InteractiveMapP
                                 snap={snap}
                                 canPlace={canPlace}
                                 onUpdate={editMode ? (updates) => {
-                                    setHistory(prev => [...prev, tile]);
+                                    setHistory(prev => {
+                                        const newHistory = [...prev, tile];
+                                        return newHistory.slice(-50); // limit history to last 50 changes
+                                    });
                                     tile.id !== undefined && updateTile(tile.id, updates);
                                 } : undefined}
                                 onClick={!editMode ? () => setSelectedMachine({ ...tile, onUpdate: () => {} }) : undefined}
