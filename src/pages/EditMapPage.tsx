@@ -4,10 +4,13 @@ import InteractiveMap from "../components/InteractiveMap";
 import Header from "../components/Header";
 import { isAdminTEST } from "../services/isAdmin";
 import { LoadingPage } from "../pages";
+import { DragAndDropMenu } from "../components/DragAndDropMenu";
+import ToggleSwitch from "../components/ToggleSwitch";
 
 function EditMapPage() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
+    const [snapToGridState, setSnapToGridState] = useState(true);
 
     // Admin gate: redirect non-admins back to the map view
     useEffect(() => {
@@ -33,20 +36,33 @@ function EditMapPage() {
         <div className="fixed inset-0 h-full w-full bg-bg-primary text-text-primary transition-colors duration-500 p-4 flex flex-col">
             <Header />
 
-            {/* Edit-mode toolbar */}
-            <div className="absolute top-20 left-8 z-30 flex flex-row items-center gap-4">
-                <span className="text-sm font-semibold select-none px-2 py-1 rounded bg-accent-primary text-white">
-                    Edit Mode
-                </span>
-                <button
-                    className="text-sm select-none underline hover:text-accent-primary transition-colors"
-                    onClick={() => navigate("/map")}
-                >
-                    Back to View
-                </button>
-            </div>
+            <div className="flex flex-row flex-1 gap-4 mt-16 pt-2 overflow-hidden">
+                <DragAndDropMenu />
+                <div className="flex-1 min-w-0">
 
-            <InteractiveMap editMode={true} />
+                    {/* Edit-mode toolbar */}
+                    <div className="z-30 flex flex-row items-center gap-4 w-full justify-between">
+                        <span className="flex flex-row items-center gap-4">
+                            <p className="text-sm font-semibold select-none px-2 py-1 rounded bg-accent-primary text-white">
+                                Edit Mode
+                            </p>
+                            <button
+                                className="text-sm select-none underline hover:text-accent-primary transition-colors"
+                                onClick={() => navigate("/map")}
+                            >
+                                Back to View
+                            </button>
+                        </span>
+
+                        <div className="flex flex-row items-center gap-4">
+                            <span className="text-sm select-none">Snap to grid</span>
+                            <ToggleSwitch checked={snapToGridState} onChange={setSnapToGridState} />
+                        </div>
+                    </div>
+                    
+                    <InteractiveMap editMode={true} snapToGrid={snapToGridState} />
+                </div>
+            </div>
         </div>
     );
 }

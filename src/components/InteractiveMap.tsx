@@ -2,7 +2,6 @@ import Tile from "./Tile";
 import { TileProps } from "../types/tile";
 import { useState, useRef, useEffect } from "react";
 import MachineModal from '../components/MachineModal';
-import ToggleSwitch from "./ToggleSwitch";
 import { getInitialTiles } from "../services/tileService";
 import ZoomControls from "./ZoomControls";
 import { useTheme } from "../context/ThemeContext";
@@ -49,14 +48,14 @@ const buildSpatialIndex = (tiles: TileProps[]) => {
 
 interface InteractiveMapProps {
     editMode?: boolean;
+    snapToGrid?: boolean;
 }
 
-function InteractiveMap({ editMode = false }: InteractiveMapProps) {
+function InteractiveMap({ editMode = false, snapToGrid = true }: InteractiveMapProps) {
     const [selectedMachine, setSelectedMachine] = useState<TileProps | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [tiles, setTiles] = useState<TileProps[]>(getInitialTiles());
     const spatialIndexRef = useRef<Map<string, TileProps[]>>(buildSpatialIndex(getInitialTiles()));
-    const [snapToGrid, setSnapToGrid] = useState(true);
     const [gridSize, setGridSize] = useState(GRID_SIZE);
     const [scale, setScale] = useState(1);
     const [autoScale, setAutoScale] = useState(true);
@@ -140,7 +139,7 @@ function InteractiveMap({ editMode = false }: InteractiveMapProps) {
     };
 
     return (
-        <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-2 mt-16">
+        <div className={`relative overflow-visible w-full h-full justify-center items-center flex pt-2 ${editMode ? '' : 'mt-16'}`}>
             <div
                 style={{
                     position: "absolute",
@@ -149,13 +148,6 @@ function InteractiveMap({ editMode = false }: InteractiveMapProps) {
                     backgroundColor: "transparent",
                 }}
             >
-                {editMode && (
-                    <div className="absolute top-4 right-4 z-10 flex flex-row items-center gap-4">
-                        <span className="text-sm select-none">Snap to grid</span>
-                        <ToggleSwitch checked={snapToGrid} onChange={setSnapToGrid} />
-                    </div>
-                )}
-
                 <ZoomControls
                     scale={scale}
                     onZoomIn={zoomIn}
