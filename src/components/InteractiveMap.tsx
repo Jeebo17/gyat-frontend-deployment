@@ -96,6 +96,7 @@ function InteractiveMap({ editMode = false, snapToGrid = true }: InteractiveMapP
         const handleKeyDown = (e: KeyboardEvent) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
                 e.preventDefault();
+                
                 setHistory(prev => {
                     if (prev.length === 0) return prev;
                     const last = prev[prev.length - 1];
