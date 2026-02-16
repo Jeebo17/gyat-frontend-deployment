@@ -40,7 +40,26 @@ export interface TileProps {
     // Grid size of the workspace into which the tile should snap.
     gridSize?: number;
 
-     // Snapping function used to align values to the grid.
-     // For example: snap(83) → 80.
+    // Snapping function used to align values to the grid.
+    // For example: snap(83) → 80.
     snap?: (value: number) => number;
+
+    // Whether this tile is a non-interactive preview
+    preview?: boolean; 
+}
+
+export interface TileTemplate {
+    equipment: EquipmentProps;
+    width: number;
+    height: number;
+    colour: string;
+}
+
+export interface TileHistoryEntry {
+    xCoord: number;
+    yCoord: number;
+    width: number;
+    height: number;
+    rotation: number;
+    colour: string;
 }

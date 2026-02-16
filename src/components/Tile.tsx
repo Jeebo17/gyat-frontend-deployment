@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { FaArrowRotateLeft, FaArrowRotateRight } from "react-icons/fa6";
-import { TileProps } from "../types/tile";
+import { TileProps, TileHistoryEntry } from "../types/tile";
 import { useTheme } from "../context/ThemeContext";
 
 
@@ -31,12 +31,14 @@ function Tile({
     editMode,
     scale = 1,
     gridSize = 20,
-    snap = (v) => v
+    snap = (v) => v,
+    preview = false,
 }: TileProps) {
     const [isDragging, setIsDragging] = useState(false);
     const [isResizing, setIsResizing] = useState<ResizeHandle | null>(null);
     const dragStartRef = useRef({ x: 0, y: 0, tileX: 0, tileY: 0 });
     const resizeStartRef = useRef({ x: 0, y: 0, width: 0, height: 0, tileX: 0, tileY: 0 });
+    const [history, setHistory] = useState<TileProps[]>([]);
     
     const theme = useTheme();
     const colourClass = colourClasses[colour]
@@ -208,6 +210,7 @@ function Tile({
                     className="absolute top-2 right-2 transform w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
                     onMouseDown={(e) => {
                         e.stopPropagation();
+                        setHistory([...history, { xCoord, yCoord, width, height, rotation, colour, equipment }]);
                         if (onUpdate) {
                             onUpdate({ width: height, height: width, rotation: rotation });
                             // onUpdate({ rotation: (rotation + 90) % 360 });
@@ -215,21 +218,7 @@ function Tile({
                     }}
                     >
                         <FaArrowRotateRight className="w-5 h-5 text-primary"/>
-                    </div>
-
-                {/* Temporary fix to rotation */}
-                {/* <div
-                    className="absolute top-2 left-2 transform w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
-                    onMouseDown={(e) => {
-                        e.stopPropagation();
-                        if (onUpdate) {
-                            onUpdate({ width: height, height: width, rotation: rotation });
-                            onUpdate({ rotation: (rotation - 90) % 360 });
-                        }
-                    }}
-                    >
-                        <FaArrowRotateLeft className="w-5 h-5 text-primary"/>
-                </div> */}
+                </div>
             </div>
             )}
 

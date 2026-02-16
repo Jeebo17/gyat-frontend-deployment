@@ -1,10 +1,11 @@
 import Tile from "./Tile";
 import { TileProps } from "../types/tile";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import MachineModal from '../components/MachineModal';
 import { getInitialTiles } from "../services/tileService";
 import ZoomControls from "./ZoomControls";
 import { useTheme } from "../context/ThemeContext";
+import type { DragTileData } from "./DragAndDropMenu";
 
 export const BASE_WIDTH = 1600;
 export const BASE_HEIGHT = 800;
@@ -105,6 +106,59 @@ function InteractiveMap({ editMode = false, snapToGrid = true }: InteractiveMapP
 
     const snap = (value: number) => Math.round(value / gridSize) * gridSize;
 
+    /** Generate the next unique tile id. */
+    const nextIdRef = useRef(
+        Math.max(...getInitialTiles().map(t => t.id)) + 1
+    );
+
+    /** Try to add a new tile at the given position; rejects on collision. */
+    const addTile = useCallback((template: DragTileData, xCoord: number, yCoord: number) => {
+        const snappedX = snap(xCoord);
+        const snappedY = snap(yCoord);
+
+        const candidate: TileProps = {
+            id: nextIdRef.current,
+            xCoord: snappedX,
+            yCoord: snappedY,
+            width: template.width,
+            height: template.height,
+            rotation: 0,
+            colour: template.colour,
+            equipment: {
+                name: template.equipmentName,
+                icon: template.equipmentIcon,
+            },
+        };
+
+        setTiles(prev => {
+            // Collision check against existing tiles
+            const spatialIndex = spatialIndexRef.current;
+            const visited = new Set<number>();
+            let collision = false;
+
+            getCellsForTile(candidate).some(cell => {
+                const bucket = spatialIndex.get(cell);
+                if (!bucket) return false;
+                for (const tile of bucket) {
+                    if (visited.has(tile.id)) continue;
+                    visited.add(tile.id);
+                    if (rectanglesOverlap(candidate, tile)) {
+                        collision = true;
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            if (collision) return prev;
+
+            nextIdRef.current += 1;
+            const next = [...prev, candidate];
+            spatialIndexRef.current = buildSpatialIndex(next);
+            return next;
+        });
+    }, [snap]);
+
     const updateTile = (id: number, updates: Partial<TileProps>) => {
         setTiles(prev => {
             const current = prev.find(t => t.id === id);
@@ -166,6 +220,18 @@ function InteractiveMap({ editMode = false, snapToGrid = true }: InteractiveMapP
                     scrollbarColor: theme === 'dark' ? '#999999 transparent' : '#808080 transparent',
                     scrollbarWidth: 'thin'
                 }}
+                onDragOver={editMode ? (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; } : undefined}
+                onDrop={editMode ? (e) => {
+                    e.preventDefault();
+                    const raw = e.dataTransfer.getData("application/tile-template");
+                    if (!raw) return;
+                    const template: DragTileData = JSON.parse(raw);
+                    const rect = containerRef.current!.getBoundingClientRect();
+                    // Account for scroll and scale so tile lands where the cursor is
+                    const x = (e.clientX - rect.left + containerRef.current!.scrollLeft) / scale - template.width / 2;
+                    const y = (e.clientY - rect.top + containerRef.current!.scrollTop) / scale - template.height / 2;
+                    addTile(template, x, y);
+                } : undefined}
             >
 
                 {/* Internal map */}
