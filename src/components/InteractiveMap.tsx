@@ -143,9 +143,6 @@ function InteractiveMap({ editMode = false, snapToGrid = true, floor = 0 }: Inte
         setAutoScale(true);
     };
 
-    const decrementFloor = () => setFLoor(prev => Math.max(0, prev - 1));
-    const incrementFloor = () => setFLoor(prev => prev + 1);
-
     const snap = (value: number) => Math.round(value / gridSize) * gridSize;
 
     /** Generate the next unique tile id. */
