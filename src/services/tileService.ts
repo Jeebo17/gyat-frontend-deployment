@@ -46,3 +46,12 @@ export function getInitialTiles(): TileData[] {
         { id: 14, xCoord: 1000, yCoord: 760, width: 160, height: 40, rotation: 0, colour: "gray", equipment: { name: "Entrance", icon: undefined }, canHover: false },
     ];
 }
+
+export function getFloorsTiles(floor: number): TileProps[] {
+
+    console.log(floor)
+    return [
+        { id: 1, x: 20, y: 160, width: 240, height: 100, rotation: 0, colour: "red", equipment: treadmillEquipment },
+        { id: 2, x: 20, y: 280, width: 240, height: 100, rotation: 0, colour: "red", equipment: { title: "Treadmill", icon: TbTreadmill } },
+    ];
+}

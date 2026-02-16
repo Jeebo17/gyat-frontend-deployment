@@ -65,6 +65,13 @@ function InteractiveMap({ editMode = false, snapToGrid = true, floor = 0 }: Inte
     const [, setHistory] = useState<TileHistoryEntry[]>([]);
 
     const { theme } = useTheme();
+    const floorButtonClasses = `w-7 h-7 rounded-md shadow flex items-center justify-center bg-text-primary transition duration-300 ${
+        theme === "dark" ? "text-black" : "text-white"
+    } disabled:opacity-50`;
+
+    useEffect(() => {
+        setTiles(floor === 0 ? getInitialTiles() : getFloorsTiles(floor))
+    }, [floor])
 
     useEffect(() => {
         setGridSize(snapToGrid ? GRID_SIZE : 1);
@@ -135,6 +142,9 @@ function InteractiveMap({ editMode = false, snapToGrid = true, floor = 0 }: Inte
     const resetZoom = () => {
         setAutoScale(true);
     };
+
+    const decrementFloor = () => setFLoor(prev => Math.max(0, prev - 1));
+    const incrementFloor = () => setFLoor(prev => prev + 1);
 
     const snap = (value: number) => Math.round(value / gridSize) * gridSize;
 
