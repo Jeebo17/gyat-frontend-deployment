@@ -6,11 +6,13 @@ import { isAdminTEST } from "../services/isAdmin";
 import { LoadingPage } from "../pages";
 import { DragAndDropMenu } from "../components/DragAndDropMenu";
 import ToggleSwitch from "../components/ToggleSwitch";
+import { FaRegCaretSquareUp, FaRegCaretSquareDown } from "react-icons/fa";
 
 function EditMapPage() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [snapToGridState, setSnapToGridState] = useState(true);
+    const [floor, setFloor] = useState<number>(0);
 
     // Admin gate: redirect non-admins back to the map view
     useEffect(() => {
@@ -54,13 +56,34 @@ function EditMapPage() {
                             </button>
                         </span>
 
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                            <button
+                                type="button"
+                                className="flex items-center justify-center text-text-primary disabled:opacity-50 flex-shrink-0"
+                                onClick={() => setFloor(prev => Math.max(0, prev - 1))}
+                                disabled={floor <= 0}
+                                aria-label="Previous floor"
+                            >
+                                <FaRegCaretSquareDown size={30} />
+                            </button>
+                            <span className="select-none w-16 text-center flex-shrink-0">Floor {floor + 1}</span>
+                            <button
+                                type="button"
+                                className="flex items-center justify-center text-text-primary disabled:opacity-50 flex-shrink-0"
+                                onClick={() => setFloor(prev => prev + 1)}
+                                aria-label="Next floor"
+                            >
+                                <FaRegCaretSquareUp size={30} />
+                            </button>
+                        </div>
+
                         <div className="flex flex-row items-center gap-4">
                             <span className="text-sm select-none">Snap to grid</span>
                             <ToggleSwitch checked={snapToGridState} onChange={setSnapToGridState} />
                         </div>
                     </div>
                     
-                    <InteractiveMap editMode={true} snapToGrid={snapToGridState} />
+                    <InteractiveMap editMode={true} snapToGrid={snapToGridState} floor={floor} />
                 </div>
             </div>
         </div>

@@ -2,7 +2,7 @@ import Tile from "./Tile";
 import { TileData, TileHistoryEntry } from "../types/tile";
 import { useState, useRef, useEffect, useCallback } from "react";
 import MachineModal from '../components/MachineModal';
-import { getInitialTiles } from "../services/tileService";
+import { getFloorsTiles, getInitialTiles } from "../services/tileService";
 import ZoomControls from "./ZoomControls";
 import { useTheme } from "../context/ThemeContext";
 import type { DragTileData } from "./DragAndDropMenu";
@@ -50,11 +50,13 @@ const buildSpatialIndex = (tiles: TileData[]) => {
 interface InteractiveMapProps {
     editMode?: boolean;
     snapToGrid?: boolean;
+    floor?: number;
 }
 
-function InteractiveMap({ editMode = false, snapToGrid = true }: InteractiveMapProps) {
+function InteractiveMap({ editMode = false, snapToGrid = true, floor = 0 }: InteractiveMapProps) {
     const [selectedMachine, setSelectedMachine] = useState<TileData | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const [floorState, setFloorState] = useState<number>(floor);
     const [tiles, setTiles] = useState<TileData[]>(getInitialTiles());
     const spatialIndexRef = useRef<Map<string, TileData[]>>(buildSpatialIndex(getInitialTiles()));
     const [gridSize, setGridSize] = useState(GRID_SIZE);
@@ -67,6 +69,10 @@ function InteractiveMap({ editMode = false, snapToGrid = true }: InteractiveMapP
     useEffect(() => {
         setGridSize(snapToGrid ? GRID_SIZE : 1);
     }, [snapToGrid]);
+
+    useEffect(() => {
+        setTiles(floor === 0 ? getInitialTiles() : getFloorsTiles(floor))
+    }, [floor])
 
     useEffect(() => {
         if (!autoScale) return;
