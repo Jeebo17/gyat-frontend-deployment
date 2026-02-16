@@ -1,5 +1,5 @@
 import { EquipmentProps } from '../types/equipment';
-import { TileProps } from '../types/tile';
+import { TileData } from '../types/tile';
 
 export const mockEquipment: EquipmentProps = {
     name: 'Equipment Title #1',
@@ -21,7 +21,7 @@ export const mockEquipment: EquipmentProps = {
 };
 
 
-export const mockTile: TileProps = {
+export const mockTile: TileData = {
     id: 1,
     equipment: mockEquipment,
     xCoord: 20,
@@ -32,7 +32,7 @@ export const mockTile: TileProps = {
     colour: 'red',
 };
 
-export const mockTiles: TileProps[] = [
+export const mockTiles: TileData[] = [
     mockTile,
     {
         ...mockTile,
@@ -60,7 +60,7 @@ export const mockTiles: TileProps[] = [
     },
 ];
 
-export const createMockTile = (overrides: Partial<TileProps> = {}): TileProps => {
+export const createMockTile = (overrides: Partial<TileData> = {}): TileData => {
     return {
         ...mockTile,
         ...overrides,

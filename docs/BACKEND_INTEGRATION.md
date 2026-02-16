@@ -1,12 +1,12 @@
 # Backend Integration Guide
 
-This document outlines the changes required in the **backend** so that its API responses align with the existing **frontend types** (`TileProps`, `EquipmentProps`).
+This document outlines the changes required in the **backend** so that its API responses align with the existing **frontend types** (`TileData`, `EquipmentProps`).
 
 ---
 
 ## Frontend Types (source of truth)
 
-### `TileProps` ([src/types/tile.ts](../src/types/tile.ts))
+### `TileData` ([src/types/tile.ts](../src/types/tile.ts))
 
 | Field | Type | Required |
 |-------|------|----------|
@@ -123,7 +123,7 @@ private String safetyInfo;
 private EquipmentDTO equipment;
 ```
 
-> `equipmentTypeId` can be kept alongside `equipment` if the frontend needs it for API calls. It just won't be consumed by `TileProps` directly.
+> `equipmentTypeId` can be kept alongside `equipment` if the frontend needs it for API calls. It just won't be consumed by `TileData` directly.
 
 Update `GymLayoutService.mapToComponentDTO()` to build the nested object:
 
@@ -264,7 +264,7 @@ These fields exist in the backend but **not** in the frontend types. They do **n
 | `brand` | Not in `EquipmentProps`. Consider adding to frontend later, or omit from response. |
 | `imageUrl` | Not in `EquipmentProps`. Same as above. |
 | `safetyInfo` | Not in `EquipmentProps`. Same as above. |
-| `additionalInfo` | Not in `TileProps`. Same as above. |
+| `additionalInfo` | Not in `TileData`. Same as above. |
 | `layoutId` | Metadata for API calls. Keep in response. |
 | `floorId` | Metadata for API calls. Keep in response. |
 | `equipmentTypeId` | Needed for create/update requests. Keep in response. |

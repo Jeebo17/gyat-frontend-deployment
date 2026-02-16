@@ -1,5 +1,5 @@
 import { EquipmentProps } from "./equipment";
-export interface TileProps {
+export interface TileData {
      // Unique identifier for this tile.
      // Used for tracking state updates and rendering.
     id: number;
@@ -23,7 +23,7 @@ export interface TileProps {
 
     // Callback fired when this tile wants to update itself.
     // Receives only the fields that have changed.
-    onUpdate?: (updates: Partial<TileProps>) => void;
+    onUpdate?: (updates: Partial<TileData>) => void;
 
     // Whether hover highlighting should be enabled.
     canHover?: boolean;
@@ -43,9 +43,6 @@ export interface TileProps {
     // Snapping function used to align values to the grid.
     // For example: snap(83) → 80.
     snap?: (value: number) => number;
-
-    // Whether this tile is a non-interactive preview
-    preview?: boolean; 
 }
 
 export interface TileTemplate {
@@ -56,6 +53,7 @@ export interface TileTemplate {
 }
 
 export interface TileHistoryEntry {
+    id: number;
     xCoord: number;
     yCoord: number;
     width: number;

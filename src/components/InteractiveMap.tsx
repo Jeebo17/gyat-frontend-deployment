@@ -1,5 +1,5 @@
 import Tile from "./Tile";
-import { TileProps } from "../types/tile";
+import { TileData, TileHistoryEntry } from "../types/tile";
 import { useState, useRef, useEffect, useCallback } from "react";
 import MachineModal from '../components/MachineModal';
 import { getInitialTiles } from "../services/tileService";
@@ -12,7 +12,7 @@ export const BASE_HEIGHT = 800;
 export const GRID_SIZE = 20;
 const CELL_SIZE = 200; // spatial hash cell size (px)
 
-const rectanglesOverlap = (a: TileProps, b: TileProps) => {
+const rectanglesOverlap = (a: TileData, b: TileData) => {
     const aRight = a.xCoord + a.width;
     const aBottom = a.yCoord + a.height;
     const bRight = b.xCoord + b.width;
@@ -21,7 +21,7 @@ const rectanglesOverlap = (a: TileProps, b: TileProps) => {
     return a.xCoord < bRight && aRight > b.xCoord && a.yCoord < bBottom && aBottom > b.yCoord;
 };
 
-const getCellsForTile = (tile: TileProps, cellSize = CELL_SIZE) => {
+const getCellsForTile = (tile: TileData, cellSize = CELL_SIZE) => {
     const cells: string[] = [];
     const startCol = Math.floor(tile.xCoord / cellSize);
     const endCol = Math.floor((tile.xCoord + tile.width) / cellSize);
@@ -36,8 +36,8 @@ const getCellsForTile = (tile: TileProps, cellSize = CELL_SIZE) => {
     return cells;
 };
 
-const buildSpatialIndex = (tiles: TileProps[]) => {
-    const index = new Map<string, TileProps[]>();
+const buildSpatialIndex = (tiles: TileData[]) => {
+    const index = new Map<string, TileData[]>();
     tiles.forEach(tile => {
         getCellsForTile(tile).forEach(cell => {
             if (!index.has(cell)) index.set(cell, []);
@@ -53,13 +53,14 @@ interface InteractiveMapProps {
 }
 
 function InteractiveMap({ editMode = false, snapToGrid = true }: InteractiveMapProps) {
-    const [selectedMachine, setSelectedMachine] = useState<TileProps | null>(null);
+    const [selectedMachine, setSelectedMachine] = useState<TileData | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const [tiles, setTiles] = useState<TileProps[]>(getInitialTiles());
-    const spatialIndexRef = useRef<Map<string, TileProps[]>>(buildSpatialIndex(getInitialTiles()));
+    const [tiles, setTiles] = useState<TileData[]>(getInitialTiles());
+    const spatialIndexRef = useRef<Map<string, TileData[]>>(buildSpatialIndex(getInitialTiles()));
     const [gridSize, setGridSize] = useState(GRID_SIZE);
     const [scale, setScale] = useState(1);
     const [autoScale, setAutoScale] = useState(true);
+    const [history, setHistory] = useState<TileHistoryEntry[]>([]);
 
     const { theme } = useTheme();
 
@@ -90,6 +91,30 @@ function InteractiveMap({ editMode = false, snapToGrid = true }: InteractiveMapP
         return () => window.removeEventListener('resize', updateScale);
     }, [autoScale]);
 
+    // Listen for Ctrl+Z / Cmd+Z to undo the last tile change
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                e.preventDefault();
+                setHistory(prev => {
+                    if (prev.length === 0) return prev;
+                    const last = prev[prev.length - 1];
+                    updateTile(last.id, {
+                        xCoord: last.xCoord,
+                        yCoord: last.yCoord,
+                        width: last.width,
+                        height: last.height,
+                        rotation: last.rotation,
+                        colour: last.colour,
+                    });
+                    return prev.slice(0, -1);
+                });
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     const zoomIn = () => {
         setAutoScale(false);
         setScale(prev => Math.min(prev + 0.2, 3));
@@ -116,7 +141,7 @@ function InteractiveMap({ editMode = false, snapToGrid = true }: InteractiveMapP
         const snappedX = snap(xCoord);
         const snappedY = snap(yCoord);
 
-        const candidate: TileProps = {
+        const candidate: TileData = {
             id: nextIdRef.current,
             xCoord: snappedX,
             yCoord: snappedY,
@@ -159,12 +184,12 @@ function InteractiveMap({ editMode = false, snapToGrid = true }: InteractiveMapP
         });
     }, [snap]);
 
-    const updateTile = (id: number, updates: Partial<TileProps>) => {
+    const updateTile = (id: number, updates: Partial<TileData>) => {
         setTiles(prev => {
             const current = prev.find(t => t.id === id);
             if (!current) return prev;
 
-            const candidate = { ...current, ...updates } as TileProps;
+            const candidate = { ...current, ...updates } as TileData;
 
             const spatialIndex = spatialIndexRef.current;
             const visited = new Set<number>();
@@ -267,7 +292,10 @@ function InteractiveMap({ editMode = false, snapToGrid = true }: InteractiveMapP
                                 scale={scale}
                                 gridSize={gridSize}
                                 snap={snap}
-                                onUpdate={editMode ? (updates) => tile.id !== undefined && updateTile(tile.id, updates) : undefined}
+                                onUpdate={editMode ? (updates) => {
+                                    setHistory(prev => [...prev, tile]);
+                                    tile.id !== undefined && updateTile(tile.id, updates);
+                                } : undefined}
                                 onClick={!editMode ? () => setSelectedMachine({ ...tile, onUpdate: () => {} }) : undefined}
                                 editMode={editMode}
                             />

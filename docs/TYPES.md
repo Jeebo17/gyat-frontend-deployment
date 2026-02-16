@@ -102,7 +102,7 @@ const detailedTreadmill: EquipmentProps = {
 This defines the properties of each tile (rectangle) on the interactive gym map.
 
 ```typescript
-export interface TileProps {
+export interface TileData {
     id: number;
     equipment: EquipmentProps;
     x: number;
@@ -112,7 +112,7 @@ export interface TileProps {
     rotation: number;
     colour: string;
 
-    onUpdate?: (updates: Partial<TileProps>) => void;
+    onUpdate?: (updates: Partial<TileData>) => void;
     canHover?: boolean;
     onClick?: () => void;
     editMode?: boolean;
@@ -151,13 +151,13 @@ export interface TileProps {
 
 ### Special Types Explained:
 
-#### `Partial<TileProps>`
+#### `Partial<TileData>`
 
-This means "some properties of TileProps, not necessarily all". It's used when updating only some fields:
+This means "some properties of TileData, not necessarily all". It's used when updating only some fields:
 
 ```typescript
 // Instead of needing all fields:
-const fullUpdate: TileProps = {
+const fullUpdate: TileData = {
     id: 1,
     equipment: {...},
     x: 100,
@@ -166,7 +166,7 @@ const fullUpdate: TileProps = {
 };
 
 // You can update just what changed:
-const partialUpdate: Partial<TileProps> = {
+const partialUpdate: Partial<TileData> = {
     x: 150,  // Only update x position
     y: 250   // Only update y position
 };
@@ -176,9 +176,9 @@ const partialUpdate: Partial<TileProps> = {
 
 ```typescript
 // onUpdate expects a function that:
-// - Takes one parameter: an object with some TileProps
+// - Takes one parameter: an object with some TileData
 // - Returns nothing (void)
-onUpdate?: (updates: Partial<TileProps>) => void;
+onUpdate?: (updates: Partial<TileData>) => void;
 
 // onClick expects a function that:
 // - Takes no parameters
@@ -194,7 +194,7 @@ snap?: (value: number) => number;
 ### Example Usage:
 
 ```typescript
-const myTile: TileProps = {
+const myTile: TileData = {
     id: 1,
     equipment: {
         title: "Treadmill",

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { FaArrowRotateLeft, FaArrowRotateRight } from "react-icons/fa6";
-import { TileProps, TileHistoryEntry } from "../types/tile";
+import { FaArrowRotateRight } from "react-icons/fa6";
+import { TileData } from "../types/tile";
 import { useTheme } from "../context/ThemeContext";
 
 
@@ -32,13 +32,25 @@ function Tile({
     scale = 1,
     gridSize = 20,
     snap = (v) => v,
-    preview = false,
-}: TileProps) {
+}: TileData) {
     const [isDragging, setIsDragging] = useState(false);
     const [isResizing, setIsResizing] = useState<ResizeHandle | null>(null);
     const dragStartRef = useRef({ x: 0, y: 0, tileX: 0, tileY: 0 });
     const resizeStartRef = useRef({ x: 0, y: 0, width: 0, height: 0, tileX: 0, tileY: 0 });
-    const [history, setHistory] = useState<TileProps[]>([]);
+    
+    // Track live position/size during drag for smooth visual feedback without parent updates
+    const [liveX, setLiveX] = useState(xCoord);
+    const [liveY, setLiveY] = useState(yCoord);
+    const [liveWidth, setLiveWidth] = useState(width);
+    const [liveHeight, setLiveHeight] = useState(height);
+
+    // Sync live state when props change (e.g., when parent applies an update)
+    useEffect(() => {
+        setLiveX(xCoord);
+        setLiveY(yCoord);
+        setLiveWidth(width);
+        setLiveHeight(height);
+    }, [xCoord, yCoord, width, height]);
     
     const theme = useTheme();
     const colourClass = colourClasses[colour]
@@ -81,8 +93,6 @@ function Tile({
         if (!isDragging && !isResizing) return;
 
         const handleMouseMove = (e: MouseEvent) => {
-            if (!onUpdate) return;
-
             if (isDragging) {
                 const deltaX = (e.clientX - dragStartRef.current.x) / scale;
                 const deltaY = (e.clientY - dragStartRef.current.y) / scale;
@@ -90,7 +100,8 @@ function Tile({
                 const newX = snap(dragStartRef.current.tileX + deltaX);
                 const newY = snap(dragStartRef.current.tileY + deltaY);
 
-                onUpdate({ xCoord: newX, yCoord: newY });
+                setLiveX(newX);
+                setLiveY(newY);
             } else if (isResizing) {
                 const deltaX = (e.clientX - resizeStartRef.current.x) / scale;
                 const deltaY = (e.clientY - resizeStartRef.current.y) / scale;
@@ -140,16 +151,27 @@ function Tile({
                         break;
                 }
 
-                onUpdate({
-                    xCoord: snap(newX),
-                    yCoord: snap(newY),
-                    width: snap(newWidth),
-                    height: snap(newHeight)
-                });
+                setLiveX(snap(newX));
+                setLiveY(snap(newY));
+                setLiveWidth(snap(newWidth));
+                setLiveHeight(snap(newHeight));
             }
         };
 
         const handleMouseUp = () => {
+            // Batch the update to parent only on mouse release
+            if (onUpdate) {
+                if (isDragging) {
+                    onUpdate({ xCoord: liveX, yCoord: liveY });
+                } else if (isResizing) {
+                    onUpdate({
+                        xCoord: liveX,
+                        yCoord: liveY,
+                        width: liveWidth,
+                        height: liveHeight
+                    });
+                }
+            }
             setIsDragging(false);
             setIsResizing(null);
         };
@@ -161,7 +183,7 @@ function Tile({
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("mouseup", handleMouseUp);
         };
-    }, [isDragging, isResizing, scale, snap, onUpdate, gridSize]);
+    }, [isDragging, isResizing, scale, snap, onUpdate, gridSize, liveX, liveY, liveWidth, liveHeight]);
 
     const resizeHandles: { handle: ResizeHandle; cursor: string; className: string }[] = [
         { handle: 'n', cursor: 'ns-resize', className: 'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-1' },
@@ -191,10 +213,10 @@ function Tile({
                 ${theme.theme === 'dark' ? 'opacity-100' : 'brightness-90'}
             `}
             style={{
-                left: xCoord,
-                top: yCoord,
-                width,
-                height,
+                left: isDragging || isResizing ? liveX : xCoord,
+                top: isDragging || isResizing ? liveY : yCoord,
+                width: isDragging || isResizing ? liveWidth : width,
+                height: isDragging || isResizing ? liveHeight : height,
                 transform: `rotate(${rotation}deg)`,
             }}
             onMouseDown={handleMouseDown}
@@ -210,7 +232,6 @@ function Tile({
                     className="absolute top-2 right-2 transform w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
                     onMouseDown={(e) => {
                         e.stopPropagation();
-                        setHistory([...history, { xCoord, yCoord, width, height, rotation, colour, equipment }]);
                         if (onUpdate) {
                             onUpdate({ width: height, height: width, rotation: rotation });
                             // onUpdate({ rotation: (rotation + 90) % 360 });

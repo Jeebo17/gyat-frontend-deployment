@@ -1,4 +1,4 @@
-import { TileProps } from "../types/tile";
+import { TileData } from "../types/tile";
 import { TbTreadmill } from "react-icons/tb";
 import { MdElectricBolt, MdRowing } from "react-icons/md";
 import { GiWeightLiftingUp  } from "react-icons/gi";
@@ -28,7 +28,7 @@ const treadmillEquipment = {
 
 
 
-export function getInitialTiles(): TileProps[] {
+export function getInitialTiles(): TileData[] {
     return [
         { id: 1, xCoord: 20, yCoord: 160, width: 240, height: 100, rotation: 0, colour: "red", equipment: treadmillEquipment },
         { id: 2, xCoord: 20, yCoord: 280, width: 240, height: 100, rotation: 0, colour: "red", equipment: { name: "Treadmill", icon: TbTreadmill } },
