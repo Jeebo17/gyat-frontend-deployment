@@ -7,9 +7,9 @@ import ZoomControls from "./ZoomControls";
 import { useTheme } from "../context/ThemeContext";
 import type { DragTileData } from "./DragAndDropMenu";
 
-export const BASE_WIDTH = 1600;
-export const BASE_HEIGHT = 800;
-export const GRID_SIZE = 20;
+const BASE_WIDTH = 1600;
+const BASE_HEIGHT = 800;
+const GRID_SIZE = 20;
 const CELL_SIZE = 200; // spatial hash cell size (px)
 
 const rectanglesOverlap = (a: TileData, b: TileData) => {
@@ -60,7 +60,7 @@ function InteractiveMap({ editMode = false, snapToGrid = true }: InteractiveMapP
     const [gridSize, setGridSize] = useState(GRID_SIZE);
     const [scale, setScale] = useState(1);
     const [autoScale, setAutoScale] = useState(true);
-    const [history, setHistory] = useState<TileHistoryEntry[]>([]);
+    const [, setHistory] = useState<TileHistoryEntry[]>([]);
 
     const { theme } = useTheme();
 
@@ -185,6 +185,33 @@ function InteractiveMap({ editMode = false, snapToGrid = true }: InteractiveMapP
         });
     }, [snap]);
 
+    const canPlace = useCallback((id: number, updates: Partial<TileData>) => {
+        const current = tiles.find(t => t.id === id);
+        if (!current) return false;
+
+        const candidate = { ...current, ...updates } as TileData;
+
+        const spatialIndex = spatialIndexRef.current;
+        const visited = new Set<number>();
+        let collision = false;
+
+        getCellsForTile(candidate).some(cell => {
+            const bucket = spatialIndex.get(cell);
+            if (!bucket) return false;
+            for (const tile of bucket) {
+                if (tile.id === id || visited.has(tile.id)) continue;
+                visited.add(tile.id);
+                if (rectanglesOverlap(candidate, tile)) {
+                    collision = true;
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        return !collision;
+    }, [tiles]);
+
     const updateTile = (id: number, updates: Partial<TileData>) => {
         setTiles(prev => {
             const current = prev.find(t => t.id === id);
@@ -293,6 +320,7 @@ function InteractiveMap({ editMode = false, snapToGrid = true }: InteractiveMapP
                                 scale={scale}
                                 gridSize={gridSize}
                                 snap={snap}
+                                canPlace={canPlace}
                                 onUpdate={editMode ? (updates) => {
                                     setHistory(prev => [...prev, tile]);
                                     tile.id !== undefined && updateTile(tile.id, updates);

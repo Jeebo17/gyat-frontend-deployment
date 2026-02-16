@@ -25,6 +25,9 @@ export interface TileData {
     // Receives only the fields that have changed.
     onUpdate?: (updates: Partial<TileData>) => void;
 
+    // Returns true if the tile can be placed at the given updates (no collisions).
+    canPlace?: (id: number, updates: Partial<TileData>) => boolean;
+
     // Whether hover highlighting should be enabled.
     canHover?: boolean;
 

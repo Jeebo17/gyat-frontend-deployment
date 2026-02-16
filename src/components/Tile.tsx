@@ -18,6 +18,7 @@ const colourClasses: Record<string, { light: string; dark: string }> = {
 };
 
 function Tile({
+    id,
     equipment,
     xCoord,
     yCoord,
@@ -26,6 +27,7 @@ function Tile({
     rotation,
     colour,
     onUpdate,
+    canPlace,
     canHover = true,
     onClick,
     editMode,
@@ -100,6 +102,10 @@ function Tile({
                 const newX = snap(dragStartRef.current.tileX + deltaX);
                 const newY = snap(dragStartRef.current.tileY + deltaY);
 
+                if (canPlace && !canPlace(id, { xCoord: newX, yCoord: newY, width: liveWidth, height: liveHeight })) {
+                    return;
+                }
+
                 setLiveX(newX);
                 setLiveY(newY);
             } else if (isResizing) {
@@ -151,10 +157,19 @@ function Tile({
                         break;
                 }
 
-                setLiveX(snap(newX));
-                setLiveY(snap(newY));
-                setLiveWidth(snap(newWidth));
-                setLiveHeight(snap(newHeight));
+                const snappedX = snap(newX);
+                const snappedY = snap(newY);
+                const snappedWidth = snap(newWidth);
+                const snappedHeight = snap(newHeight);
+
+                if (canPlace && !canPlace(id, { xCoord: snappedX, yCoord: snappedY, width: snappedWidth, height: snappedHeight })) {
+                    return;
+                }
+
+                setLiveX(snappedX);
+                setLiveY(snappedY);
+                setLiveWidth(snappedWidth);
+                setLiveHeight(snappedHeight);
             }
         };
 
