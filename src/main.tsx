@@ -7,6 +7,7 @@ import './index.css';
 import './styles/main.scss';
 import ClickSpark from './components/effects/ClickSpark.tsx';
 // import { DropDownMenu } from './components/DropDownMenu.tsx';
+import { SettingsProvider } from './context/SettingsContext';
 
 function AppShell() {
   const { theme } = useTheme();
@@ -29,7 +30,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <ThemeProvider>
-        <AppShell />
+        <SettingsProvider>
+          <AppShell />
+        </SettingsProvider>
       </ThemeProvider>
     </BrowserRouter>
   </StrictMode>
