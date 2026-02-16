@@ -35,8 +35,8 @@ createRoot(document.getElementById('root')!).render(
           <AuthProvider>
             <AppShell />
           </AuthProvider>
-        </ThemeProvider>
-      </SettingsProvider>
+        </SettingsProvider>
+      </ThemeProvider>
     </BrowserRouter>
   </StrictMode>
 );
