@@ -13,7 +13,7 @@ interface ProfileButtonProps {
 export function ProfileButton({ header = false }: ProfileButtonProps) {
     const navigate = useNavigate();
     const [isClicking, setIsClicking] = useState(false);
-    const [play] = useSound(popSound, { volume: 0.5 });
+    const [play] = useSound(popSound, { volume: 0.3 });
     const { isLoggedIn } = useAuth();
 
     const handleClick = () => {

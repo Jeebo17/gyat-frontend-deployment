@@ -2,80 +2,22 @@ import Tile from "./Tile";
 import { TileProps } from "../types/tile";
 import { useState, useRef, useEffect } from "react";
 import MachineModal from '../components/MachineModal';
-import ToggleSwitch from "./ToggleSwitch";
 import { getInitialTiles } from "../services/tileService";
 import ZoomControls from "./ZoomControls";
 import { useTheme } from "../context/ThemeContext";
 
-import { isAdminTEST } from "../services/isAdmin";
-
-const BASE_WIDTH = 1600;
-const BASE_HEIGHT = 800;
-const GRID_SIZE = 20;
-const CELL_SIZE = 200; // spatial hash cell size (px)
-
-const rectanglesOverlap = (a: TileProps, b: TileProps) => {
-    const aRight = a.xCoord + a.width;
-    const aBottom = a.yCoord + a.height;
-    const bRight = b.xCoord + b.width;
-    const bBottom = b.yCoord + b.height;
-
-    // Edges touching are allowed; overlap requires positive shared area
-    return a.xCoord < bRight && aRight > b.xCoord && a.yCoord < bBottom && aBottom > b.yCoord;
-};
-
-const getCellsForTile = (tile: TileProps, cellSize = CELL_SIZE) => {
-    const cells: string[] = [];
-    const startCol = Math.floor(tile.xCoord / cellSize);
-    const endCol = Math.floor((tile.xCoord + tile.width) / cellSize);
-    const startRow = Math.floor(tile.yCoord / cellSize);
-    const endRow = Math.floor((tile.yCoord + tile.height) / cellSize);
-
-    for (let col = startCol; col <= endCol; col++) {
-        for (let row = startRow; row <= endRow; row++) {
-            cells.push(`${col}:${row}`);
-        }
-    }
-    return cells;
-};
-
-const buildSpatialIndex = (tiles: TileProps[]) => {
-    const index = new Map<string, TileProps[]>();
-    tiles.forEach(tile => {
-        getCellsForTile(tile).forEach(cell => {
-            if (!index.has(cell)) index.set(cell, []);
-            index.get(cell)!.push(tile);
-        });
-    });
-    return index;
-};
+export const BASE_WIDTH = 1600;
+export const BASE_HEIGHT = 800;
+export const GRID_SIZE = 20;
 
 function InteractiveMap() {
     const [selectedMachine, setSelectedMachine] = useState<TileProps | null>(null);
-    const [editMode, setEditMode] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
-    const [tiles, setTiles] = useState<TileProps[]>(getInitialTiles());
-    const spatialIndexRef = useRef<Map<string, TileProps[]>>(buildSpatialIndex(getInitialTiles()));
-    const [snapToGrid, setSnapToGrid] = useState(true);
-    const [gridSize, setGridSize] = useState(GRID_SIZE);
+    const [tiles] = useState<TileProps[]>(getInitialTiles());
     const [scale, setScale] = useState(1);
     const [autoScale, setAutoScale] = useState(true);
 
     const { theme } = useTheme();
-
-    const [userIsAdmin, setUserIsAdmin] = useState(false);
-
-    useEffect(() => {
-        const checkAdmin = async () => {
-            const isAdmin = await isAdminTEST("test");
-            setUserIsAdmin(isAdmin);
-        }
-        checkAdmin();
-    }, []);
-
-    useEffect(() => {
-        setGridSize(snapToGrid ? GRID_SIZE : 1);
-    }, [snapToGrid]);
 
     useEffect(() => {
         if (!autoScale) return; 
@@ -114,41 +56,6 @@ function InteractiveMap() {
         setAutoScale(true);
     };
 
-    const snap = (value: number) => Math.round(value / gridSize) * gridSize;
-
-    const updateTile = (id: number, updates: Partial<TileProps>) => {
-        setTiles(prev => {
-            const current = prev.find(t => t.id === id);
-            if (!current) return prev;
-
-            const candidate = { ...current, ...updates } as TileProps;
-
-            const spatialIndex = spatialIndexRef.current;
-            const visited = new Set<number>();
-            let collision = false;
-
-            getCellsForTile(candidate).some(cell => {
-                const bucket = spatialIndex.get(cell);
-                if (!bucket) return false;
-                for (const tile of bucket) {
-                    if (tile.id === id || visited.has(tile.id)) continue;
-                    visited.add(tile.id);
-                    if (rectanglesOverlap(candidate, tile)) {
-                        collision = true;
-                        return true;
-                    }
-                }
-                return false;
-            });
-
-            if (collision) return prev;
-
-            const nextTiles = prev.map(t => t.id === id ? candidate : t);
-            spatialIndexRef.current = buildSpatialIndex(nextTiles);
-            return nextTiles;
-        });
-    };
-
     return (
         <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-2 mt-16">
             <div
@@ -159,22 +66,6 @@ function InteractiveMap() {
                     backgroundColor: "transparent",
                 }}
             >
-                {userIsAdmin && (
-                    <>
-                        <div className="absolute top-4 left-4 z-10 flex flex-row items-center gap-4">
-                            <ToggleSwitch checked={editMode} onChange={(checked) => { setEditMode(checked); setSnapToGrid(true); }} />
-                            {!editMode && <span className="text-sm select-none">Edit Mode</span>}
-                        </div>
-
-                        {editMode && 
-                            <div className="absolute top-4 right-4 z-10 flex flex-row items-center gap-4">
-                                <span className="text-sm select-none">Snap to grid</span>             
-                                <ToggleSwitch checked={snapToGrid} onChange={setSnapToGrid} />
-                            </div>
-                        }
-                    </>
-                )}
-
                 <ZoomControls
                     scale={scale}
                     onZoomIn={zoomIn}
@@ -226,11 +117,10 @@ function InteractiveMap() {
                                 key={tile.id}
                                 {...tile}
                                 scale={scale}
-                                gridSize={gridSize}
-                                snap={snap}
-                                onUpdate={(updates) => editMode && tile.id !== undefined && updateTile(tile.id, updates)}
-                                onClick={!editMode ? () => setSelectedMachine({ ...tile, onUpdate: () => {} }) : undefined}
-                                editMode={editMode}
+                                gridSize={GRID_SIZE}
+                                snap={(v) => v}
+                                onClick={() => setSelectedMachine({ ...tile, onUpdate: () => {} })}
+                                editMode={false}
                             />
                         ))}
                     </div>

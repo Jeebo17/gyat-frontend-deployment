@@ -17,7 +17,7 @@ export interface GymComponentDTO {
     safetyInfo: string;
     additionalInfo: string;
 
-    // Fields the frontend needs to send but the backend does NOT yet accept
+    // Fields the frontend uses but the backend does NOT yet return
     // TODO: Ask dan to implement
     // colour: string;           // Display colour for the tile (e.g. "red", "#ff0000")
     // videoUrl: string;         // URL to an equipment demo video (currently only on Exercise entity)

@@ -1,11 +1,12 @@
 import HomePage from "./HomePage";
-import Map from "./Map";
+import Map from "./MapPage";
 import NotFoundPage from "./NotFoundPage";
 import SettingsPage from "./SettingsPage";
 import LoadingPage from "./LoadingPage";
 import LoginPage from "./LoginPage";
 import SignUpPage from "./SignUpPage";
 import ProfilePage from "./ProfilePage";
+import EditMapPage from "./EditMapPage";
 
 export {
     HomePage,
@@ -15,5 +16,6 @@ export {
     LoadingPage,
     LoginPage,
     SignUpPage,
-    ProfilePage
+    ProfilePage,
+    EditMapPage
 }

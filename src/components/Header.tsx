@@ -15,7 +15,7 @@ export type HeaderProps = {
 export default function Header({ className = '' }: HeaderProps) {
     const navigate = useNavigate();
     const selectedPage = window.location.pathname;
-    const [play] = useSound(popSound, { volume: 0.5 });
+    const [play] = useSound(popSound, { volume: 0.3 });
     const { isLoggedIn, userName } = useAuth();
 
     const items = [

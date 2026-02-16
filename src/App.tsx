@@ -8,12 +8,13 @@ import {
   SettingsPage, 
   LoginPage,
   SignUpPage,
-  ProfilePage
+  ProfilePage,
+  EditMapPage
 } from './pages';
 import startSound from './assets/sounds/start.mp3';
 
 function App() {
-  const [play] = useSound(startSound, { volume: 0.5 });
+  const [play] = useSound(startSound, { volume: 0.3 });
 
   useEffect(() => {
     play();
@@ -23,6 +24,7 @@ function App() {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/map" element={<Map />} />
+      <Route path="/map/edit" element={<EditMapPage />} />
       <Route path="/settings" element={<SettingsPage />}/> 
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />

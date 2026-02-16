@@ -12,7 +12,7 @@ interface ThemeToggleProps {
 export function ThemeToggle({ header = false }: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme();
   const [isClicking, setIsClicking] = useState(false);
-  const [play] = useSound(popSound, { volume: 0.5 });
+  const [play] = useSound(popSound, { volume: 0.3 });
 
   return (
     <div className="z-50">
