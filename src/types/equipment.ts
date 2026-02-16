@@ -1,7 +1,7 @@
 export interface EquipmentProps {
-    // Name of the equipment.
-    title: string;
-    // Optional icon component for the equipment.
+    // Name of the equipment
+    name: string;
+    // Optional icon component for the equipment (frontend-only, not from API).
     icon?: React.ComponentType<{ className?: string }>;
 
     // Detailed description of the equipment. 

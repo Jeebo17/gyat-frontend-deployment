@@ -6,6 +6,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { ProfileButton } from './ProfileButton';
 import useSound from 'use-sound';
 import popSound from '../assets/sounds/pop.mp3';
+import { useAuth } from '../context/AuthContext';
 
 export type HeaderProps = {
     className?: string;
@@ -14,7 +15,8 @@ export type HeaderProps = {
 export default function Header({ className = '' }: HeaderProps) {
     const navigate = useNavigate();
     const selectedPage = window.location.pathname;
-    const [play] = useSound(popSound, { volume: 0.5 });
+    const [play] = useSound(popSound, { volume: 0.3 });
+    const { isLoggedIn, userName } = useAuth();
 
     const items = [
         {
@@ -67,6 +69,9 @@ export default function Header({ className = '' }: HeaderProps) {
                 </div>
 
                 <div className="flex items-center gap-2">
+                    {isLoggedIn && userName && (
+                        <span className="text-sm text-text-secondary mr-2">Hi, {userName}</span>
+                    )}
                     <ThemeToggle header={true} />
                     <ProfileButton header={true} />
                 </div>

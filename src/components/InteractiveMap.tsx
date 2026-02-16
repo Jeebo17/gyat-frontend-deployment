@@ -1,35 +1,32 @@
 import Tile from "./Tile";
-import { TileProps } from "../types/tile";
-import { useState, useRef, useEffect } from "react";
+import { TileData, TileHistoryEntry } from "../types/tile";
+import { useState, useRef, useEffect, useCallback } from "react";
 import MachineModal from '../components/MachineModal';
-import ToggleSwitch from "./ToggleSwitch";
 import { getFloorsTiles, getInitialTiles } from "../services/tileService";
 import ZoomControls from "./ZoomControls";
 import { useTheme } from "../context/ThemeContext";
-
-import { isAdminTEST } from "../services/isAdmin";
+import type { DragTileData } from "./DragAndDropMenu";
 
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
 const GRID_SIZE = 20;
 const CELL_SIZE = 200; // spatial hash cell size (px)
 
-const rectanglesOverlap = (a: TileProps, b: TileProps) => {
-    const aRight = a.x + a.width;
-    const aBottom = a.y + a.height;
-    const bRight = b.x + b.width;
-    const bBottom = b.y + b.height;
+const rectanglesOverlap = (a: TileData, b: TileData) => {
+    const aRight = a.xCoord + a.width;
+    const aBottom = a.yCoord + a.height;
+    const bRight = b.xCoord + b.width;
+    const bBottom = b.yCoord + b.height;
 
-    // Edges touching are allowed; overlap requires positive shared area
-    return a.x < bRight && aRight > b.x && a.y < bBottom && aBottom > b.y;
+    return a.xCoord < bRight && aRight > b.xCoord && a.yCoord < bBottom && aBottom > b.yCoord;
 };
 
-const getCellsForTile = (tile: TileProps, cellSize = CELL_SIZE) => {
+const getCellsForTile = (tile: TileData, cellSize = CELL_SIZE) => {
     const cells: string[] = [];
-    const startCol = Math.floor(tile.x / cellSize);
-    const endCol = Math.floor((tile.x + tile.width) / cellSize);
-    const startRow = Math.floor(tile.y / cellSize);
-    const endRow = Math.floor((tile.y + tile.height) / cellSize);
+    const startCol = Math.floor(tile.xCoord / cellSize);
+    const endCol = Math.floor((tile.xCoord + tile.width) / cellSize);
+    const startRow = Math.floor(tile.yCoord / cellSize);
+    const endRow = Math.floor((tile.yCoord + tile.height) / cellSize);
 
     for (let col = startCol; col <= endCol; col++) {
         for (let row = startRow; row <= endRow; row++) {
@@ -39,8 +36,8 @@ const getCellsForTile = (tile: TileProps, cellSize = CELL_SIZE) => {
     return cells;
 };
 
-const buildSpatialIndex = (tiles: TileProps[]) => {
-    const index = new Map<string, TileProps[]>();
+const buildSpatialIndex = (tiles: TileData[]) => {
+    const index = new Map<string, TileData[]>();
     tiles.forEach(tile => {
         getCellsForTile(tile).forEach(cell => {
             if (!index.has(cell)) index.set(cell, []);
@@ -50,32 +47,27 @@ const buildSpatialIndex = (tiles: TileProps[]) => {
     return index;
 };
 
-function InteractiveMap() {
-    const [selectedMachine, setSelectedMachine] = useState<TileProps | null>(null);
-    const [editMode, setEditMode] = useState(false);
+interface InteractiveMapProps {
+    editMode?: boolean;
+    snapToGrid?: boolean;
+    floor?: number;
+}
+
+function InteractiveMap({ editMode = false, snapToGrid = true, floor = 0 }: InteractiveMapProps) {
+    const [selectedMachine, setSelectedMachine] = useState<TileData | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const [floor, setFLoor] = useState<number>(0);
-    const [tiles, setTiles] = useState<TileProps[]>(getInitialTiles());
-    const spatialIndexRef = useRef<Map<string, TileProps[]>>(buildSpatialIndex(getInitialTiles()));
-    const [snapToGrid, setSnapToGrid] = useState(true);
+    const [floorState, setFloorState] = useState<number>(floor);
+    const [tiles, setTiles] = useState<TileData[]>(getInitialTiles());
+    const spatialIndexRef = useRef<Map<string, TileData[]>>(buildSpatialIndex(getInitialTiles()));
     const [gridSize, setGridSize] = useState(GRID_SIZE);
     const [scale, setScale] = useState(1);
     const [autoScale, setAutoScale] = useState(true);
+    const [, setHistory] = useState<TileHistoryEntry[]>([]);
 
     const { theme } = useTheme();
     const floorButtonClasses = `w-7 h-7 rounded-md shadow flex items-center justify-center bg-text-primary transition duration-300 ${
         theme === "dark" ? "text-black" : "text-white"
     } disabled:opacity-50`;
-
-    const [userIsAdmin, setUserIsAdmin] = useState(false);
-
-    useEffect(() => {
-        const checkAdmin = async () => {
-            const isAdmin = await isAdminTEST("test");
-            setUserIsAdmin(isAdmin);
-        }
-        checkAdmin();
-    }, []);
 
     useEffect(() => {
         setTiles(floor === 0 ? getInitialTiles() : getFloorsTiles(floor))
@@ -86,7 +78,11 @@ function InteractiveMap() {
     }, [snapToGrid]);
 
     useEffect(() => {
-        if (!autoScale) return; 
+        setTiles(floor === 0 ? getInitialTiles() : getFloorsTiles(floor))
+    }, [floor])
+
+    useEffect(() => {
+        if (!autoScale) return;
         const updateScale = () => {
             if (!containerRef.current) return;
 
@@ -108,6 +104,31 @@ function InteractiveMap() {
         return () => window.removeEventListener('resize', updateScale);
     }, [autoScale]);
 
+    // Listen for Ctrl+Z / Cmd+Z to undo the last tile change
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                e.preventDefault();
+                
+                setHistory(prev => {
+                    if (prev.length === 0) return prev;
+                    const last = prev[prev.length - 1];
+                    updateTile(last.id, {
+                        xCoord: last.xCoord,
+                        yCoord: last.yCoord,
+                        width: last.width,
+                        height: last.height,
+                        rotation: last.rotation,
+                        colour: last.colour,
+                    });
+                    return prev.slice(0, -1);
+                });
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     const zoomIn = () => {
         setAutoScale(false);
         setScale(prev => Math.min(prev + 0.2, 3));
@@ -127,12 +148,92 @@ function InteractiveMap() {
 
     const snap = (value: number) => Math.round(value / gridSize) * gridSize;
 
-    const updateTile = (id: number, updates: Partial<TileProps>) => {
+    /** Generate the next unique tile id. */
+    const nextIdRef = useRef(
+        Math.max(...getInitialTiles().map(t => t.id)) + 1
+    );
+
+    /** Try to add a new tile at the given position; rejects on collision. */
+    const addTile = useCallback((template: DragTileData, xCoord: number, yCoord: number) => {
+        const snappedX = snap(xCoord);
+        const snappedY = snap(yCoord);
+
+        const candidate: TileData = {
+            id: nextIdRef.current,
+            xCoord: snappedX,
+            yCoord: snappedY,
+            width: template.width,
+            height: template.height,
+            rotation: 0,
+            colour: template.colour,
+            equipment: {
+                name: template.equipmentName,
+                icon: template.equipmentIcon,
+            },
+        };
+
+        setTiles(prev => {
+            // Collision check against existing tiles
+            const spatialIndex = spatialIndexRef.current;
+            const visited = new Set<number>();
+            let collision = false;
+
+            getCellsForTile(candidate).some(cell => {
+                const bucket = spatialIndex.get(cell);
+                if (!bucket) return false;
+                for (const tile of bucket) {
+                    if (visited.has(tile.id)) continue;
+                    visited.add(tile.id);
+                    if (rectanglesOverlap(candidate, tile)) {
+                        collision = true;
+                        return true;
+                    }
+                }
+                return false;
+            });
+
+            if (collision) return prev;
+
+            nextIdRef.current += 1;
+            const next = [...prev, candidate];
+            spatialIndexRef.current = buildSpatialIndex(next);
+            return next;
+        });
+    }, [snap]);
+
+    const canPlace = useCallback((id: number, updates: Partial<TileData>) => {
+        const current = tiles.find(t => t.id === id);
+        if (!current) return false;
+
+        const candidate = { ...current, ...updates } as TileData;
+
+        const spatialIndex = spatialIndexRef.current;
+        const visited = new Set<number>();
+        let collision = false;
+
+        getCellsForTile(candidate).some(cell => {
+            const bucket = spatialIndex.get(cell);
+            if (!bucket) return false;
+            for (const tile of bucket) {
+                if (tile.id === id || visited.has(tile.id)) continue;
+                visited.add(tile.id);
+                if (rectanglesOverlap(candidate, tile)) {
+                    collision = true;
+                    return true;
+                }
+            }
+            return false;
+        });
+
+        return !collision;
+    }, [tiles]);
+
+    const updateTile = (id: number, updates: Partial<TileData>) => {
         setTiles(prev => {
             const current = prev.find(t => t.id === id);
             if (!current) return prev;
 
-            const candidate = { ...current, ...updates } as TileProps;
+            const candidate = { ...current, ...updates } as TileData;
 
             const spatialIndex = spatialIndexRef.current;
             const visited = new Set<number>();
@@ -161,7 +262,7 @@ function InteractiveMap() {
     };
 
     return (
-        <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-2 mt-16">
+        <div className={`relative overflow-visible w-full h-full justify-center items-center flex pt-2 ${editMode ? '' : 'mt-16'}`}>
             <div
                 style={{
                     position: "absolute",
@@ -169,47 +270,7 @@ function InteractiveMap() {
                     height: "min(95vh, " + BASE_HEIGHT + "px)",
                     backgroundColor: "transparent",
                 }}
-
-                
             >
-                <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm select-none">Floor</span>
-                        <button
-                            type="button"
-                            className={floorButtonClasses}
-                            onClick={decrementFloor}
-                            disabled={floor <= 0}
-                            aria-label="Previous floor"
-                        >
-                            -
-                        </button>
-                        <span className="text-sm select-none w-6 text-center">{floor + 1}</span>
-                        <button
-                            type="button"
-                            className={floorButtonClasses}
-                            onClick={incrementFloor}
-                            aria-label="Next floor"
-                        >
-                            +
-                        </button>
-                    </div>
-                    {userIsAdmin && (
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                                {!editMode && <span className="text-sm select-none">Edit Mode</span>}
-                                <ToggleSwitch checked={editMode} onChange={(checked) => { setEditMode(checked); setSnapToGrid(true); }} />
-                            </div>
-                            {editMode && (
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm select-none">Snap to grid</span>
-                                    <ToggleSwitch checked={snapToGrid} onChange={setSnapToGrid} />
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
-
                 <ZoomControls
                     scale={scale}
                     onZoomIn={zoomIn}
@@ -217,7 +278,7 @@ function InteractiveMap() {
                     onReset={resetZoom}
                 />
             </div>
-            
+
             {/* Map container */}
             <div
                 ref={containerRef}
@@ -228,6 +289,18 @@ function InteractiveMap() {
                     scrollbarColor: theme === 'dark' ? '#999999 transparent' : '#808080 transparent',
                     scrollbarWidth: 'thin'
                 }}
+                onDragOver={editMode ? (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; } : undefined}
+                onDrop={editMode ? (e) => {
+                    e.preventDefault();
+                    const raw = e.dataTransfer.getData("application/tile-template");
+                    if (!raw) return;
+                    const template: DragTileData = JSON.parse(raw);
+                    const rect = containerRef.current!.getBoundingClientRect();
+                    // Account for scroll and scale so tile lands where the cursor is
+                    const x = (e.clientX - rect.left + containerRef.current!.scrollLeft) / scale - template.width / 2;
+                    const y = (e.clientY - rect.top + containerRef.current!.scrollTop) / scale - template.height / 2;
+                    addTile(template, x, y);
+                } : undefined}
             >
 
                 {/* Internal map */}
@@ -263,7 +336,14 @@ function InteractiveMap() {
                                 scale={scale}
                                 gridSize={gridSize}
                                 snap={snap}
-                                onUpdate={(updates) => editMode && tile.id !== undefined && updateTile(tile.id, updates)}
+                                canPlace={canPlace}
+                                onUpdate={editMode ? (updates) => {
+                                    setHistory(prev => {
+                                        const newHistory = [...prev, tile];
+                                        return newHistory.slice(-50); // limit history to last 50 changes
+                                    });
+                                    tile.id !== undefined && updateTile(tile.id, updates);
+                                } : undefined}
                                 onClick={!editMode ? () => setSelectedMachine({ ...tile, onUpdate: () => {} }) : undefined}
                                 editMode={editMode}
                             />
@@ -272,7 +352,7 @@ function InteractiveMap() {
                 </div>
             </div>
 
-            {selectedMachine && <MachineModal tile={selectedMachine} onClose={() => setSelectedMachine(null)} />}
+            {!editMode && selectedMachine && <MachineModal tile={selectedMachine} onClose={() => setSelectedMachine(null)} />}
         </div>
     );
 }

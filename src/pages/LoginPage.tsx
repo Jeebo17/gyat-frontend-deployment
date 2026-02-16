@@ -1,18 +1,35 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import Header from '../components/Header';
+import { authenticateTempUser } from '../services/tempAuth';
+import { useAuth } from '../context/AuthContext';
 
 function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Handle login logic here
-        console.log('Login attempt:', { email, password });
+        const result = authenticateTempUser(email, password);
+
+        if (!result.ok) {
+            setError('Invalid credentials. Try admin@admin / admin.');
+            return;
+        }
+
+        setError('');
+        login(result.userName, result.isAdmin);
+        navigate('/');
     };
 
     return (
         <div className="min-h-screen bg-bg-primary text-text-primary flex items-center justify-center">
+            <Header />
+            
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -25,6 +42,9 @@ function LoginPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {error && (
+                        <p className="text-red-500 text-sm">{error}</p>
+                    )}
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-2">
                             Email

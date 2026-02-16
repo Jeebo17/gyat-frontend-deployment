@@ -35,3 +35,27 @@
   --color-border-dark: #666666;
   --grid-line-color: rgba(255,255,255,0.07);
 }
+
+/* Scrollbar with hidden track but visible thumb */
+.scrollbar-thumb-only::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-thumb-only::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thumb-only::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 4px;
+}
+
+.scrollbar-thumb-only::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+/* Firefox */
+.scrollbar-thumb-only {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
+}

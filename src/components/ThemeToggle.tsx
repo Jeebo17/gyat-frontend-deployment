@@ -11,8 +11,8 @@ interface ThemeToggleProps {
 
 export function ThemeToggle({ header = false }: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme();
-  const [isHovered, setIsHovered] = useState(false);
-  const [play] = useSound(popSound, { volume: 0.5 });
+  const [isClicking, setIsClicking] = useState(false);
+  const [play] = useSound(popSound, { volume: 0.3 });
 
   return (
     <div className="z-50">
@@ -21,14 +21,14 @@ export function ThemeToggle({ header = false }: ThemeToggleProps) {
           onClick={() => {
             play();
             toggleTheme();
+            setIsClicking(true);
+            setTimeout(() => setIsClicking(false), 400);
           }}
           className="p-2 text-text-primary flex items-center"
           aria-label="Toggle theme"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
         >
           <motion.div
-            animate={isHovered ? { rotate: [0, -10, 10, 0], scale: 1.1 } : { rotate: 0, scale: 1 }}
+            animate={isClicking ? { rotate: [0, -10, 10, 0], scale: 1.1 } : { rotate: 0, scale: 1 }}
             transition={{ duration: 0.4 }}
             style={{ display: 'flex', alignItems: 'center' }}
           >
@@ -44,14 +44,14 @@ export function ThemeToggle({ header = false }: ThemeToggleProps) {
           onClick={() => {
             play();
             toggleTheme();
+            setIsClicking(true);
+            setTimeout(() => setIsClicking(false), 400);
           }}
           className="p-2 rounded-lg transition-colors bg-bg-secondary hover:bg-bg-tertiary text-text-primary flex items-center"
           aria-label="Toggle theme"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
         >
           <motion.div
-            animate={isHovered ? { rotate: [0, -10, 10, 0], scale: 1.1 } : { rotate: 0, scale: 1 }}
+            animate={isClicking ? { rotate: [0, -10, 10, 0], scale: 1.1 } : { rotate: 0, scale: 1 }}
             transition={{ duration: 0.4 }}
             style={{ display: 'flex', alignItems: 'center' }}
           >

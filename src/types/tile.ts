@@ -1,5 +1,5 @@
 import { EquipmentProps } from "./equipment";
-export interface TileProps {
+export interface TileData {
      // Unique identifier for this tile.
      // Used for tracking state updates and rendering.
     id: number;
@@ -7,9 +7,9 @@ export interface TileProps {
     //Data describing the equipment assigned to this tile.
     equipment: EquipmentProps;
 
-    // Coordinates of the tile on the canvas grid.
-    x: number;
-    y: number;
+    // Coordinates of the tile on the canvas grid (matches backend xCoord/yCoord).
+    xCoord: number;
+    yCoord: number;
 
     // Dimensions of the tile in grid in pixels
     width: number;
@@ -23,7 +23,10 @@ export interface TileProps {
 
     // Callback fired when this tile wants to update itself.
     // Receives only the fields that have changed.
-    onUpdate?: (updates: Partial<TileProps>) => void;
+    onUpdate?: (updates: Partial<TileData>) => void;
+
+    // Returns true if the tile can be placed at the given updates (no collisions).
+    canPlace?: (id: number, updates: Partial<TileData>) => boolean;
 
     // Whether hover highlighting should be enabled.
     canHover?: boolean;
@@ -40,7 +43,24 @@ export interface TileProps {
     // Grid size of the workspace into which the tile should snap.
     gridSize?: number;
 
-     // Snapping function used to align values to the grid.
-     // For example: snap(83) → 80.
+    // Snapping function used to align values to the grid.
+    // For example: snap(83) → 80.
     snap?: (value: number) => number;
+}
+
+export interface TileTemplate {
+    equipment: EquipmentProps;
+    width: number;
+    height: number;
+    colour: string;
+}
+
+export interface TileHistoryEntry {
+    id: number;
+    xCoord: number;
+    yCoord: number;
+    width: number;
+    height: number;
+    rotation: number;
+    colour: string;
 }

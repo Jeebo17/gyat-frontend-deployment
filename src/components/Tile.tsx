@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { FaArrowRotateLeft, FaArrowRotateRight } from "react-icons/fa6";
-import { TileProps } from "../types/tile";
+import { FaArrowRotateRight } from "react-icons/fa6";
+import { TileData } from "../types/tile";
 import { useTheme } from "../context/ThemeContext";
 
 
@@ -18,25 +18,41 @@ const colourClasses: Record<string, { light: string; dark: string }> = {
 };
 
 function Tile({
+    id,
     equipment,
-    x,
-    y,
+    xCoord,
+    yCoord,
     width,
     height,
     rotation,
     colour,
     onUpdate,
+    canPlace,
     canHover = true,
     onClick,
     editMode,
     scale = 1,
     gridSize = 20,
-    snap = (v) => v
-}: TileProps) {
+    snap = (v) => v,
+}: TileData) {
     const [isDragging, setIsDragging] = useState(false);
     const [isResizing, setIsResizing] = useState<ResizeHandle | null>(null);
     const dragStartRef = useRef({ x: 0, y: 0, tileX: 0, tileY: 0 });
     const resizeStartRef = useRef({ x: 0, y: 0, width: 0, height: 0, tileX: 0, tileY: 0 });
+    
+    // Track live position/size during drag for smooth visual feedback without parent updates
+    const [liveX, setLiveX] = useState(xCoord);
+    const [liveY, setLiveY] = useState(yCoord);
+    const [liveWidth, setLiveWidth] = useState(width);
+    const [liveHeight, setLiveHeight] = useState(height);
+
+    // Sync live state when props change (e.g., when parent applies an update)
+    useEffect(() => {
+        setLiveX(xCoord);
+        setLiveY(yCoord);
+        setLiveWidth(width);
+        setLiveHeight(height);
+    }, [xCoord, yCoord, width, height]);
     
     const theme = useTheme();
     const colourClass = colourClasses[colour]
@@ -55,8 +71,8 @@ function Tile({
         dragStartRef.current = {
             x: e.clientX,
             y: e.clientY,
-            tileX: x,
-            tileY: y
+            tileX: xCoord,
+            tileY: yCoord
         };
     };
 
@@ -70,8 +86,8 @@ function Tile({
             y: e.clientY,
             width,
             height,
-            tileX: x,
-            tileY: y
+            tileX: xCoord,
+            tileY: yCoord
         };
     };
 
@@ -79,8 +95,6 @@ function Tile({
         if (!isDragging && !isResizing) return;
 
         const handleMouseMove = (e: MouseEvent) => {
-            if (!onUpdate) return;
-
             if (isDragging) {
                 const deltaX = (e.clientX - dragStartRef.current.x) / scale;
                 const deltaY = (e.clientY - dragStartRef.current.y) / scale;
@@ -88,7 +102,12 @@ function Tile({
                 const newX = snap(dragStartRef.current.tileX + deltaX);
                 const newY = snap(dragStartRef.current.tileY + deltaY);
 
-                onUpdate({ x: newX, y: newY });
+                if (canPlace && !canPlace(id, { xCoord: newX, yCoord: newY, width: liveWidth, height: liveHeight })) {
+                    return;
+                }
+
+                setLiveX(newX);
+                setLiveY(newY);
             } else if (isResizing) {
                 const deltaX = (e.clientX - resizeStartRef.current.x) / scale;
                 const deltaY = (e.clientY - resizeStartRef.current.y) / scale;
@@ -138,16 +157,36 @@ function Tile({
                         break;
                 }
 
-                onUpdate({
-                    x: snap(newX),
-                    y: snap(newY),
-                    width: snap(newWidth),
-                    height: snap(newHeight)
-                });
+                const snappedX = snap(newX);
+                const snappedY = snap(newY);
+                const snappedWidth = snap(newWidth);
+                const snappedHeight = snap(newHeight);
+
+                if (canPlace && !canPlace(id, { xCoord: snappedX, yCoord: snappedY, width: snappedWidth, height: snappedHeight })) {
+                    return;
+                }
+
+                setLiveX(snappedX);
+                setLiveY(snappedY);
+                setLiveWidth(snappedWidth);
+                setLiveHeight(snappedHeight);
             }
         };
 
         const handleMouseUp = () => {
+            // Batch the update to parent only on mouse release
+            if (onUpdate) {
+                if (isDragging) {
+                    onUpdate({ xCoord: liveX, yCoord: liveY });
+                } else if (isResizing) {
+                    onUpdate({
+                        xCoord: liveX,
+                        yCoord: liveY,
+                        width: liveWidth,
+                        height: liveHeight
+                    });
+                }
+            }
             setIsDragging(false);
             setIsResizing(null);
         };
@@ -159,7 +198,7 @@ function Tile({
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("mouseup", handleMouseUp);
         };
-    }, [isDragging, isResizing, scale, snap, onUpdate, gridSize]);
+    }, [isDragging, isResizing, scale, snap, onUpdate, gridSize, liveX, liveY, liveWidth, liveHeight]);
 
     const resizeHandles: { handle: ResizeHandle; cursor: string; className: string }[] = [
         { handle: 'n', cursor: 'ns-resize', className: 'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-1' },
@@ -189,17 +228,17 @@ function Tile({
                 ${theme.theme === 'dark' ? 'opacity-100' : 'brightness-90'}
             `}
             style={{
-                left: x,
-                top: y,
-                width,
-                height,
+                left: isDragging || isResizing ? liveX : xCoord,
+                top: isDragging || isResizing ? liveY : yCoord,
+                width: isDragging || isResizing ? liveWidth : width,
+                height: isDragging || isResizing ? liveHeight : height,
                 transform: `rotate(${rotation}deg)`,
             }}
             onMouseDown={handleMouseDown}
             onClick={!editMode ? onClick : undefined}
-            aria-label={equipment.title}
+            aria-label={equipment.name}
         >
-            <p className="truncate">{equipment.title}</p>
+            <p className="truncate">{equipment.name}</p>
             {equipment.icon && <equipment.icon className="absolute bottom-2 right-2 w-6 h-6 opacity-100" />}
 
             {editMode && onUpdate && (
@@ -215,21 +254,7 @@ function Tile({
                     }}
                     >
                         <FaArrowRotateRight className="w-5 h-5 text-primary"/>
-                    </div>
-
-                {/* Temporary fix to rotation */}
-                {/* <div
-                    className="absolute top-2 left-2 transform w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
-                    onMouseDown={(e) => {
-                        e.stopPropagation();
-                        if (onUpdate) {
-                            onUpdate({ width: height, height: width, rotation: rotation });
-                            onUpdate({ rotation: (rotation - 90) % 360 });
-                        }
-                    }}
-                    >
-                        <FaArrowRotateLeft className="w-5 h-5 text-primary"/>
-                </div> */}
+                </div>
             </div>
             )}
 

@@ -115,7 +115,7 @@ Represents a piece of gym equipment on the interactive map.
 
 #### Props:
 
-See `TileProps` in [TYPES.md](./TYPES.md#tile-types) for full details.
+See `TileData` in [TYPES.md](./TYPES.md#tile-types) for full details.
 
 Key props:
 - `equipment` - What equipment to display
@@ -166,7 +166,7 @@ A popup modal showing detailed information about gym equipment.
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `tile` | `TileProps` | The equipment tile to show details for |
+| `tile` | `TileData` | The equipment tile to show details for |
 | `onClose` | `() => void` | Function to call when closing modal |
 
 #### Usage Example:
@@ -181,7 +181,7 @@ function Map() {
   return (
     <div>
       {/* Click a tile to open modal */}
-      <Tile onClick={() => setSelectedTile(someTile)} {...tileProps} />
+      <Tile onClick={() => setSelectedTile(someTile)} {...TileData} />
 
       {/* Show modal if a tile is selected */}
       {selectedTile && (

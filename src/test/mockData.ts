@@ -1,8 +1,8 @@
 import { EquipmentProps } from '../types/equipment';
-import { TileProps } from '../types/tile';
+import { TileData } from '../types/tile';
 
 export const mockEquipment: EquipmentProps = {
-    title: 'Equipment Title #1',
+    name: 'Equipment Title #1',
     description: 'Equipment Description #1',
     musclesTargeted: [
         'Muscle 1',
@@ -21,27 +21,27 @@ export const mockEquipment: EquipmentProps = {
 };
 
 
-export const mockTile: TileProps = {
+export const mockTile: TileData = {
     id: 1,
     equipment: mockEquipment,
-    x: 20,
-    y: 160,
+    xCoord: 20,
+    yCoord: 160,
     width: 240,
     height: 100,
     rotation: 0,
     colour: 'red',
 };
 
-export const mockTiles: TileProps[] = [
+export const mockTiles: TileData[] = [
     mockTile,
     {
         ...mockTile,
         id: 2,
-        x: 280,
-        y: 160,
+        xCoord: 280,
+        yCoord: 160,
         colour: 'blue',
         equipment: {
-            title: 'Equipment Title #2',
+            name: 'Equipment Title #2',
             description: 'Equipment Description #2',
             musclesTargeted: ['Muscle 2', 'Muscle 4'],
         },
@@ -49,18 +49,18 @@ export const mockTiles: TileProps[] = [
     {
         ...mockTile,
         id: 3,
-        x: 20,
-        y: 300,
+        xCoord: 20,
+        yCoord: 300,
         colour: 'green',
         equipment: {
-            title: 'Equipment Title #3',
+            name: 'Equipment Title #3',
             description: 'Equipment Description #3',
             musclesTargeted: ['Muscle 1', 'Muscle 3', 'Muscle 5'],
         },
     },
 ];
 
-export const createMockTile = (overrides: Partial<TileProps> = {}): TileProps => {
+export const createMockTile = (overrides: Partial<TileData> = {}): TileData => {
     return {
         ...mockTile,
         ...overrides,
