@@ -30,10 +30,12 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <ThemeProvider>
-        <AuthProvider>
-          <AppShell />
-        </AuthProvider>
-      </ThemeProvider>
+        <SettingsProvider>
+          <AuthProvider>
+            <AppShell />
+          </AuthProvider>
+        </ThemeProvider>
+      </SettingsProvider>
     </BrowserRouter>
   </StrictMode>
 );
