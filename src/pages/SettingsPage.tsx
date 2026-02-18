@@ -9,6 +9,7 @@ function SettingsPage() {
   const navigate = useNavigate();
   const { reducedMotion } = useSettings();
   const { setReducedMotion } = useSettings();
+  const { highContrast, setHighContrast } = useSettings();
 
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary transition-colors duration-300 flex flex-col">
@@ -58,7 +59,19 @@ function SettingsPage() {
             />
             </div>
 
-          {/* Back Button */}
+          <div className="mb-6 flex items-center justify-between">
+            <label className="font-medium">
+                High Contrast Mode
+            </label>
+
+            <input
+                type="checkbox"
+                checked={highContrast}
+                onChange={(e) => setHighContrast(e.target.checked)}
+                className="w-5 h-5 accent-accent-primary"
+            />
+        </div>
+
           <button
             onClick={() => navigate(-1)}
             className="mt-4 px-6 py-2 bg-accent-primary text-white rounded-xl hover:bg-accent-hover transition-colors duration-200 shadow-md"

@@ -13,7 +13,7 @@ function AppShell() {
   const { theme } = useTheme();
   const { reducedMotion } = useSettings();
 
-  // If reduced animations is ON → no ClickSpark at all
+ 
   if (reducedMotion) {
     return <App />;
   }
