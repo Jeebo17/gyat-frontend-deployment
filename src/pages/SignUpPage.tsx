@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+
 import Header from '../components/Header';
 
 function SignUpPage() {
@@ -7,11 +9,16 @@ function SignUpPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const navigate = useNavigate();
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         // Handle signup logic here
         console.log('Signup attempt:', { name, email, password, confirmPassword });
+    };
+
+    const goToSignIn = () => {
+        navigate('/login'); // Adjust this path to your actual login route
     };
 
     return (
@@ -90,6 +97,7 @@ function SignUpPage() {
                         />
                     </div>
 
+
                     <motion.button
                         type="submit"
                         whileHover={{ scale: 1.02 }}
@@ -100,11 +108,15 @@ function SignUpPage() {
                     </motion.button>
                 </form>
 
+                {/* Sign in button at the bottom */}
                 <p className="mt-6 text-center text-text-tertiary text-sm">
                     Already have an account?{' '}
-                    <a href="#" className="text-accent-primary hover:underline">
+                    <button
+                        onClick={goToSignIn}
+                        className="text-accent-primary hover:underline"
+                    >
                         Sign in
-                    </a>
+                    </button>
                 </p>
             </motion.div>
         </div>
