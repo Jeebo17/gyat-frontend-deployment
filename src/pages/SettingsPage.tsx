@@ -3,9 +3,12 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import { motion } from "framer-motion";
 
+
 function SettingsPage() {
   const { fontScale, setFontScale } = useSettings();
   const navigate = useNavigate();
+  const { reducedMotion } = useSettings();
+  const { setReducedMotion } = useSettings();
 
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary transition-colors duration-300 flex flex-col">
@@ -15,9 +18,9 @@ function SettingsPage() {
       <div className="flex flex-1 items-center justify-center p-6">
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+        initial={reducedMotion ? false : { opacity: 0, y: 20 }}
+        animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+        transition={reducedMotion ? { duration: 0 } : { duration: 0.6 }}
           className="w-full max-w-xl p-8 bg-bg-secondary/50 backdrop-blur-lg rounded-2xl border-2 border-neutral-700/30"
         >
 
@@ -41,6 +44,19 @@ function SettingsPage() {
               className="w-full accent-accent-primary"
             />
           </div>
+
+          <div className="mb-6 flex items-center justify-between">
+            <label className="font-medium">
+            Reduced Animations
+            </label>
+
+            <input
+                type="checkbox"
+                checked={reducedMotion}
+                onChange={(e) => setReducedMotion(e.target.checked)}
+                className="w-5 h-5 accent-accent-primary"
+            />
+            </div>
 
           {/* Back Button */}
           <button
