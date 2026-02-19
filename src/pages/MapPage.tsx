@@ -39,9 +39,10 @@ function MapPage() {
 
     const tiles = useMemo(() => {
         if (!layout || !currentFloor) return [];
+        const definitions = layout.definitions ?? {};
         return layout.components
             .filter(c => c.floorId === currentFloor.id)
-            .map(mapComponentToTile);
+            .map(c => mapComponentToTile(c, definitions));
     }, [layout, currentFloor]);
 
     useEffect(() => {

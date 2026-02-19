@@ -15,7 +15,7 @@ const resolveEquipmentTypeId = (component: GymComponentDTO): number => {
     return 0;
 };
 
-const mapComponentToTile = (
+export const mapComponentToTile = (
     component: GymComponentDTO,
     definitions: Partial<Record<number, EquipmentDefinitionDTO>>
 ): TileData => {
