@@ -9,7 +9,7 @@ const getColourForEquipment = (equipmentTypeId: number): string => {
     return FALLBACK_COLOURS[index];
 };
 
-const mapComponentToTile = (component: GymComponentDTO): TileData => ({
+export const mapComponentToTile = (component: GymComponentDTO): TileData => ({
     id: component.id,
     xCoord: component.xCoord,
     yCoord: component.yCoord,

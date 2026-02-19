@@ -54,6 +54,7 @@ interface InteractiveMapProps {
     floorLoading?: boolean;
     floorLoadError?: string | null;
     onTilesChange?: (tiles: TileData[]) => void;
+    highlightedTileId?: number | null;
 }
 
 function InteractiveMap({
@@ -63,6 +64,7 @@ function InteractiveMap({
     floorLoading = false,
     floorLoadError = null,
     onTilesChange,
+    highlightedTileId = null,
 }: InteractiveMapProps) {
     const [selectedMachine, setSelectedMachine] = useState<TileData | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -386,6 +388,7 @@ function InteractiveMap({
                             <Tile
                                 key={tile.id}
                                 {...tile}
+                                highlighted={highlightedTileId === tile.id}
                                 scale={scale}
                                 gridSize={gridSize}
                                 snap={snap}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import InteractiveMap from "../components/InteractiveMap";
 import Header from "../components/Header";
@@ -7,22 +7,21 @@ import { LoadingPage } from "../pages";
 import { DragAndDropMenu } from "../components/DragAndDropMenu";
 import ToggleSwitch from "../components/ToggleSwitch";
 import { FaRegCaretSquareUp, FaRegCaretSquareDown } from "react-icons/fa";
-import type { GymFloorDTO } from "../types/api";
+import type { GymFloorDTO, GymLayoutDTO } from "../types/api";
 import type { TileData } from "../types/tile";
-import { getFloorTiles } from "../services/tileService";
+import { getLayout } from "../services/layoutService";
+import { mapComponentToTile } from "../services/tileService";
 
 function EditMapPage() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [snapToGridState, setSnapToGridState] = useState(true);
     const [floor, setFloor] = useState<number>(0);
-    const [floors, setFloors] = useState<GymFloorDTO[]>([]);
-    const maxFloorIndex = floors.length > 0 ? floors.length - 1 : 0;
-    const currentFloor = floors[Math.min(floor, maxFloorIndex)];
-    const [tiles, setTiles] = useState<TileData[]>([]);
-    const [isFloorLoading, setIsFloorLoading] = useState(true);
-    const [floorLoadError, setFloorLoadError] = useState<string | null>(null);
+    const [layout, setLayout] = useState<GymLayoutDTO | null>(null);
+    const [isLayoutLoading, setIsLayoutLoading] = useState(true);
+    const [layoutLoadError, setLayoutLoadError] = useState<string | null>(null);
     const [refreshVersion, setRefreshVersion] = useState(0);
+    const [tileOverrides, setTileOverrides] = useState<TileData[] | null>(null);
 
     //TEMP
     const layoutId = 50;
@@ -30,43 +29,63 @@ function EditMapPage() {
     const DEFAULT_LAYOUT_ID = Number.isFinite(parsedLayoutId) && parsedLayoutId > 0 ? parsedLayoutId : 50;
     const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : DEFAULT_LAYOUT_ID;
 
+    // Derive floors from the cached layout
+    const floors = useMemo<GymFloorDTO[]>(() => {
+        if (!layout) return [];
+        return [...layout.floors].sort((a, b) => a.levelOrder - b.levelOrder);
+    }, [layout]);
+
+    const maxFloorIndex = floors.length > 0 ? floors.length - 1 : 0;
+    const currentFloor = floors[Math.min(floor, maxFloorIndex)];
+
+    // Derive tiles from layout, but allow local overrides from editing
+    const tiles = useMemo(() => {
+        if (tileOverrides) return tileOverrides;
+        if (!layout || !currentFloor) return [];
+        return layout.components
+            .filter(c => c.floorId === currentFloor.id)
+            .map(mapComponentToTile);
+    }, [layout, currentFloor, tileOverrides]);
+
     useEffect(() => {
         if (floor > maxFloorIndex) {
             setFloor(maxFloorIndex);
         }
     }, [floor, maxFloorIndex]);
 
-    // Load floor tiles when floor changes or refresh is triggered
+    // Reset local tile overrides when floor changes
+    useEffect(() => {
+        setTileOverrides(null);
+    }, [floor]);
+
+    // Fetch the full layout once (or re-fetch on refresh)
     useEffect(() => {
         let active = true;
 
-        const loadFloor = async () => {
-            setIsFloorLoading(true);
-            setFloorLoadError(null);
+        const loadLayout = async () => {
+            setIsLayoutLoading(true);
+            setLayoutLoadError(null);
 
             try {
-                const floorData = await getFloorTiles(resolvedLayoutId, floor);
+                const data = await getLayout(resolvedLayoutId);
                 if (!active) return;
-
-                setFloors(floorData.floors);
-                setTiles(floorData.tiles);
+                setLayout(data);
+                setTileOverrides(null);
             } catch (error) {
                 if (!active) return;
-
-                setFloors([]);
-                setTiles([]);
-                setFloorLoadError(error instanceof Error ? error.message : "Failed to load floor.");
+                setLayout(null);
+                setLayoutLoadError(error instanceof Error ? error.message : "Failed to load layout.");
             } finally {
-                if (active) setIsFloorLoading(false);
+                if (active) setIsLayoutLoading(false);
             }
         };
 
-        void loadFloor();
+        void loadLayout();
         return () => { active = false; };
-    }, [floor, resolvedLayoutId, refreshVersion]);
+    }, [resolvedLayoutId, refreshVersion]);
 
     const handleTilesChange = useCallback((newTiles: TileData[]) => {
-        setTiles(newTiles);
+        setTileOverrides(newTiles);
     }, []);
 
     const triggerRefresh = useCallback(() => {
@@ -150,8 +169,8 @@ function EditMapPage() {
                         editMode={true}
                         snapToGrid={snapToGridState}
                         floorTiles={tiles}
-                        floorLoading={isFloorLoading}
-                        floorLoadError={floorLoadError}
+                        floorLoading={isLayoutLoading}
+                        floorLoadError={layoutLoadError}
                         onTilesChange={handleTilesChange}
                     />
                 </div>

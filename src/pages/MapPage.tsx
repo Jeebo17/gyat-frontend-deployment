@@ -1,15 +1,16 @@
 import '../styles/App.scss';
 import { LoadingPage } from '.';
 import InteractiveMap from '../components/InteractiveMap';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { isAdminTEST } from '../services/isAdmin';
-import type { GymFloorDTO } from '../types/api';
-import type { TileData } from '../types/tile';
+import type { GymFloorDTO, GymLayoutDTO } from '../types/api';
 import { FaRegCaretSquareUp, FaRegCaretSquareDown } from 'react-icons/fa';
 import { SearchBar } from '../components/SearchBar';
-import { getFloorTiles } from "../services/tileService";
+import { getLayout } from "../services/layoutService";
+import { mapComponentToTile } from "../services/tileService";
+import type { TileSearchProps } from '../types/tile';
 
 const parsedLayoutId = Number(import.meta.env.VITE_LAYOUT_ID ?? "50");
 const DEFAULT_LAYOUT_ID = Number.isFinite(parsedLayoutId) && parsedLayoutId > 0 ? parsedLayoutId : 50;
@@ -19,15 +20,29 @@ function MapPage() {
     const [isAdmin, setIsAdmin] = useState(false);
     const navigate = useNavigate();
     const [floor, setFloor] = useState<number>(0);
-    const [floors, setFloors] = useState<GymFloorDTO[]>([]);
+    const [layout, setLayout] = useState<GymLayoutDTO | null>(null);
+    const [searchData, setSearchData] = useState<TileSearchProps[]>([]);
+    const [highlightedTileId, setHighlightedTileId] = useState<number | null>(null);
+    const [isLayoutLoading, setIsLayoutLoading] = useState(true);
+    const [layoutLoadError, setLayoutLoadError] = useState<string | null>(null);
+    const layoutId = null;
+    const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : DEFAULT_LAYOUT_ID;
+
+    // Derive floors and tiles from the cached layout
+    const floors = useMemo<GymFloorDTO[]>(() => {
+        if (!layout) return [];
+        return [...layout.floors].sort((a, b) => a.levelOrder - b.levelOrder);
+    }, [layout]);
+
     const maxFloorIndex = floors.length > 0 ? floors.length - 1 : 0;
     const currentFloor = floors[Math.min(floor, maxFloorIndex)];
-    const [tiles, setTiles] = useState<TileData[]>([]);
-    const [isFloorLoading, setIsFloorLoading] = useState(true);
-    const [floorLoadError, setFloorLoadError] = useState<string | null>(null);
-    //TEMP
-    const layoutId = 50
-    const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : DEFAULT_LAYOUT_ID;
+
+    const tiles = useMemo(() => {
+        if (!layout || !currentFloor) return [];
+        return layout.components
+            .filter(c => c.floorId === currentFloor.id)
+            .map(mapComponentToTile);
+    }, [layout, currentFloor]);
 
     useEffect(() => {
         if (floor > maxFloorIndex) {
@@ -35,36 +50,48 @@ function MapPage() {
         }
     }, [floor, maxFloorIndex]);
 
-
+    // Fetch the full layout once
     useEffect(() => {
         let active = true;
 
-        const loadFloor = async () => {
-            setIsFloorLoading(true);
-            setFloorLoadError(null);
+        const loadLayout = async () => {
+            setIsLayoutLoading(true);
+            setLayoutLoadError(null);
 
             try {
-                const floorData = await getFloorTiles(resolvedLayoutId, floor);
+                const data = await getLayout(resolvedLayoutId);
                 if (!active) return;
+                setLayout(data);
 
-                setFloors(floorData.floors);
-                setTiles(floorData.tiles);
+                const searchItems: TileSearchProps[] = data.components.map(component => ({
+                    id: component.id,
+                    name: component.name || `Component ${component.id}`,
+                    description: component.description || component.additionalInfo || "No description provided.",
+                    floorId: component.floorId,
+                }));
+                setSearchData(searchItems);
             } catch (error) {
                 if (!active) return;
-
-                setFloors([]);
-                setTiles([]);
-                setFloorLoadError(error instanceof Error ? error.message : "Failed to load floor.");
+                setLayout(null);
+                setLayoutLoadError(error instanceof Error ? error.message : "Failed to load layout.");
             } finally {
-                if (active) setIsFloorLoading(false);
+                if (active) setIsLayoutLoading(false);
             }
         };
 
-        void loadFloor();
-        return () => {
-            active = false;
-        };
-    }, [floor, resolvedLayoutId]);
+        void loadLayout();
+        return () => { active = false; };
+    }, [resolvedLayoutId]);
+
+    // When a search result is selected, switch to its floor and highlight it
+    const handleSearchSelect = useCallback((item: TileSearchProps) => {
+        // Find which floor index this item belongs to
+        const floorIdx = floors.findIndex(f => f.id === item.floorId);
+        if (floorIdx >= 0 && floorIdx !== floor) {
+            setFloor(floorIdx);
+        }
+        setHighlightedTileId(item.id);
+    }, [floors, floor]);
 
     useEffect(() => {
         const init = async () => {
@@ -72,9 +99,7 @@ function MapPage() {
             setIsAdmin(admin);
             setLoading(false);
         };
-        // small delay keeps the loading screen feeling intentional
-        const timer = setTimeout(() => { init(); }, 300);
-        return () => clearTimeout(timer);
+        void init();
     }, []);
 
     if (loading) {
@@ -91,7 +116,7 @@ function MapPage() {
             <Header />
 
             <div className="mt-16 flex flex-row items-center justify-between w-full py-3 px-4 gap-4 flex-shrink-0 select-none">
-                <SearchBar />
+                <SearchBar searchData={searchData} onSelect={handleSearchSelect} />
 
                 <div className="flex items-center gap-3 whitespace-nowrap">
                     <button
@@ -132,8 +157,9 @@ function MapPage() {
             <div className="flex-1 min-h-0 overflow-hidden">
                 <InteractiveMap
                     floorTiles={tiles}
-                    floorLoading={isFloorLoading}
-                    floorLoadError={floorLoadError}
+                    floorLoading={isLayoutLoading}
+                    floorLoadError={layoutLoadError}
+                    highlightedTileId={highlightedTileId}
                 />
             </div>
         </div>

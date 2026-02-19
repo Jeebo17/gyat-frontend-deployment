@@ -227,7 +227,7 @@ function Tile({
                 select-none
                 ${editMode ? "cursor-move" : ""}
                 ${canHover && !editMode ? "cursor-pointer hover:brightness-110 hover:border-2 border-text-primary" : ""}
-                ${highlighted ? "ring-2 ring-blue-500" : ""}
+                ${highlighted ? "ring-4 ring-accent-primary" : ""}
                 ${theme.theme === 'dark' ? 'opacity-100' : 'brightness-90'}
             `}
             style={{
