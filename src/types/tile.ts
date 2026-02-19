@@ -78,5 +78,5 @@ export interface TileSearchProps {
     id: number;
     name: string;
     description: string;
-    floorId: number;
+    floorName: string;
 }

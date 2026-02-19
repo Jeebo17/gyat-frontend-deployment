@@ -44,14 +44,18 @@ export function SearchBar({ searchData, onSelect }: SearchBarProps) {
                     {filtered.map(item => (
                         <li
                             key={item.id}
-                            className="px-4 py-2 cursor-pointer hover:bg-accent-primary/20 text-text-primary text-sm transition-colors"
+                            className="px-4 py-2 cursor-pointer hover:bg-accent-primary/20 text-text-primary text-sm transition-colors flex flex-col"
                             onMouseDown={() => {
                                 onSelect?.(item);
                                 setQuery(item.name);
                                 setOpen(false);
                             }}
                         >
-                            <span className="font-medium">{item.name}</span>
+                            <span>
+                                <span className="font-medium">{item.name}</span>
+                                <span className="font-light ml-1 text-xs">#{item.id}</span>
+                            </span>
+                            <span className="ml-2 text-xs opacity-60">Floor: {item.floorName}</span>
                             <span className="ml-2 text-xs opacity-60">{item.description}</span>
                         </li>
                     ))}
