@@ -6,11 +6,11 @@ import useSound from "use-sound";
 import popSound from "../assets/sounds/pop.mp3";
 import { useAuth } from "../context/AuthContext";
 
-interface LogOutButtonProps {
+interface LogoutButtonProps {
     header?: boolean;
 }
 
-export function LogOutButton({ header = false }: LogOutButtonProps) {
+export function LogoutButton({ header = false }: LogoutButtonProps) {
     const navigate = useNavigate();
     const { isLoggedIn, logout } = useAuth();
     const [isClicking, setIsClicking] = useState(false);

@@ -11,6 +11,7 @@ import { SearchBar } from '../components/SearchBar';
 import { getLayout } from "../services/layoutService";
 import { mapComponentToTile } from "../services/tileService";
 import type { TileSearchProps } from '../types/tile';
+import { useAuth } from '../context/AuthContext';
 
 const parsedLayoutId = Number(import.meta.env.VITE_LAYOUT_ID ?? "50");
 const DEFAULT_LAYOUT_ID = Number.isFinite(parsedLayoutId) && parsedLayoutId > 0 ? parsedLayoutId : 50;
@@ -27,6 +28,7 @@ function MapPage() {
     const [layoutLoadError, setLayoutLoadError] = useState<string | null>(null);
     const layoutId = null;
     const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : DEFAULT_LAYOUT_ID;
+    const { isLoggedIn } = useAuth();
 
     // Derive floors and tiles from the cached layout
     const floors = useMemo<GymFloorDTO[]>(() => {
@@ -121,10 +123,11 @@ function MapPage() {
 
             <Header />
 
-            <div className="mt-16 flex flex-row items-center justify-between w-full py-3 px-4 gap-4 flex-shrink-0 select-none">
+            <div className="mt-16 relative flex flex-row items-center w-full py-3 px-4 flex-shrink-0 select-none">
                 <SearchBar searchData={searchData} onSelect={handleSearchSelect} />
 
-                <div className="flex items-center gap-3 whitespace-nowrap">
+                {/* Absolutely centered floor buttons */}
+                <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 whitespace-nowrap">
                     <button
                         type="button"
                         className="flex items-center justify-center text-text-primary hover:text-accent-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
@@ -149,10 +152,10 @@ function MapPage() {
                 </div>
 
                 {/* Admin-only edit button */}
-                {isAdmin && (
+                {isAdmin && isLoggedIn && (
                     <button
                         onClick={() => navigate("/map/edit")}
-                        className="px-4 py-2 rounded-lg bg-accent-primary text-white text-sm font-medium shadow hover:opacity-90 transition-opacity flex-shrink-0"
+                        className="ml-auto px-4 py-2 rounded-lg bg-accent-primary text-white text-sm font-medium shadow hover:opacity-90 transition-opacity flex-shrink-0"
                     >
                         Edit Map
                     </button>
