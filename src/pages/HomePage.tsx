@@ -5,12 +5,13 @@ import { IoMapOutline, IoFitnessOutline, IoLocationOutline, IoTimeOutline } from
 import Header from '../components/Header';
 import Silk from '../backgrounds/Silk';
 import { useTheme } from '../context/ThemeContext';
-
+import {useSettings } from '../context/SettingsContext';
 
 
 function HomePage() {
     const navigate = useNavigate();
     const { theme } = useTheme();
+    const { reducedMotion } = useSettings();
 
     const features = [
         {
@@ -53,9 +54,9 @@ function HomePage() {
             <div className="relative flex flex-row items-center justify-center h-full w-full" style={{ minHeight: '100vh' }}>
                 <div className="max-w-4xl mx-auto text-center">
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
+                        initial={reducedMotion ? false : { opacity: 0, y: 20 }}
+                        animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+                        transition={reducedMotion ? { duration: 0 } : { duration: 0.6 }}
                     >
                         <h1 className="text-5xl md:text-6xl font-bold mb-4">
                             GYAT
@@ -69,9 +70,9 @@ function HomePage() {
                     </motion.div>
 
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
+                        initial={reducedMotion ? false : { opacity: 0, y: 20 }}
+                        animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+                        transition={reducedMotion ? { duration: 0 } : { duration: 0.6 }}
                         className="mt-10"
                     >
                         <button
@@ -86,17 +87,18 @@ function HomePage() {
                 <div className="px-6">
                     <div className="max-w-4xl mx-auto px-4">
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.6, delay: 0.3 }}
+                            initial={reducedMotion ? false : { opacity: 0, y: 20 }}
+                            animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+                            transition={reducedMotion ? { duration: 0 } : { duration: 0.6 }}
                             className="grid grid-cols-1 md:grid-cols-2 gap-6"
                         >
                             {features.map((feature, index) => (
                                 <motion.div
                                     key={index}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
+                                    initial={reducedMotion ? false : { opacity: 0, y: 20 }}
+                                    animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
+                                    transition={reducedMotion ? { duration: 0 } : { duration: 0.6 }}
+                    
                                     className="p-6 bg-bg-secondary/50 backdrop-blur-lg rounded-2xl border-2 border-neutral-700/30 hover:border-neutral-600/50 transition-colors duration-200"
                                 >
                                     <div className="flex items-start gap-4">
