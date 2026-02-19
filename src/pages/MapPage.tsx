@@ -64,12 +64,17 @@ function MapPage() {
                 if (!active) return;
                 setLayout(data);
 
-                const searchItems: TileSearchProps[] = data.components.map(component => ({
-                    id: component.id,
-                    name: component.name || `Component ${component.id}`,
-                    description: component.description || component.additionalInfo || "No description provided.",
-                    floorId: component.floorId,
-                }));
+                const definitions = data.definitions ?? {};
+                const searchItems: TileSearchProps[] = data.components.map(component => {
+                    const eqId = component.equipmentTypeId ?? component.equipmentId ?? 0;
+                    const def = definitions[eqId];
+                    return {
+                        id: component.id,
+                        name: `${def?.name || component.name || "Unknown Equipment"} #${component.id}`,
+                        description: def?.description || component.description || component.additionalInfo || "No description provided.",
+                        floorId: component.floorId,
+                    };
+                });
                 setSearchData(searchItems);
             } catch (error) {
                 if (!active) return;
