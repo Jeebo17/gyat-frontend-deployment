@@ -9,21 +9,65 @@ function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
     const { login } = useAuth();
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        const result = authenticateTempUser(email, password);
+    // Validate email format
+    const isValidEmail = (value: string) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(value);
+    };
 
-        if (!result.ok) {
-            setError('Invalid credentials. Try admin@admin / admin.');
+    // Simple rate limiting: prevent rapid submissions
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (isLoading) return;
+        setError('');
+
+        if (!email.trim() || !password.trim()) {
+            setError('Invalid credentials. Please try again.');
             return;
         }
 
-        setError('');
-        login(result.userName, result.isAdmin);
-        navigate('/');
+        if (!isValidEmail(email)) {
+            setError('Invalid credentials. Please try again.');
+            return;
+        }
+
+        if (password.length > 128) {
+            setError('Invalid credentials. Please try again.');
+            return;
+        }
+
+        setIsLoading(true);
+        
+        try {
+            const result = authenticateTempUser(email.trim(), password);
+
+            if (!result?.ok) {
+                setError('Invalid credentials. Please try again.');
+                return;
+            }
+
+            if (!result.userName) {
+                setError('Authentication failed. Please try again.');
+                return;
+            }
+
+
+            setEmail('');
+            setPassword('');
+            login(result.userName);
+            navigate('/');
+        } catch (err) {
+
+            console.error('Login error:', err);
+            setError('An error occurred. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -77,11 +121,12 @@ function LoginPage() {
 
                     <motion.button
                         type="submit"
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="w-full py-3 px-4 rounded-lg bg-accent-primary text-white font-medium hover:bg-accent-secondary transition-colors"
+                        disabled={isLoading}
+                        whileHover={{ scale: isLoading ? 1 : 1.02 }}
+                        whileTap={{ scale: isLoading ? 1 : 0.98 }}
+                        className="w-full py-3 px-4 rounded-lg bg-accent-primary text-white font-medium hover:bg-accent-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Sign In
+                        {isLoading ? 'Signing in...' : 'Sign In'}
                     </motion.button>
                 </form>
 

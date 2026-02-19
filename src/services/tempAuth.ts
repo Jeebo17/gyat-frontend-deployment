@@ -1,23 +1,35 @@
 type TempLogin = {
     email: string;
     password: string;
-    isAdmin: boolean;
     userName: string;
 };
 
+// ⚠️  TEMPORARY DEV CREDENTIALS - REMOVE BEFORE PRODUCTION
 const TEMP_LOGIN: TempLogin = {
     email: 'admin@admin',
     password: 'admin',
-    isAdmin: true,
     userName: 'Admin'
 };
 
 export function authenticateTempUser(email: string, password: string) {
-    const ok = email === TEMP_LOGIN.email && password === TEMP_LOGIN.password;
+    const emailMatch = constantTimeCompare(email || '', TEMP_LOGIN.email);
+    const passwordMatch = constantTimeCompare(password || '', TEMP_LOGIN.password);
+    
+    const ok = emailMatch && passwordMatch;
 
     return {
         ok,
-        isAdmin: ok ? TEMP_LOGIN.isAdmin : false,
-        userName: ok ? TEMP_LOGIN.userName : ''
+        userName: ok ? TEMP_LOGIN.userName : '',
+        // Note: isAdmin removed - should come from server only
     };
+}
+
+function constantTimeCompare(a: string, b: string): boolean {
+    if (a.length !== b.length) return false;
+    
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+        result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return result === 0;
 }

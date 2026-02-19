@@ -2,12 +2,11 @@ import { createContext, useContext, useMemo, useState, ReactNode } from 'react';
 
 type AuthState = {
     isLoggedIn: boolean;
-    isAdmin: boolean;
     userName: string;
 };
 
 type AuthContextValue = AuthState & {
-    login: (userName: string, isAdmin?: boolean) => void;
+    login: (userName: string) => void;
     logout: () => void;
 };
 
@@ -18,7 +17,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const raw = localStorage.getItem('auth');
 
         if (!raw) {
-            return { isLoggedIn: false, isAdmin: false, userName: '' };
+            return { isLoggedIn: false, userName: '' };
         }
 
         try {
@@ -26,25 +25,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             return {
                 isLoggedIn: Boolean(parsed.isLoggedIn),
-                isAdmin: Boolean(parsed.isAdmin),
                 userName: typeof parsed.userName === 'string' ? parsed.userName : ''
             };
         } catch {
-            return { isLoggedIn: false, isAdmin: false, userName: '' };
+            // Clear corrupted auth data
+            localStorage.removeItem('auth');
+            return { isLoggedIn: false, userName: '' };
         }
     });
 
     const value = useMemo<AuthContextValue>(() => ({
         ...state,
-        login: (userName: string, isAdmin = false) => {
-            const next = { isLoggedIn: true, isAdmin, userName };
+        login: (userName: string) => {
+            const next = { isLoggedIn: true, userName };
             localStorage.setItem('auth', JSON.stringify(next));
             setState(next);
         },
         logout: () => {
-            const next = { isLoggedIn: false, isAdmin: false, userName: '' };
-            localStorage.setItem('auth', JSON.stringify(next));
+            const next = { isLoggedIn: false, userName: '' };
+            localStorage.removeItem('auth');
             setState(next);
+            // Clear any sensitive data
+            sessionStorage.clear();
         }
     }), [state]);
 
@@ -62,7 +64,11 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     return isLoggedIn ? <>{children}</> : null;
 }
 
+// TODO: Implement RequireAdmin with server-side role verification when API is available
+// For now, admin role should only come from the backend
 export function RequireAdmin({ children }: { children: ReactNode }) {
-    const { isLoggedIn, isAdmin } = useAuth();
-    return isLoggedIn && isAdmin ? <>{children}</> : null;
+    const { isLoggedIn } = useAuth();
+    // This should be replaced with a server-side check
+    // Admin status must be determined server-side, never trusted from client
+    return isLoggedIn ? <>{children}</> : null;
 }
