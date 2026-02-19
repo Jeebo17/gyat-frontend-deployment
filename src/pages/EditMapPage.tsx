@@ -7,12 +7,22 @@ import { LoadingPage } from "../pages";
 import { DragAndDropMenu } from "../components/DragAndDropMenu";
 import ToggleSwitch from "../components/ToggleSwitch";
 import { FaRegCaretSquareUp, FaRegCaretSquareDown } from "react-icons/fa";
+import type { GymFloorDTO } from "../types/api";
 
 function EditMapPage() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [snapToGridState, setSnapToGridState] = useState(true);
     const [floor, setFloor] = useState<number>(0);
+    const [floors, setFloors] = useState<GymFloorDTO[]>([]);
+    const maxFloorIndex = floors.length > 0 ? floors.length - 1 : 0;
+    const currentFloor = floors[Math.min(floor, maxFloorIndex)];
+
+    useEffect(() => {
+        if (floor > maxFloorIndex) {
+            setFloor(maxFloorIndex);
+        }
+    }, [floor, maxFloorIndex]);
 
     // Admin gate: redirect non-admins back to the map view
     useEffect(() => {
@@ -66,11 +76,14 @@ function EditMapPage() {
                             >
                                 <FaRegCaretSquareDown size={30} />
                             </button>
-                            <span className="select-none w-16 text-center flex-shrink-0">Floor {floor + 1}</span>
+                            <span className="select-none min-w-16 text-center flex-shrink-0">
+                                {currentFloor?.name ?? `Floor ${floor + 1}`}
+                            </span>
                             <button
                                 type="button"
                                 className="flex items-center justify-center text-text-primary disabled:opacity-50 flex-shrink-0"
-                                onClick={() => setFloor(prev => prev + 1)}
+                                onClick={() => setFloor(prev => Math.min(maxFloorIndex, prev + 1))}
+                                disabled={floor >= maxFloorIndex}
                                 aria-label="Next floor"
                             >
                                 <FaRegCaretSquareUp size={30} />
@@ -83,7 +96,12 @@ function EditMapPage() {
                         </div>
                     </div>
                     
-                    <InteractiveMap editMode={true} snapToGrid={snapToGridState} floor={floor} />
+                    <InteractiveMap
+                        editMode={true}
+                        snapToGrid={snapToGridState}
+                        floor={floor}
+                        onFloorsLoaded={setFloors}
+                    />
                 </div>
             </div>
         </div>
