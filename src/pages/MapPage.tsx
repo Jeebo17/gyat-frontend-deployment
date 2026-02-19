@@ -5,8 +5,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { isAdminTEST } from '../services/isAdmin';
-import { GymFloorDTO } from '../types/api';
+import type { GymFloorDTO } from '../types/api';
+import type { TileData } from '../types/tile';
 import { FaRegCaretSquareUp, FaRegCaretSquareDown } from 'react-icons/fa';
+import { SearchBar } from '../components/SearchBar';
+import { getFloorTiles } from "../services/tileService";
+
+const parsedLayoutId = Number(import.meta.env.VITE_LAYOUT_ID ?? "50");
+const DEFAULT_LAYOUT_ID = Number.isFinite(parsedLayoutId) && parsedLayoutId > 0 ? parsedLayoutId : 50;
 
 function MapPage() {
     const [loading, setLoading] = useState(true);
@@ -16,6 +22,12 @@ function MapPage() {
     const [floors, setFloors] = useState<GymFloorDTO[]>([]);
     const maxFloorIndex = floors.length > 0 ? floors.length - 1 : 0;
     const currentFloor = floors[Math.min(floor, maxFloorIndex)];
+    const [tiles, setTiles] = useState<TileData[]>([]);
+    const [isFloorLoading, setIsFloorLoading] = useState(true);
+    const [floorLoadError, setFloorLoadError] = useState<string | null>(null);
+    //TEMP
+    const layoutId = 50
+    const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : DEFAULT_LAYOUT_ID;
 
     useEffect(() => {
         if (floor > maxFloorIndex) {
@@ -23,6 +35,36 @@ function MapPage() {
         }
     }, [floor, maxFloorIndex]);
 
+
+    useEffect(() => {
+        let active = true;
+
+        const loadFloor = async () => {
+            setIsFloorLoading(true);
+            setFloorLoadError(null);
+
+            try {
+                const floorData = await getFloorTiles(resolvedLayoutId, floor);
+                if (!active) return;
+
+                setFloors(floorData.floors);
+                setTiles(floorData.tiles);
+            } catch (error) {
+                if (!active) return;
+
+                setFloors([]);
+                setTiles([]);
+                setFloorLoadError(error instanceof Error ? error.message : "Failed to load floor.");
+            } finally {
+                if (active) setIsFloorLoading(false);
+            }
+        };
+
+        void loadFloor();
+        return () => {
+            active = false;
+        };
+    }, [floor, resolvedLayoutId]);
 
     useEffect(() => {
         const init = async () => {
@@ -49,7 +91,7 @@ function MapPage() {
             <Header />
 
             <div className="mt-16 flex flex-row items-center justify-between w-full py-3 px-4 gap-4 flex-shrink-0 select-none">
-                <span />
+                <SearchBar />
 
                 <div className="flex items-center gap-3 whitespace-nowrap">
                     <button
@@ -89,8 +131,9 @@ function MapPage() {
             {/* Map container */}
             <div className="flex-1 min-h-0 overflow-hidden">
                 <InteractiveMap
-                    floor={floor}
-                    onFloorsLoaded={setFloors}
+                    floorTiles={tiles}
+                    floorLoading={isFloorLoading}
+                    floorLoadError={floorLoadError}
                 />
             </div>
         </div>

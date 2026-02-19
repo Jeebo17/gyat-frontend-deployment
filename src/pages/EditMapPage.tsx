@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import InteractiveMap from "../components/InteractiveMap";
 import Header from "../components/Header";
@@ -8,6 +8,8 @@ import { DragAndDropMenu } from "../components/DragAndDropMenu";
 import ToggleSwitch from "../components/ToggleSwitch";
 import { FaRegCaretSquareUp, FaRegCaretSquareDown } from "react-icons/fa";
 import type { GymFloorDTO } from "../types/api";
+import type { TileData } from "../types/tile";
+import { getFloorTiles } from "../services/tileService";
 
 function EditMapPage() {
     const navigate = useNavigate();
@@ -17,12 +19,59 @@ function EditMapPage() {
     const [floors, setFloors] = useState<GymFloorDTO[]>([]);
     const maxFloorIndex = floors.length > 0 ? floors.length - 1 : 0;
     const currentFloor = floors[Math.min(floor, maxFloorIndex)];
+    const [tiles, setTiles] = useState<TileData[]>([]);
+    const [isFloorLoading, setIsFloorLoading] = useState(true);
+    const [floorLoadError, setFloorLoadError] = useState<string | null>(null);
+    const [refreshVersion, setRefreshVersion] = useState(0);
+
+    //TEMP
+    const layoutId = 50;
+    const parsedLayoutId = Number(import.meta.env.VITE_LAYOUT_ID ?? "50");
+    const DEFAULT_LAYOUT_ID = Number.isFinite(parsedLayoutId) && parsedLayoutId > 0 ? parsedLayoutId : 50;
+    const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : DEFAULT_LAYOUT_ID;
 
     useEffect(() => {
         if (floor > maxFloorIndex) {
             setFloor(maxFloorIndex);
         }
     }, [floor, maxFloorIndex]);
+
+    // Load floor tiles when floor changes or refresh is triggered
+    useEffect(() => {
+        let active = true;
+
+        const loadFloor = async () => {
+            setIsFloorLoading(true);
+            setFloorLoadError(null);
+
+            try {
+                const floorData = await getFloorTiles(resolvedLayoutId, floor);
+                if (!active) return;
+
+                setFloors(floorData.floors);
+                setTiles(floorData.tiles);
+            } catch (error) {
+                if (!active) return;
+
+                setFloors([]);
+                setTiles([]);
+                setFloorLoadError(error instanceof Error ? error.message : "Failed to load floor.");
+            } finally {
+                if (active) setIsFloorLoading(false);
+            }
+        };
+
+        void loadFloor();
+        return () => { active = false; };
+    }, [floor, resolvedLayoutId, refreshVersion]);
+
+    const handleTilesChange = useCallback((newTiles: TileData[]) => {
+        setTiles(newTiles);
+    }, []);
+
+    const triggerRefresh = useCallback(() => {
+        setRefreshVersion(v => v + 1);
+    }, []);
 
     // Admin gate: redirect non-admins back to the map view
     useEffect(() => {
@@ -100,8 +149,10 @@ function EditMapPage() {
                     <InteractiveMap
                         editMode={true}
                         snapToGrid={snapToGridState}
-                        floor={floor}
-                        onFloorsLoaded={setFloors}
+                        floorTiles={tiles}
+                        floorLoading={isFloorLoading}
+                        floorLoadError={floorLoadError}
+                        onTilesChange={handleTilesChange}
                     />
                 </div>
             </div>

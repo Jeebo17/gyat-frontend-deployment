@@ -51,6 +51,8 @@ export async function getFloorTiles(
         .filter((component) => component.floorId === selectedFloor.id)
         .map(mapComponentToTile);
 
+    console.log("Mapped tiles:", tiles);
+
     return {
         floors,
         selectedFloor,

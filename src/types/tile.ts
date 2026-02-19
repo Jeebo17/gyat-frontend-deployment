@@ -49,6 +49,9 @@ export interface TileData {
 
     // Fired when the tile is deleted.
     onDelete?: () => void;
+
+    // Whether the tile should be highlighted (e.g. for search).
+    highlighted?: boolean;
 }
 
 export interface TileTemplate {
@@ -66,4 +69,10 @@ export interface TileHistoryEntry {
     height: number;
     rotation: number;
     colour: string;
+}
+
+export interface TileSearchProps {
+    id: number;
+    name: string;
+    description: string;
 }
