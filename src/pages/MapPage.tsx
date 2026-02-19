@@ -48,7 +48,7 @@ function MapPage() {
 
             <Header />
 
-            <div className="mt-16 flex flex-row items-center justify-between w-full py-3 px-4 gap-4 flex-shrink-0">
+            <div className="mt-16 flex flex-row items-center justify-between w-full py-3 px-4 gap-4 flex-shrink-0 select-none">
                 <span />
 
                 <div className="flex items-center gap-3 whitespace-nowrap">
