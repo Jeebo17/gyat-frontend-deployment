@@ -35,6 +35,7 @@ function Tile({
     gridSize = 20,
     snap = (v) => v,
     onDelete,
+    highlighted = false,
 }: TileData) {
     const [isDragging, setIsDragging] = useState(false);
     const [isResizing, setIsResizing] = useState<ResizeHandle | null>(null);
@@ -226,6 +227,7 @@ function Tile({
                 select-none
                 ${editMode ? "cursor-move" : ""}
                 ${canHover && !editMode ? "cursor-pointer hover:brightness-110 hover:border-2 border-text-primary" : ""}
+                ${highlighted ? "ring-4 ring-accent-primary" : ""}
                 ${theme.theme === 'dark' ? 'opacity-100' : 'brightness-90'}
             `}
             style={{

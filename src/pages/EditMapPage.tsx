@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import InteractiveMap from "../components/InteractiveMap";
 import Header from "../components/Header";
@@ -7,22 +7,90 @@ import { LoadingPage } from "../pages";
 import { DragAndDropMenu } from "../components/DragAndDropMenu";
 import ToggleSwitch from "../components/ToggleSwitch";
 import { FaRegCaretSquareUp, FaRegCaretSquareDown } from "react-icons/fa";
-import type { GymFloorDTO } from "../types/api";
+import type { GymFloorDTO, GymLayoutDTO } from "../types/api";
+import type { TileData } from "../types/tile";
+import { getLayout } from "../services/layoutService";
+import { mapComponentToTile } from "../services/tileService";
 
 function EditMapPage() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
     const [snapToGridState, setSnapToGridState] = useState(true);
     const [floor, setFloor] = useState<number>(0);
-    const [floors, setFloors] = useState<GymFloorDTO[]>([]);
+    const [layout, setLayout] = useState<GymLayoutDTO | null>(null);
+    const [isLayoutLoading, setIsLayoutLoading] = useState(true);
+    const [layoutLoadError, setLayoutLoadError] = useState<string | null>(null);
+    const [refreshVersion, setRefreshVersion] = useState(0);
+    const [tileOverrides, setTileOverrides] = useState<TileData[] | null>(null);
+
+    //TEMP
+    const layoutId = 50;
+    const parsedLayoutId = Number(import.meta.env.VITE_LAYOUT_ID ?? "50");
+    const DEFAULT_LAYOUT_ID = Number.isFinite(parsedLayoutId) && parsedLayoutId > 0 ? parsedLayoutId : 50;
+    const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : DEFAULT_LAYOUT_ID;
+
+    // Derive floors from the cached layout
+    const floors = useMemo<GymFloorDTO[]>(() => {
+        if (!layout) return [];
+        return [...layout.floors].sort((a, b) => a.levelOrder - b.levelOrder);
+    }, [layout]);
+
     const maxFloorIndex = floors.length > 0 ? floors.length - 1 : 0;
     const currentFloor = floors[Math.min(floor, maxFloorIndex)];
+
+    // Derive tiles from layout, but allow local overrides from editing
+    const tiles = useMemo(() => {
+        if (tileOverrides) return tileOverrides;
+        if (!layout || !currentFloor) return [];
+        return layout.components
+            .filter(c => c.floorId === currentFloor.id)
+            .map(mapComponentToTile);
+    }, [layout, currentFloor, tileOverrides]);
 
     useEffect(() => {
         if (floor > maxFloorIndex) {
             setFloor(maxFloorIndex);
         }
     }, [floor, maxFloorIndex]);
+
+    // Reset local tile overrides when floor changes
+    useEffect(() => {
+        setTileOverrides(null);
+    }, [floor]);
+
+    // Fetch the full layout once (or re-fetch on refresh)
+    useEffect(() => {
+        let active = true;
+
+        const loadLayout = async () => {
+            setIsLayoutLoading(true);
+            setLayoutLoadError(null);
+
+            try {
+                const data = await getLayout(resolvedLayoutId);
+                if (!active) return;
+                setLayout(data);
+                setTileOverrides(null);
+            } catch (error) {
+                if (!active) return;
+                setLayout(null);
+                setLayoutLoadError(error instanceof Error ? error.message : "Failed to load layout.");
+            } finally {
+                if (active) setIsLayoutLoading(false);
+            }
+        };
+
+        void loadLayout();
+        return () => { active = false; };
+    }, [resolvedLayoutId, refreshVersion]);
+
+    const handleTilesChange = useCallback((newTiles: TileData[]) => {
+        setTileOverrides(newTiles);
+    }, []);
+
+    const triggerRefresh = useCallback(() => {
+        setRefreshVersion(v => v + 1);
+    }, []);
 
     // Admin gate: redirect non-admins back to the map view
     useEffect(() => {
@@ -66,27 +134,28 @@ function EditMapPage() {
                             </button>
                         </span>
 
-                        <div className="flex items-center gap-2 whitespace-nowrap">
+
+                        <div className="flex items-center gap-3 whitespace-nowrap">
                             <button
                                 type="button"
-                                className="flex items-center justify-center text-text-primary disabled:opacity-50 flex-shrink-0"
+                                className="flex items-center justify-center text-text-primary hover:text-accent-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
                                 onClick={() => setFloor(prev => Math.max(0, prev - 1))}
                                 disabled={floor <= 0}
                                 aria-label="Previous floor"
                             >
-                                <FaRegCaretSquareDown size={30} />
+                                <FaRegCaretSquareDown size={32} />
                             </button>
-                            <span className="select-none min-w-16 text-center flex-shrink-0">
+                            <span className="select-none min-w-32 text-center flex-shrink-0 font-semibold">
                                 {currentFloor?.name ?? `Floor ${floor + 1}`}
                             </span>
                             <button
                                 type="button"
-                                className="flex items-center justify-center text-text-primary disabled:opacity-50 flex-shrink-0"
+                                className="flex items-center justify-center text-text-primary hover:text-accent-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
                                 onClick={() => setFloor(prev => Math.min(maxFloorIndex, prev + 1))}
                                 disabled={floor >= maxFloorIndex}
                                 aria-label="Next floor"
                             >
-                                <FaRegCaretSquareUp size={30} />
+                                <FaRegCaretSquareUp size={32} />
                             </button>
                         </div>
 
@@ -99,8 +168,10 @@ function EditMapPage() {
                     <InteractiveMap
                         editMode={true}
                         snapToGrid={snapToGridState}
-                        floor={floor}
-                        onFloorsLoaded={setFloors}
+                        floorTiles={tiles}
+                        floorLoading={isLayoutLoading}
+                        floorLoadError={layoutLoadError}
+                        onTilesChange={handleTilesChange}
                     />
                 </div>
             </div>

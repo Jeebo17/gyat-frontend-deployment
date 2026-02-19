@@ -2,18 +2,15 @@ import Tile from "./Tile";
 import { TileData, TileHistoryEntry } from "../types/tile";
 import { useState, useRef, useEffect, useCallback } from "react";
 import MachineModal from '../components/MachineModal';
-import { getFloorTiles } from "../services/tileService";
 import ZoomControls from "./ZoomControls";
 import { useTheme } from "../context/ThemeContext";
 import type { DragTileData } from "./DragAndDropMenu";
-import type { GymFloorDTO } from "../types/api";
+import ShinyText from "./effects/ShinyText";
 
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
 const GRID_SIZE = 20;
 const CELL_SIZE = 200; // spatial hash cell size (px)
-const parsedLayoutId = Number(import.meta.env.VITE_LAYOUT_ID ?? "50");
-const DEFAULT_LAYOUT_ID = Number.isFinite(parsedLayoutId) && parsedLayoutId > 0 ? parsedLayoutId : 50;
 
 const rectanglesOverlap = (a: TileData, b: TileData) => {
     const aRight = a.xCoord + a.width;
@@ -53,31 +50,55 @@ const buildSpatialIndex = (tiles: TileData[]) => {
 interface InteractiveMapProps {
     editMode?: boolean;
     snapToGrid?: boolean;
-    floor?: number;
-    layoutId?: number;
-    onFloorsLoaded?: (floors: GymFloorDTO[]) => void;
+    floorTiles?: TileData[];
+    floorLoading?: boolean;
+    floorLoadError?: string | null;
+    onTilesChange?: (tiles: TileData[]) => void;
+    highlightedTileId?: number | null;
 }
 
 function InteractiveMap({
     editMode = false,
     snapToGrid = true,
-    floor = 0,
-    layoutId,
-    onFloorsLoaded,
+    floorTiles = [],
+    floorLoading = false,
+    floorLoadError = null,
+    onTilesChange,
+    highlightedTileId = null,
 }: InteractiveMapProps) {
     const [selectedMachine, setSelectedMachine] = useState<TileData | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const [tiles, setTiles] = useState<TileData[]>([]);
+    const [tiles, setTilesRaw] = useState<TileData[]>([]);
+    const pendingUserEditRef = useRef(false);
+    const onTilesChangeRef = useRef(onTilesChange);
+    onTilesChangeRef.current = onTilesChange;
+
+    // Sync tiles from parent when floor data changes
+    useEffect(() => {
+        setTilesRaw(floorTiles);
+    }, [floorTiles]);
+
+    // Notify parent of user-driven tile changes
+    useEffect(() => {
+        if (pendingUserEditRef.current) {
+            pendingUserEditRef.current = false;
+            onTilesChangeRef.current?.(tiles);
+        }
+    }, [tiles]);
+
+    // Wrapped setTiles that marks changes as user-driven edits
+    const setTiles = useCallback((action: TileData[] | ((prev: TileData[]) => TileData[])) => {
+        pendingUserEditRef.current = true;
+        setTilesRaw(action);
+    }, []);
+
     const spatialIndexRef = useRef<Map<string, TileData[]>>(buildSpatialIndex([]));
     const [gridSize, setGridSize] = useState(GRID_SIZE);
     const [scale, setScale] = useState(1);
     const [autoScale, setAutoScale] = useState(true);
-    const [isFloorLoading, setIsFloorLoading] = useState(true);
-    const [floorLoadError, setFloorLoadError] = useState<string | null>(null);
     const [, setHistory] = useState<TileHistoryEntry[]>([]);
     const nextIdRef = useRef(1);
 
-    const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : DEFAULT_LAYOUT_ID;
     const { theme } = useTheme();
 
     useEffect(() => {
@@ -90,36 +111,6 @@ function InteractiveMap({
         nextIdRef.current = maxId + 1;
     }, [tiles]);
 
-    useEffect(() => {
-        let active = true;
-
-        const loadFloor = async () => {
-            setIsFloorLoading(true);
-            setFloorLoadError(null);
-
-            try {
-                const floorData = await getFloorTiles(resolvedLayoutId, floor);
-                if (!active) return;
-
-                onFloorsLoaded?.(floorData.floors);
-                setSelectedMachine(null);
-                setTiles(floorData.tiles);
-            } catch (error) {
-                if (!active) return;
-
-                onFloorsLoaded?.([]);
-                setTiles([]);
-                setFloorLoadError(error instanceof Error ? error.message : "Failed to load floor.");
-            } finally {
-                if (active) setIsFloorLoading(false);
-            }
-        };
-
-        void loadFloor();
-        return () => {
-            active = false;
-        };
-    }, [floor, onFloorsLoaded, resolvedLayoutId]);
 
     useEffect(() => {
         if (!autoScale) return;
@@ -302,7 +293,7 @@ function InteractiveMap({
     };
 
     return (
-        <div className={`relative overflow-visible w-full h-full justify-center items-center flex pt-2 ${editMode ? '' : 'mt-16'}`}>
+        <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-2">
             <div
                 style={{
                     position: "absolute",
@@ -370,19 +361,24 @@ function InteractiveMap({
                         width: "100%",
                         position: "relative",
                     }}>
-                        {isFloorLoading && (
+                        {floorLoading && (
                             <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/15 text-text-primary text-sm">
-                                Loading floor...
+                                <ShinyText 
+                                    text="Loading Floor..." 
+                                    disabled={false} 
+                                    speed={2}
+                                    className='custom-class text-2xl font-light select-none' 
+                                />
                             </div>
                         )}
 
-                        {!isFloorLoading && floorLoadError && (
+                        {!floorLoading && floorLoadError && (
                             <div className="absolute bottom-4 left-4 z-20 rounded-md bg-red-900/80 px-3 py-2 text-xs text-white">
                                 Failed to load floor data. {floorLoadError}
                             </div>
                         )}
 
-                        {!isFloorLoading && !floorLoadError && tiles.length === 0 && (
+                        {!floorLoading && !floorLoadError && tiles.length === 0 && (
                             <div className="absolute top-4 left-4 z-20 rounded-md bg-bg-primary/70 px-3 py-2 text-xs text-text-primary">
                                 This floor has no equipment yet.
                             </div>
@@ -392,6 +388,7 @@ function InteractiveMap({
                             <Tile
                                 key={tile.id}
                                 {...tile}
+                                highlighted={highlightedTileId === tile.id}
                                 scale={scale}
                                 gridSize={gridSize}
                                 snap={snap}
