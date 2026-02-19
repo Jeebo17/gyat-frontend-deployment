@@ -2,15 +2,18 @@ import Tile from "./Tile";
 import { TileData, TileHistoryEntry } from "../types/tile";
 import { useState, useRef, useEffect, useCallback } from "react";
 import MachineModal from '../components/MachineModal';
-import { getFloorsTiles, getInitialTiles } from "../services/tileService";
+import { getFloorTiles } from "../services/tileService";
 import ZoomControls from "./ZoomControls";
 import { useTheme } from "../context/ThemeContext";
 import type { DragTileData } from "./DragAndDropMenu";
+import type { GymFloorDTO } from "../types/api";
 
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
 const GRID_SIZE = 20;
 const CELL_SIZE = 200; // spatial hash cell size (px)
+const parsedLayoutId = Number(import.meta.env.VITE_LAYOUT_ID ?? "50");
+const DEFAULT_LAYOUT_ID = Number.isFinite(parsedLayoutId) && parsedLayoutId > 0 ? parsedLayoutId : 50;
 
 const rectanglesOverlap = (a: TileData, b: TileData) => {
     const aRight = a.xCoord + a.width;
@@ -51,35 +54,72 @@ interface InteractiveMapProps {
     editMode?: boolean;
     snapToGrid?: boolean;
     floor?: number;
+    layoutId?: number;
+    onFloorsLoaded?: (floors: GymFloorDTO[]) => void;
 }
 
-function InteractiveMap({ editMode = false, snapToGrid = true, floor = 0 }: InteractiveMapProps) {
+function InteractiveMap({
+    editMode = false,
+    snapToGrid = true,
+    floor = 0,
+    layoutId,
+    onFloorsLoaded,
+}: InteractiveMapProps) {
     const [selectedMachine, setSelectedMachine] = useState<TileData | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const [floorState, setFloorState] = useState<number>(floor);
-    const [tiles, setTiles] = useState<TileData[]>(getInitialTiles());
-    const spatialIndexRef = useRef<Map<string, TileData[]>>(buildSpatialIndex(getInitialTiles()));
+    const [tiles, setTiles] = useState<TileData[]>([]);
+    const spatialIndexRef = useRef<Map<string, TileData[]>>(buildSpatialIndex([]));
     const [gridSize, setGridSize] = useState(GRID_SIZE);
     const [scale, setScale] = useState(1);
     const [autoScale, setAutoScale] = useState(true);
+    const [isFloorLoading, setIsFloorLoading] = useState(true);
+    const [floorLoadError, setFloorLoadError] = useState<string | null>(null);
     const [, setHistory] = useState<TileHistoryEntry[]>([]);
+    const nextIdRef = useRef(1);
 
+    const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : DEFAULT_LAYOUT_ID;
     const { theme } = useTheme();
-    const floorButtonClasses = `w-7 h-7 rounded-md shadow flex items-center justify-center bg-text-primary transition duration-300 ${
-        theme === "dark" ? "text-black" : "text-white"
-    } disabled:opacity-50`;
-
-    useEffect(() => {
-        setTiles(floor === 0 ? getInitialTiles() : getFloorsTiles(floor))
-    }, [floor])
 
     useEffect(() => {
         setGridSize(snapToGrid ? GRID_SIZE : 1);
     }, [snapToGrid]);
 
     useEffect(() => {
-        setTiles(floor === 0 ? getInitialTiles() : getFloorsTiles(floor))
-    }, [floor])
+        spatialIndexRef.current = buildSpatialIndex(tiles);
+        const maxId = tiles.reduce((max, tile) => Math.max(max, tile.id), 0);
+        nextIdRef.current = maxId + 1;
+    }, [tiles]);
+
+    useEffect(() => {
+        let active = true;
+
+        const loadFloor = async () => {
+            setIsFloorLoading(true);
+            setFloorLoadError(null);
+
+            try {
+                const floorData = await getFloorTiles(resolvedLayoutId, floor);
+                if (!active) return;
+
+                onFloorsLoaded?.(floorData.floors);
+                setSelectedMachine(null);
+                setTiles(floorData.tiles);
+            } catch (error) {
+                if (!active) return;
+
+                onFloorsLoaded?.([]);
+                setTiles([]);
+                setFloorLoadError(error instanceof Error ? error.message : "Failed to load floor.");
+            } finally {
+                if (active) setIsFloorLoading(false);
+            }
+        };
+
+        void loadFloor();
+        return () => {
+            active = false;
+        };
+    }, [floor, onFloorsLoaded, resolvedLayoutId]);
 
     useEffect(() => {
         if (!autoScale) return;
@@ -144,11 +184,6 @@ function InteractiveMap({ editMode = false, snapToGrid = true, floor = 0 }: Inte
     };
 
     const snap = (value: number) => Math.round(value / gridSize) * gridSize;
-
-    /** Generate the next unique tile id. */
-    const nextIdRef = useRef(
-        Math.max(...getInitialTiles().map(t => t.id)) + 1
-    );
 
     /** Try to add a new tile at the given position; rejects on collision. */
     const addTile = useCallback((template: DragTileData, xCoord: number, yCoord: number) => {
@@ -325,7 +360,26 @@ function InteractiveMap({ editMode = false, snapToGrid = true, floor = 0 }: Inte
                         borderRadius: "16px",
                         height: "100%",
                         width: "100%",
+                        position: "relative",
                     }}>
+                        {isFloorLoading && (
+                            <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/15 text-text-primary text-sm">
+                                Loading floor...
+                            </div>
+                        )}
+
+                        {!isFloorLoading && floorLoadError && (
+                            <div className="absolute bottom-4 left-4 z-20 rounded-md bg-red-900/80 px-3 py-2 text-xs text-white">
+                                Failed to load floor data. {floorLoadError}
+                            </div>
+                        )}
+
+                        {!isFloorLoading && !floorLoadError && tiles.length === 0 && (
+                            <div className="absolute top-4 left-4 z-20 rounded-md bg-bg-primary/70 px-3 py-2 text-xs text-text-primary">
+                                This floor has no equipment yet.
+                            </div>
+                        )}
+
                         {tiles.map(tile => (
                             <Tile
                                 key={tile.id}
