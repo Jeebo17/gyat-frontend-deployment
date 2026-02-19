@@ -70,9 +70,9 @@ function MapPage() {
                     const def = definitions[eqId];
                     return {
                         id: component.id,
-                        name: `${def?.name || component.name || "Unknown Equipment"} #${component.id}`,
+                        name: `${def?.name || component.name || "Unknown Equipment"}`,
                         description: def?.description || component.description || component.additionalInfo || "No description provided.",
-                        floorId: component.floorId,
+                        floorName: data.floors.find(f => f.id === component.floorId)?.name || "Unknown Floor",
                     };
                 });
                 setSearchData(searchItems);
@@ -92,7 +92,7 @@ function MapPage() {
     // When a search result is selected, switch to its floor and highlight it
     const handleSearchSelect = useCallback((item: TileSearchProps) => {
         // Find which floor index this item belongs to
-        const floorIdx = floors.findIndex(f => f.id === item.floorId);
+        const floorIdx = floors.findIndex(f => f.name === item.floorName);
         if (floorIdx >= 0 && floorIdx !== floor) {
             setFloor(floorIdx);
         }
