@@ -293,6 +293,14 @@ function InteractiveMap({
         });
     };
 
+    const deleteTile = (id: number) => {
+        setTiles(prev => {
+            const next = prev.filter(t => t.id !== id);
+            spatialIndexRef.current = buildSpatialIndex(next);
+            return next;
+        });
+    };
+
     return (
         <div className={`relative overflow-visible w-full h-full justify-center items-center flex pt-2 ${editMode ? '' : 'mt-16'}`}>
             <div
@@ -397,6 +405,13 @@ function InteractiveMap({
                                 } : undefined}
                                 onClick={!editMode ? () => setSelectedMachine({ ...tile, onUpdate: () => {} }) : undefined}
                                 editMode={editMode}
+                                onDelete={editMode ? () => {
+                                    setHistory(prev => {
+                                        const newHistory = [...prev, tile];
+                                        return newHistory.slice(-50);
+                                    });
+                                    deleteTile(tile.id);
+                                } : undefined}
                             />
                         ))}
                     </div>

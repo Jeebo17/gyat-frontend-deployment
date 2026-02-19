@@ -46,6 +46,9 @@ export interface TileData {
     // Snapping function used to align values to the grid.
     // For example: snap(83) → 80.
     snap?: (value: number) => number;
+
+    // Fired when the tile is deleted.
+    onDelete?: () => void;
 }
 
 export interface TileTemplate {
