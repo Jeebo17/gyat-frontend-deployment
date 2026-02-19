@@ -7,6 +7,7 @@ import ZoomControls from "./ZoomControls";
 import { useTheme } from "../context/ThemeContext";
 import type { DragTileData } from "./DragAndDropMenu";
 import type { GymFloorDTO } from "../types/api";
+import ShinyText from "./effects/ShinyText";
 
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
@@ -302,7 +303,7 @@ function InteractiveMap({
     };
 
     return (
-        <div className={`relative overflow-visible w-full h-full justify-center items-center flex pt-2 ${editMode ? '' : 'mt-16'}`}>
+        <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-2">
             <div
                 style={{
                     position: "absolute",
@@ -372,7 +373,12 @@ function InteractiveMap({
                     }}>
                         {isFloorLoading && (
                             <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/15 text-text-primary text-sm">
-                                Loading floor...
+                                <ShinyText 
+                                    text="Loading Floor..." 
+                                    disabled={false} 
+                                    speed={2}
+                                    className='custom-class text-2xl font-light select-none' 
+                                />
                             </div>
                         )}
 

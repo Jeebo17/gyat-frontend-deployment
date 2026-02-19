@@ -45,15 +45,16 @@
   --color-text-secondary: #000000;
   --color-text-tertiary: #000000;
 
-  --color-accent-primary: #0000ff; 
-  --color-accent-secondary: #0000cc;
-  --color-accent-hover: #0000cc;
+  --color-accent-primary: #0052cc;
+  --color-accent-secondary: #003399;
+  --color-accent-hover: #003399;
+  --color-accent-light: #cce5ff;
 
   --color-border-light: #000000;
   --color-border-medium: #000000;
   --color-border-dark: #000000;
 
-  --grid-line-color: rgba(0,0,0,0.4);
+  --grid-line-color: rgba(0,0,0,0.2);
 }
 
 :root.dark.high-contrast {
@@ -65,15 +66,16 @@
   --color-text-secondary: #ffffff;
   --color-text-tertiary: #ffffff;
 
-  --color-accent-primary: #0055ff;
-  --color-accent-secondary: #003ecc;
-  --color-accent-hover: #003ecc;
+  --color-accent-primary: #00d9ff;
+  --color-accent-secondary: #00b8d4;
+  --color-accent-hover: #00b8d4;
+  --color-accent-light: #00334d;
 
   --color-border-light: #ffffff;
   --color-border-medium: #ffffff;
   --color-border-dark: #ffffff;
 
-  --grid-line-color: rgba(255,255,255,0.4);
+  --grid-line-color: rgba(255,255,255,0.2);
 }
 
 /* Scrollbar with hidden track but visible thumb */

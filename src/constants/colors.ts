@@ -55,6 +55,63 @@ export const colors = {
       disabled: '#2d2d2d',
     },
   },
+  // High contrast theme for accessibility (WCAG AAA compliant)
+  lightHighContrast: {
+    background: {
+      primary: '#ffffff',
+      secondary: '#ffffff',
+      tertiary: '#ffffff',
+    },
+    text: {
+      primary: '#000000',
+      secondary: '#000000',
+      tertiary: '#000000',
+    },
+    accent: {
+      primary: '#0052cc',
+      secondary: '#003399',
+      hover: '#003399',
+      light: '#cce5ff',
+    },
+    border: {
+      light: '#000000',
+      medium: '#000000',
+      dark: '#000000',
+    },
+    interactive: {
+      hover: '#e6e6e6',
+      active: '#cccccc',
+      disabled: '#f5f5f5',
+    },
+  },
+  darkHighContrast: {
+    background: {
+      primary: '#000000',
+      secondary: '#000000',
+      tertiary: '#000000',
+    },
+    text: {
+      primary: '#ffffff',
+      secondary: '#ffffff',
+      tertiary: '#ffffff',
+    },
+    accent: {
+      primary: '#00d9ff',
+      secondary: '#00b8d4',
+      hover: '#00b8d4',
+      light: '#00334d',
+    },
+    border: {
+      light: '#ffffff',
+      medium: '#ffffff',
+      dark: '#ffffff',
+    },
+    interactive: {
+      hover: '#1a1a1a',
+      active: '#333333',
+      disabled: '#0d0d0d',
+    },
+  },
 };
 
 export type Theme = 'light' | 'dark';

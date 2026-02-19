@@ -66,27 +66,28 @@ function EditMapPage() {
                             </button>
                         </span>
 
-                        <div className="flex items-center gap-2 whitespace-nowrap">
+
+                        <div className="flex items-center gap-3 whitespace-nowrap">
                             <button
                                 type="button"
-                                className="flex items-center justify-center text-text-primary disabled:opacity-50 flex-shrink-0"
+                                className="flex items-center justify-center text-text-primary hover:text-accent-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
                                 onClick={() => setFloor(prev => Math.max(0, prev - 1))}
                                 disabled={floor <= 0}
                                 aria-label="Previous floor"
                             >
-                                <FaRegCaretSquareDown size={30} />
+                                <FaRegCaretSquareDown size={32} />
                             </button>
-                            <span className="select-none min-w-16 text-center flex-shrink-0">
+                            <span className="select-none min-w-32 text-center flex-shrink-0 font-semibold">
                                 {currentFloor?.name ?? `Floor ${floor + 1}`}
                             </span>
                             <button
                                 type="button"
-                                className="flex items-center justify-center text-text-primary disabled:opacity-50 flex-shrink-0"
+                                className="flex items-center justify-center text-text-primary hover:text-accent-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
                                 onClick={() => setFloor(prev => Math.min(maxFloorIndex, prev + 1))}
                                 disabled={floor >= maxFloorIndex}
                                 aria-label="Next floor"
                             >
-                                <FaRegCaretSquareUp size={30} />
+                                <FaRegCaretSquareUp size={32} />
                             </button>
                         </div>
 

@@ -5,11 +5,24 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import { isAdminTEST } from '../services/isAdmin';
+import { GymFloorDTO } from '../types/api';
+import { FaRegCaretSquareUp, FaRegCaretSquareDown } from 'react-icons/fa';
 
 function MapPage() {
     const [loading, setLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
     const navigate = useNavigate();
+    const [floor, setFloor] = useState<number>(0);
+    const [floors, setFloors] = useState<GymFloorDTO[]>([]);
+    const maxFloorIndex = floors.length > 0 ? floors.length - 1 : 0;
+    const currentFloor = floors[Math.min(floor, maxFloorIndex)];
+
+    useEffect(() => {
+        if (floor > maxFloorIndex) {
+            setFloor(maxFloorIndex);
+        }
+    }, [floor, maxFloorIndex]);
+
 
     useEffect(() => {
         const init = async () => {
@@ -31,24 +44,55 @@ function MapPage() {
     }
 
     return (
-        <div className="fixed inset-0 h-full w-full bg-bg-primary text-text-primary transition-colors duration-500 p-4 flex flex-col">
+        <div className="fixed inset-0 h-full w-full bg-bg-primary text-text-primary transition-colors duration-500 flex flex-col">
 
             <Header />
 
-            {/* Admin-only edit button */}
-            {isAdmin && (
-                <div className="absolute top-20 right-8 z-30">
+            <div className="mt-16 flex flex-row items-center justify-between w-full py-3 px-4 gap-4 flex-shrink-0">
+                <span />
+
+                <div className="flex items-center gap-3 whitespace-nowrap">
+                    <button
+                        type="button"
+                        className="flex items-center justify-center text-text-primary hover:text-accent-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                        onClick={() => setFloor(prev => Math.max(0, prev - 1))}
+                        disabled={floor <= 0}
+                        aria-label="Previous floor"
+                    >
+                        <FaRegCaretSquareDown size={32} />
+                    </button>
+                    <span className="select-none min-w-32 text-center flex-shrink-0 font-semibold">
+                        {currentFloor?.name ?? `Floor ${floor + 1}`}
+                    </span>
+                    <button
+                        type="button"
+                        className="flex items-center justify-center text-text-primary hover:text-accent-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                        onClick={() => setFloor(prev => Math.min(maxFloorIndex, prev + 1))}
+                        disabled={floor >= maxFloorIndex}
+                        aria-label="Next floor"
+                    >
+                        <FaRegCaretSquareUp size={32} />
+                    </button>
+                </div>
+
+                {/* Admin-only edit button */}
+                {isAdmin && (
                     <button
                         onClick={() => navigate("/map/edit")}
-                        className="px-4 py-2 rounded-lg bg-accent-primary text-white text-sm font-medium shadow hover:opacity-90 transition-opacity"
+                        className="px-4 py-2 rounded-lg bg-accent-primary text-white text-sm font-medium shadow hover:opacity-90 transition-opacity flex-shrink-0"
                     >
                         Edit Map
                     </button>
-                </div>
-            )}
+                )}
+            </div>
 
-            <InteractiveMap />
-
+            {/* Map container */}
+            <div className="flex-1 min-h-0 overflow-hidden">
+                <InteractiveMap
+                    floor={floor}
+                    onFloorsLoaded={setFloors}
+                />
+            </div>
         </div>
     );
 }
