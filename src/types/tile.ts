@@ -4,6 +4,9 @@ export interface TileData {
      // Used for tracking state updates and rendering.
     id: number;
 
+    // Equipment definition id used by backend dictionaries.
+    equipmentTypeId?: number;
+
     //Data describing the equipment assigned to this tile.
     equipment: EquipmentProps;
 
