@@ -1,5 +1,5 @@
 import { getLayout } from "./layoutService";
-import type { GymComponentDTO, GymFloorDTO } from "../types/api";
+import type { EquipmentDefinitionDTO, GymComponentDTO, GymFloorDTO } from "../types/api";
 import type { TileData } from "../types/tile";
 
 const FALLBACK_COLOURS = ["red", "blue", "green", "yellow", "purple", "orange", "gray", "zinc"];
@@ -9,19 +9,51 @@ const getColourForEquipment = (equipmentTypeId: number): string => {
     return FALLBACK_COLOURS[index];
 };
 
-const mapComponentToTile = (component: GymComponentDTO): TileData => ({
-    id: component.id,
-    xCoord: component.xCoord,
-    yCoord: component.yCoord,
-    width: component.width,
-    height: component.height,
-    rotation: component.rotation,
-    colour: getColourForEquipment(component.equipmentTypeId),
-    equipment: {
-        name: component.name || "Unknown equipment",
-        description: component.description || component.additionalInfo || "No description provided.",
-    },
-});
+const resolveEquipmentTypeId = (component: GymComponentDTO): number => {
+    if (typeof component.equipmentTypeId === "number") return component.equipmentTypeId;
+    if (typeof component.equipmentId === "number") return component.equipmentId;
+    return 0;
+};
+
+const mapComponentToTile = (
+    component: GymComponentDTO,
+    definitions: Partial<Record<number, EquipmentDefinitionDTO>>
+): TileData => {
+    const equipmentTypeId = resolveEquipmentTypeId(component);
+    const definition = definitions[equipmentTypeId];
+    const exercises = definition?.exercises ?? [];
+
+    const descriptionParts = [
+        definition?.description?.trim() || component.description?.trim(),
+        component.additionalInfo?.trim(),
+    ].filter((part): part is string => Boolean(part));
+
+    const musclesTargeted = Array.from(
+        new Set(
+            exercises.flatMap((exercise) => exercise.muscles ?? [])
+        )
+    );
+
+    const videoUrl = exercises.find((exercise) => exercise.videoUrl)?.videoUrl ?? undefined;
+
+    return {
+        id: component.id,
+        equipmentTypeId,
+        xCoord: component.xCoord,
+        yCoord: component.yCoord,
+        width: component.width,
+        height: component.height,
+        rotation: component.rotation,
+        colour: getColourForEquipment(equipmentTypeId),
+        equipment: {
+            name: definition?.name || component.name || `Equipment #${equipmentTypeId}`,
+            description: descriptionParts.join("\n\n") || "No description provided.",
+            benefits: exercises.map((exercise) => exercise.name),
+            musclesTargeted: musclesTargeted.length > 0 ? musclesTargeted : undefined,
+            videoUrl,
+        },
+    };
+};
 
 export interface FloorTilesResult {
     floors: GymFloorDTO[];
@@ -47,9 +79,10 @@ export async function getFloorTiles(
     const clampedIndex = Math.min(Math.max(floorIndex, 0), floors.length - 1);
     const selectedFloor = floors[clampedIndex];
 
+    const definitions = layout.definitions ?? {};
     const tiles = layout.components
         .filter((component) => component.floorId === selectedFloor.id)
-        .map(mapComponentToTile);
+        .map((component) => mapComponentToTile(component, definitions));
 
     return {
         floors,

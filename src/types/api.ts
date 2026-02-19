@@ -1,5 +1,26 @@
 // ─── Response DTOs ───────────────────────────────────────────────────────────
 
+export interface ExerciseDTO {
+    id: number;
+    name: string;
+    description: string | null;
+    videoUrl: string | null;
+    difficulty: string | null;
+    equipmentTypeId: number;
+    equipmentTypeName: string;
+    muscles: string[];
+}
+
+export interface EquipmentDefinitionDTO {
+    id: number;
+    name: string;
+    brand: string | null;
+    imageUrl: string | null;
+    description: string | null;
+    safetyInfo: string | null;
+    exercises: ExerciseDTO[];
+}
+
 export interface GymComponentDTO {
     id: number;
     layoutId: number;
@@ -9,20 +30,19 @@ export interface GymComponentDTO {
     width: number;
     height: number;
     rotation: number;
-    equipmentTypeId: number;
-    name: string;
-    brand: string;
-    imageUrl: string;
-    description: string;
-    safetyInfo: string;
-    additionalInfo: string;
+    additionalInfo?: string | null;
 
-    // Fields the frontend uses but the backend does NOT yet return
-    // TODO: Ask dan to implement
-    // colour: string;           // Display colour for the tile (e.g. "red", "#ff0000")
-    // videoUrl: string;         // URL to an equipment demo video (currently only on Exercise entity)
-    // musclesTargeted: string[];// List of muscle names (currently only via Exercise → Muscle join)
-    // benefits: string[];       // List of benefit descriptions (does not exist in backend at all)
+    // Current backend key
+    equipmentTypeId?: number;
+    // Compatibility alias if backend exposes this key name
+    equipmentId?: number;
+
+    // Legacy fields (older payload shape)
+    name?: string;
+    brand?: string;
+    imageUrl?: string;
+    description?: string;
+    safetyInfo?: string;
 }
 
 export interface GymFloorDTO {
@@ -37,6 +57,7 @@ export interface GymLayoutDTO {
     managerId: number;
     floors: GymFloorDTO[];
     components: GymComponentDTO[];
+    definitions?: Partial<Record<number, EquipmentDefinitionDTO>>;
 }
 
 // ─── Request DTOs ────────────────────────────────────────────────────────────
