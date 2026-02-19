@@ -56,18 +56,13 @@ interface InteractiveMapProps {
 function InteractiveMap({ editMode = false, snapToGrid = true, floor = 0 }: InteractiveMapProps) {
     const [selectedMachine, setSelectedMachine] = useState<TileData | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const [floorState, setFloorState] = useState<number>(floor);
     const [tiles, setTiles] = useState<TileData[]>(getInitialTiles());
     const spatialIndexRef = useRef<Map<string, TileData[]>>(buildSpatialIndex(getInitialTiles()));
     const [gridSize, setGridSize] = useState(GRID_SIZE);
     const [scale, setScale] = useState(1);
     const [autoScale, setAutoScale] = useState(true);
     const [, setHistory] = useState<TileHistoryEntry[]>([]);
-
     const { theme } = useTheme();
-    const floorButtonClasses = `w-7 h-7 rounded-md shadow flex items-center justify-center bg-text-primary transition duration-300 ${
-        theme === "dark" ? "text-black" : "text-white"
-    } disabled:opacity-50`;
 
     useEffect(() => {
         setTiles(floor === 0 ? getInitialTiles() : getFloorsTiles(floor))
@@ -258,6 +253,14 @@ function InteractiveMap({ editMode = false, snapToGrid = true, floor = 0 }: Inte
         });
     };
 
+    const deleteTile = (id: number) => {
+        setTiles(prev => {
+            const next = prev.filter(t => t.id !== id);
+            spatialIndexRef.current = buildSpatialIndex(next);
+            return next;
+        });
+    };
+
     return (
         <div className={`relative overflow-visible w-full h-full justify-center items-center flex pt-2 ${editMode ? '' : 'mt-16'}`}>
             <div
@@ -343,6 +346,13 @@ function InteractiveMap({ editMode = false, snapToGrid = true, floor = 0 }: Inte
                                 } : undefined}
                                 onClick={!editMode ? () => setSelectedMachine({ ...tile, onUpdate: () => {} }) : undefined}
                                 editMode={editMode}
+                                onDelete={editMode ? () => {
+                                    setHistory(prev => {
+                                        const newHistory = [...prev, tile];
+                                        return newHistory.slice(-50);
+                                    });
+                                    deleteTile(tile.id);
+                                } : undefined}
                             />
                         ))}
                     </div>
