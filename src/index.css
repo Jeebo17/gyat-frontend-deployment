@@ -36,6 +36,46 @@
   --grid-line-color: rgba(255,255,255,0.07);
 }
 
+:root.high-contrast {
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #ffffff;
+  --color-bg-tertiary: #ffffff;
+
+  --color-text-primary: #000000;
+  --color-text-secondary: #000000;
+  --color-text-tertiary: #000000;
+
+  --color-accent-primary: #0000ff; 
+  --color-accent-secondary: #0000cc;
+  --color-accent-hover: #0000cc;
+
+  --color-border-light: #000000;
+  --color-border-medium: #000000;
+  --color-border-dark: #000000;
+
+  --grid-line-color: rgba(0,0,0,0.4);
+}
+
+:root.dark.high-contrast {
+  --color-bg-primary: #000000;
+  --color-bg-secondary: #000000;
+  --color-bg-tertiary: #000000;
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #ffffff;
+  --color-text-tertiary: #ffffff;
+
+  --color-accent-primary: #0055ff;
+  --color-accent-secondary: #003ecc;
+  --color-accent-hover: #003ecc;
+
+  --color-border-light: #ffffff;
+  --color-border-medium: #ffffff;
+  --color-border-dark: #ffffff;
+
+  --grid-line-color: rgba(255,255,255,0.4);
+}
+
 /* Scrollbar with hidden track but visible thumb */
 .scrollbar-thumb-only::-webkit-scrollbar {
   width: 8px;
