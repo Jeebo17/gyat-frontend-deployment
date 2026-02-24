@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { RxCross2 } from "react-icons/rx";
 import type { TileData } from "../types/tile";
 import type { EquipmentProps } from "../types/equipment";
@@ -32,11 +33,13 @@ function MachineModal({
     saveError = null,
     saveSuccess = null,
 }: MachineModalProps) {
+    const [previewMode, setPreviewMode] = useState(false);
+    const showEditableFields = editMode && !previewMode;
     const inputClasses = "w-full rounded-md border border-white/30 bg-black/30 px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-accent-primary";
     const textareaClasses = "w-full rounded-md border border-white/30 bg-black/30 px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-accent-primary resize-y min-h-[120px]";
 
     return (
-        <div className={`${containerMode ? 'absolute' : 'fixed'} inset-0 flex items-center justify-center z-40 cursor-pointer ${editMode ? '' : 'select-none'}`} onClick={onClose}>
+        <div className={`${containerMode ? 'absolute' : 'fixed'} inset-0 flex items-center justify-center z-40 cursor-pointer ${showEditableFields ? '' : 'select-none'}`} onClick={onClose}>
             <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm select-none"></div>
 
             <div
@@ -47,7 +50,7 @@ function MachineModal({
                     <RxCross2 className="w-8 h-8 sm:w-12 sm:h-12"/>
                 </button>
 
-                {editMode ? (
+                {showEditableFields ? (
                     <div className="flex-shrink-0 pr-10">
                         <label htmlFor="machine-name-input" className="sr-only">Equipment name</label>
                         <input
@@ -73,7 +76,7 @@ function MachineModal({
                         {/* Equipment description */}
                         <div className="w-full mt-4 p-2 text-white overflow-y-auto flex-1 min-h-0 scrollbar-thumb-only">
                             <h3 className="text-xl mb-2 select-none font-semibold">Description</h3>
-                            {editMode ? (
+                            {showEditableFields ? (
                                 <textarea
                                     className={textareaClasses}
                                     value={tile.equipment.description ?? ""}
@@ -90,7 +93,7 @@ function MachineModal({
                         {/* Benefits */}
                         <h3 className="text-xl mb-2 select-none font-semibold flex-shrink-0">List of exercises:</h3>
                         <div className="overflow-y-auto flex-1 min-h-0 scrollbar-thumb-only">
-                            {editMode ? (
+                            {showEditableFields ? (
                                 <textarea
                                     key={`benefits-${tile.id}`}
                                     className={textareaClasses}
@@ -111,7 +114,7 @@ function MachineModal({
                     <div className="rounded-lg p-4 overflow-y-auto text-white bg-black/20 min-h-0 scrollbar-thumb-only">
                         {/* Muscles trained */}
                         <h3 className="text-xl mb-2 select-none font-semibold">Muscles trained</h3>
-                        {editMode ? (
+                        {showEditableFields ? (
                             <textarea
                                 key={`muscles-${tile.id}`}
                                 className={textareaClasses}
@@ -130,7 +133,7 @@ function MachineModal({
                     
                     <div className="rounded-lg p-4 overflow-y-auto text-white bg-black/20 min-h-0 scrollbar-thumb-only">
                         <h3 className="text-xl mb-2 select-none font-semibold">Video</h3>
-                        {editMode && (
+                        {showEditableFields && (
                             <div className="mb-3">
                                 <label htmlFor="machine-video-url" className="sr-only">Video URL</label>
                                 <input
@@ -167,14 +170,23 @@ function MachineModal({
                             {saveError && <p className="text-red-300">{saveError}</p>}
                             {!saveError && saveSuccess && <p className="text-green-300">{saveSuccess}</p>}
                         </div>
-                        <button
-                            type="button"
-                            className="px-4 py-2 rounded-md bg-accent-primary text-white font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
-                            onClick={() => { void onSave?.(); }}
-                            disabled={saving}
-                        >
-                            {saving ? "Saving..." : "Save"}
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                className="px-4 py-2 rounded-md border border-white/40 text-white font-semibold hover:bg-white/10 transition-colors"
+                                onClick={() => setPreviewMode(prev => !prev)}
+                            >
+                                {previewMode ? "Back to Edit" : "Preview"}
+                            </button>
+                            <button
+                                type="button"
+                                className="px-4 py-2 rounded-md bg-accent-primary text-white font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+                                onClick={() => { void onSave?.(); }}
+                                disabled={saving}
+                            >
+                                {saving ? "Saving..." : "Save"}
+                            </button>
+                        </div>
                     </div>
                 )}
 
