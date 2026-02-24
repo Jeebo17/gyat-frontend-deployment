@@ -4,6 +4,19 @@ import type { TileData } from "../types/tile";
 
 const FALLBACK_COLOURS = ["red", "blue", "green", "yellow", "purple", "orange", "gray", "zinc"];
 
+interface ComponentModalOverrides {
+    name?: string;
+    description?: string;
+    benefits?: string[];
+    musclesTargeted?: string[];
+    videoUrl?: string;
+}
+
+interface ParsedAdditionalInfo {
+    legacyText?: string;
+    modalOverrides?: ComponentModalOverrides;
+}
+
 const getColourForEquipment = (equipmentTypeId: number): string => {
     const index = Math.abs(equipmentTypeId) % FALLBACK_COLOURS.length;
     return FALLBACK_COLOURS[index];
@@ -15,6 +28,63 @@ const resolveEquipmentTypeId = (component: GymComponentDTO): number => {
     return 0;
 };
 
+const normalizeOptionalString = (value: unknown): string | undefined => {
+    if (typeof value !== "string") return undefined;
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const parseStringArray = (value: unknown): string[] | undefined => {
+    if (!Array.isArray(value)) return undefined;
+    return value
+        .filter((item): item is string => typeof item === "string")
+        .map((item) => item.trim())
+        .filter(Boolean);
+};
+
+const parseAdditionalInfo = (raw: string | null | undefined): ParsedAdditionalInfo => {
+    if (!raw || !raw.trim()) return {};
+
+    try {
+        const parsed = JSON.parse(raw) as {
+            notes?: unknown;
+            modalOverrides?: {
+                name?: unknown;
+                description?: unknown;
+                benefits?: unknown;
+                musclesTargeted?: unknown;
+                videoUrl?: unknown;
+            };
+        };
+
+        if (!parsed || typeof parsed !== "object") {
+            return { legacyText: raw };
+        }
+
+        const overrides = parsed.modalOverrides;
+        if (!overrides || typeof overrides !== "object") {
+            return { legacyText: normalizeOptionalString(parsed.notes) ?? raw };
+        }
+
+        const modalOverrides: ComponentModalOverrides = {
+            name: normalizeOptionalString(overrides.name),
+            description: normalizeOptionalString(overrides.description),
+            benefits: parseStringArray(overrides.benefits),
+            musclesTargeted: parseStringArray(overrides.musclesTargeted),
+            videoUrl: normalizeOptionalString(overrides.videoUrl),
+        };
+
+        const hasOverrides = Object.values(modalOverrides).some((value) => value !== undefined);
+
+        return {
+            legacyText: normalizeOptionalString(parsed.notes),
+            modalOverrides: hasOverrides ? modalOverrides : undefined,
+        };
+    } catch {
+        return { legacyText: raw };
+    }
+};
+
 export const mapComponentToTile = (
     component: GymComponentDTO,
     definitions: Partial<Record<number, EquipmentDefinitionDTO>>
@@ -22,10 +92,12 @@ export const mapComponentToTile = (
     const equipmentTypeId = resolveEquipmentTypeId(component);
     const definition = definitions[equipmentTypeId];
     const exercises = definition?.exercises ?? [];
+    const parsedAdditionalInfo = parseAdditionalInfo(component.additionalInfo);
+    const modalOverrides = parsedAdditionalInfo.modalOverrides;
 
     const descriptionParts = [
         definition?.description?.trim() || component.description?.trim(),
-        component.additionalInfo?.trim(),
+        parsedAdditionalInfo.legacyText,
     ].filter((part): part is string => Boolean(part));
 
     const musclesTargeted = Array.from(
@@ -39,6 +111,7 @@ export const mapComponentToTile = (
     return {
         id: component.id,
         equipmentTypeId,
+        additionalInfo: component.additionalInfo ?? undefined,
         xCoord: component.xCoord,
         yCoord: component.yCoord,
         width: component.width,
@@ -46,11 +119,11 @@ export const mapComponentToTile = (
         rotation: component.rotation,
         colour: getColourForEquipment(equipmentTypeId),
         equipment: {
-            name: definition?.name || component.name || `Equipment #${equipmentTypeId}`,
-            description: descriptionParts.join("\n\n") || "No description provided.",
-            benefits: exercises.map((exercise) => exercise.name),
-            musclesTargeted: musclesTargeted.length > 0 ? musclesTargeted : undefined,
-            videoUrl,
+            name: modalOverrides?.name || definition?.name || component.name || `Equipment #${equipmentTypeId}`,
+            description: modalOverrides?.description ?? (descriptionParts.join("\n\n") || "No description provided."),
+            benefits: modalOverrides?.benefits ?? exercises.map((exercise) => exercise.name),
+            musclesTargeted: modalOverrides?.musclesTargeted ?? (musclesTargeted.length > 0 ? musclesTargeted : undefined),
+            videoUrl: modalOverrides?.videoUrl ?? videoUrl,
         },
     };
 };

@@ -6,6 +6,7 @@ import ZoomControls from "./ZoomControls";
 import { useTheme } from "../context/ThemeContext";
 import type { DragTileData } from "./DragAndDropMenu";
 import ShinyText from "./effects/ShinyText";
+import { updateComponent } from "../services/componentService";
 
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
@@ -49,6 +50,42 @@ const buildSpatialIndex = (tiles: TileData[]) => {
     return index;
 };
 
+const normalizeArray = (items?: string[]): string[] | undefined => {
+    if (!items) return undefined;
+    return items.map((item) => item.trim()).filter(Boolean);
+};
+
+const extractLegacyNotes = (additionalInfo?: string): string | undefined => {
+    if (!additionalInfo || !additionalInfo.trim()) return undefined;
+
+    try {
+        const parsed = JSON.parse(additionalInfo) as { notes?: unknown };
+        if (parsed && typeof parsed === "object" && typeof parsed.notes === "string") {
+            const notes = parsed.notes.trim();
+            return notes.length > 0 ? notes : undefined;
+        }
+        return undefined;
+    } catch {
+        return additionalInfo.trim();
+    }
+};
+
+const buildModalAdditionalInfo = (tile: TileData): string => {
+    const notes = extractLegacyNotes(tile.additionalInfo);
+    const payload = {
+        ...(notes ? { notes } : {}),
+        modalOverrides: {
+            name: tile.equipment.name?.trim() || undefined,
+            description: tile.equipment.description?.trim() || undefined,
+            benefits: normalizeArray(tile.equipment.benefits),
+            musclesTargeted: normalizeArray(tile.equipment.musclesTargeted),
+            videoUrl: tile.equipment.videoUrl?.trim() || undefined,
+        },
+    };
+
+    return JSON.stringify(payload);
+};
+
 interface InteractiveMapProps {
     editMode?: boolean;
     snapToGrid?: boolean;
@@ -71,6 +108,9 @@ function InteractiveMap({
     previewMode = false,
 }: InteractiveMapProps) {
     const [selectedMachine, setSelectedMachine] = useState<TileData | null>(null);
+    const [isSavingMachine, setIsSavingMachine] = useState(false);
+    const [machineSaveError, setMachineSaveError] = useState<string | null>(null);
+    const [machineSaveSuccess, setMachineSaveSuccess] = useState<string | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [tiles, setTilesRaw] = useState<TileData[]>([]);
     const pendingUserEditRef = useRef(false);
@@ -298,6 +338,46 @@ function InteractiveMap({
         });
     };
 
+    const closeMachineModal = () => {
+        setSelectedMachine(null);
+        setMachineSaveError(null);
+        setMachineSaveSuccess(null);
+    };
+
+    const handleMachineSave = async () => {
+        if (!selectedMachine) return;
+
+        setIsSavingMachine(true);
+        setMachineSaveError(null);
+        setMachineSaveSuccess(null);
+
+        const serializedAdditionalInfo = buildModalAdditionalInfo(selectedMachine);
+
+        try {
+            await updateComponent(selectedMachine.id, {
+                xCoord: selectedMachine.xCoord,
+                yCoord: selectedMachine.yCoord,
+                width: selectedMachine.width,
+                height: selectedMachine.height,
+                rotation: selectedMachine.rotation,
+                additionalInfo: serializedAdditionalInfo,
+            });
+
+            updateTile(selectedMachine.id, {
+                additionalInfo: serializedAdditionalInfo,
+                equipment: selectedMachine.equipment,
+            });
+
+            setSelectedMachine(prev => prev ? { ...prev, additionalInfo: serializedAdditionalInfo } : prev);
+            setMachineSaveSuccess("Saved");
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to save machine details.";
+            setMachineSaveError(message);
+        } finally {
+            setIsSavingMachine(false);
+        }
+    };
+
     return (
         <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-1 sm:pt-2">
             <div
@@ -414,7 +494,11 @@ function InteractiveMap({
                                         updateTile(tile.id, updates);
                                     }
                                 } : undefined}
-                                onClick={!previewMode ? () => setSelectedMachine({ ...tile, onUpdate: () => {} }) : undefined}
+                                onClick={!previewMode ? () => {
+                                    setMachineSaveError(null);
+                                    setMachineSaveSuccess(null);
+                                    setSelectedMachine({ ...tile, onUpdate: () => {} });
+                                } : undefined}
                                 editMode={editMode}
                                 onDelete={editMode ? () => {
                                     setHistory(prev => {
@@ -434,14 +518,19 @@ function InteractiveMap({
             { selectedMachine && (
                 <MachineModal
                     tile={selectedMachine}
-                    onClose={() => setSelectedMachine(null)}
+                    onClose={closeMachineModal}
                     containerMode={previewMode}
                     editMode={editMode}
                     onTileChange={editMode ? (equipmentUpdates) => {
                         const updatedEquipment = { ...selectedMachine.equipment, ...equipmentUpdates };
                         setSelectedMachine({ ...selectedMachine, equipment: updatedEquipment });
-                        updateTile(selectedMachine.id, { equipment: updatedEquipment });
+                        setMachineSaveError(null);
+                        setMachineSaveSuccess(null);
                     } : undefined}
+                    onSave={editMode ? handleMachineSave : undefined}
+                    saving={isSavingMachine}
+                    saveError={machineSaveError}
+                    saveSuccess={machineSaveSuccess}
                 />
             )}
         </div>

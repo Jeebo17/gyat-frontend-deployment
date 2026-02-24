@@ -24,6 +24,9 @@ export interface TileData {
     // Display colour (e.g. CSS hex or rgb).
     colour: string;
 
+    // Raw persisted metadata from backend component.additionalInfo.
+    additionalInfo?: string;
+
     // Callback fired when this tile wants to update itself.
     // Receives only the fields that have changed.
     onUpdate?: (updates: Partial<TileData>) => void;

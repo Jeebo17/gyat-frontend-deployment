@@ -8,15 +8,17 @@ interface MachineModalProps {
     containerMode?: boolean;
     editMode?: boolean;
     onTileChange?: (equipmentUpdates: Partial<EquipmentProps>) => void;
+    onSave?: () => Promise<void> | void;
+    saving?: boolean;
+    saveError?: string | null;
+    saveSuccess?: string | null;
 }
 
-const parseMultilineList = (value: string): string[] | undefined => {
-    const items = value
+const parseMultilineList = (value: string): string[] => {
+    return value
         .split("\n")
         .map(item => item.trim())
         .filter(Boolean);
-
-    return items.length > 0 ? items : undefined;
 };
 
 function MachineModal({
@@ -25,6 +27,10 @@ function MachineModal({
     containerMode = false,
     editMode = false,
     onTileChange,
+    onSave,
+    saving = false,
+    saveError = null,
+    saveSuccess = null,
 }: MachineModalProps) {
     const inputClasses = "w-full rounded-md border border-white/30 bg-black/30 px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-accent-primary";
     const textareaClasses = "w-full rounded-md border border-white/30 bg-black/30 px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-accent-primary resize-y min-h-[120px]";
@@ -154,6 +160,23 @@ function MachineModal({
                     </div>
 
                 </div>
+
+                {editMode && (
+                    <div className="mt-3 flex items-center gap-3">
+                        <div className="min-h-5 text-sm flex-1">
+                            {saveError && <p className="text-red-300">{saveError}</p>}
+                            {!saveError && saveSuccess && <p className="text-green-300">{saveSuccess}</p>}
+                        </div>
+                        <button
+                            type="button"
+                            className="px-4 py-2 rounded-md bg-accent-primary text-white font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+                            onClick={() => { void onSave?.(); }}
+                            disabled={saving}
+                        >
+                            {saving ? "Saving..." : "Save"}
+                        </button>
+                    </div>
+                )}
 
             </div>
         </div>
