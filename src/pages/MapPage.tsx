@@ -8,7 +8,7 @@ import { isAdminTEST } from '../services/isAdmin';
 import type { GymFloorDTO, GymLayoutDTO } from '../types/api';
 import { FaRegCaretSquareUp, FaRegCaretSquareDown } from 'react-icons/fa';
 import { SearchBar } from '../components/SearchBar';
-import { getLayout } from "../services/layoutService";
+import { getLayoutPublic } from "../services/layoutService";
 import { mapComponentToTile } from "../services/tileService";
 import type { TileSearchProps } from '../types/tile';
 import { useAuth } from '../context/AuthContext';
@@ -62,7 +62,7 @@ function MapPage() {
             setLayoutLoadError(null);
 
             try {
-                const data = await getLayout(resolvedLayoutId);
+                const data = await getLayoutPublic(resolvedLayoutId);
                 if (!active) return;
                 setLayout(data);
 
