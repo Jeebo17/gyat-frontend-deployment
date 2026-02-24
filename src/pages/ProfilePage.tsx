@@ -19,7 +19,7 @@ function ProfilePage() {
     }
 
     return (
-        <div className="min-h-screen bg-bg-primary text-text-primary flex items-center justify-center">
+        <div className="min-h-screen bg-bg-primary text-text-primary flex items-center justify-center px-4 pt-16">
             <Header />
             <LogoutButton />       
         </div>

@@ -5,13 +5,17 @@ import { IoMapOutline, IoFitnessOutline, IoLocationOutline, IoTimeOutline } from
 import Header from '../components/Header';
 import Silk from '../backgrounds/Silk';
 import { useTheme } from '../context/ThemeContext';
-import {useSettings } from '../context/SettingsContext';
-
+import { useSettings } from '../context/SettingsContext';
+import InteractiveMap from '../components/InteractiveMap';
+import { getPreviewTiles } from "../services/tileService";
+import cursor from '../assets/images/arrowhead-cursor.svg';
 
 function HomePage() {
     const navigate = useNavigate();
     const { theme } = useTheme();
     const { reducedMotion } = useSettings();
+
+    const snap = (value: number) => Math.round(value / 20) * 20;
 
     const features = [
         {
@@ -22,7 +26,7 @@ function HomePage() {
         {
             icon: <IoFitnessOutline className="w-8 h-8" />,
             title: "Equipment Tracking",
-            description: "Find and track gym machines in real-time"
+            description: "Find and track gym machines in \"real-time\""
         },
         {
             icon: <IoLocationOutline className="w-8 h-8" />,
@@ -37,7 +41,7 @@ function HomePage() {
     ];
 
     return (
-        <div className="min-h-screen text-text-primary transition-colors duration-300 select-none">
+        <div className="min-h-screen text-text-primary transition-colors duration-300 select-none" style={{ cursor: `url(${cursor}) 12 12, auto` }}>
             <Header />
 
             <div className="absolute w-full h-full top-0 left-0 overflow-hidden -z-10">
@@ -51,20 +55,20 @@ function HomePage() {
                 <div className="absolute inset-0 bg-bg-primary opacity-40"></div>
             </div>
             
-            <div className="relative flex flex-row items-center justify-center h-full w-full" style={{ minHeight: '100vh' }}>
+            <div className="relative flex flex-col lg:flex-row items-center justify-center min-h-screen w-full px-4 sm:px-6 pt-20 pb-10 lg:pt-14 lg:pb-0 gap-8 lg:gap-0">
                 <div className="max-w-4xl mx-auto text-center">
                     <motion.div
                         initial={reducedMotion ? false : { opacity: 0, y: 20 }}
                         animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
                         transition={reducedMotion ? { duration: 0 } : { duration: 0.6 }}
                     >
-                        <h1 className="text-5xl md:text-6xl font-bold mb-4">
+                        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4">
                             GYAT
                         </h1>
-                        <p className="text-xl md:text-2xl text-text-primary font-medium mb-2">
+                        <p className="text-lg sm:text-xl md:text-2xl text-text-primary font-medium mb-2">
                             The Gym App & Tracker
                         </p>
-                        <p className="text-text-primary max-w-xl mx-auto mt-4">
+                        <p className="text-sm sm:text-base text-text-primary max-w-xl mx-auto mt-4">
                             Navigate your gym smarter. Find equipment, track availability, and optimise your workout experience.
                         </p>
                     </motion.div>
@@ -73,50 +77,22 @@ function HomePage() {
                         initial={reducedMotion ? false : { opacity: 0, y: 20 }}
                         animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
                         transition={reducedMotion ? { duration: 0 } : { duration: 0.6 }}
-                        className="mt-10"
+                        className="mt-8 sm:mt-10"
                     >
                         <button
                             onClick={() => navigate('/map')}
-                            className="px-8 py-4 bg-accent-primary text-white font-semibold rounded-xl hover:bg-accent-hover transition-colors duration-200 shadow-lg hover:shadow-xl"
+                            className="px-6 sm:px-8 py-3 sm:py-4 bg-accent-primary text-white font-semibold rounded-xl hover:bg-accent-hover transition-colors duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
                         >
                             Open Gym Map
                         </button>
                     </motion.div>
                 </div>
 
-                <div className="px-6">
-                    <div className="max-w-4xl mx-auto px-4">
-                        <motion.div
-                            initial={reducedMotion ? false : { opacity: 0, y: 20 }}
-                            animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-                            transition={reducedMotion ? { duration: 0 } : { duration: 0.6 }}
-                            className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                        >
-                            {features.map((feature, index) => (
-                                <motion.div
-                                    key={index}
-                                    initial={reducedMotion ? false : { opacity: 0, y: 20 }}
-                                    animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
-                                    transition={reducedMotion ? { duration: 0 } : { duration: 0.6 }}
-                    
-                                    className="p-6 bg-bg-secondary/50 backdrop-blur-lg rounded-2xl border-2 border-neutral-700/30 hover:border-neutral-600/50 transition-colors duration-200"
-                                >
-                                    <div className="flex items-start gap-4">
-                                        <div className="p-3 bg-bg-tertiary rounded-xl text-accent-primary">
-                                            {feature.icon}
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg font-semibold mb-1">
-                                                {feature.title}
-                                            </h3>
-                                            <p className="text-text-primary text-sm">
-                                                {feature.description}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </motion.div>
+                <div className="px-2 sm:px-6 w-full lg:w-auto">
+                    <div className="mx-auto w-full max-w-6xl px-2 sm:px-4">
+                        <div className="w-full aspect-[3/2] max-w-4xl mx-auto relative overflow-hidden">
+                            <InteractiveMap editMode={false} previewMode={true} floorTiles={getPreviewTiles()} />
+                        </div>
                     </div>
                 </div>
             </div>

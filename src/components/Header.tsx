@@ -1,11 +1,13 @@
-import { motion } from 'framer-motion';
-import { IoHomeOutline, IoHome, IoMapOutline, IoMap, IoSettingsOutline, IoSettings } from 'react-icons/io5';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { IoHomeOutline, IoHome, IoMapOutline, IoMap, IoSettingsOutline, IoSettings, IoMenuOutline, IoCloseOutline } from 'react-icons/io5';
 import { useNavigate } from 'react-router';
 import { ThemeToggle } from './ThemeToggle';
 import { ProfileButton } from './ProfileButton';
-import useSound from 'use-sound';
+import { useAppSound } from '../hooks/useAppSound';
 import popSound from '../assets/sounds/pop.mp3';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 
 export type HeaderProps = {
     className?: string;
@@ -14,8 +16,10 @@ export type HeaderProps = {
 export default function Header({ className = '' }: HeaderProps) {
     const navigate = useNavigate();
     const selectedPage = window.location.pathname;
-    const [play] = useSound(popSound, { volume: 0.3 });
+    const [ play ] = useAppSound(popSound, { volume: 0.3 });
     const { isLoggedIn, userName } = useAuth();
+    const [ mobileMenuOpen, setMobileMenuOpen ] = useState(false);
+    const { soundEnabled } = useSettings();
 
     const items = [
         {
@@ -44,37 +48,102 @@ export default function Header({ className = '' }: HeaderProps) {
             role="banner"
         >
             <nav 
-                className="flex items-center justify-between pl-8 pr-2 h-14 bg-bg-secondary"
+                className="flex items-center justify-between px-3 sm:pl-8 sm:pr-2 h-14 bg-bg-secondary"
                 role="navigation"
                 aria-label="Main navigation"
             >
                 <div className="flex items-center gap-1">
                     <h1>
-                        <span className="text-2xl text-text-primary mr-6">GYAT</span>
+                        <span 
+                            className="text-xl sm:text-2xl text-text-primary mr-2 sm:mr-6"
+                            onClick={() => navigate("/")}
+                        >GYAT</span>
                     </h1>
 
-                    {items.map((item, index) => (
-                        <HeaderItem
-                            key={index}
-                            icon={item.icon}
-                            label={item.label}
-                            onClick={() => {
-                                play();
-                                item.onClick();
-                            }}
-                            selected={selectedPage === item.path}
-                        />
-                    ))}
+                    {/* Desktop nav items */}
+                    <div className="hidden sm:flex items-center gap-1">
+                        {items.map((item, index) => (
+                            <HeaderItem
+                                key={index}
+                                icon={item.icon}
+                                label={item.label}
+                                onClick={() => {
+                                    if (soundEnabled) {
+                                        play();
+                                    }
+                                    item.onClick();
+                                }}
+                                selected={selectedPage === item.path}
+                            />
+                        ))}
+                    </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                {/* Desktop rhs controls */}
+                <div className="hidden sm:flex items-center gap-2">
                     {isLoggedIn && userName && (
                         <span className="text-sm text-text-secondary mr-2">Hi, {userName}</span>
                     )}
                     <ThemeToggle header={true} />
                     <ProfileButton header={true} />
                 </div>
+
+                {/* Mobile hamborgir button */}
+                <button
+                    className="sm:hidden p-2 text-text-primary"
+                    onClick={() => setMobileMenuOpen(prev => !prev)}
+                    aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+                >
+                    {mobileMenuOpen ? <IoCloseOutline size={24} /> : <IoMenuOutline size={24} />}
+                </button>
             </nav>
+
+            {/* Mobile menu overlay */}
+            <AnimatePresence>
+                {mobileMenuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="sm:hidden bg-bg-secondary border-t border-border-light overflow-hidden"
+                    >
+                        <div className="flex flex-col px-4 py-3 gap-1">
+                            {items.map((item, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => {
+                                        if (soundEnabled) {
+                                            play();
+                                        }
+                                        item.onClick();
+                                        setMobileMenuOpen(false);
+                                    }}
+                                    className={`flex items-center gap-3 px-3 py-3 rounded-lg text-left transition-colors ${
+                                        selectedPage === item.path
+                                            ? 'text-text-primary bg-bg-tertiary font-medium'
+                                            : 'text-text-secondary hover:text-text-primary hover:bg-bg-tertiary'
+                                    }`}
+                                >
+                                    <span className="text-lg">{item.icon}</span>
+                                    <span>{item.label}</span>
+                                </button>
+                            ))}
+                            <div className="flex items-center justify-between pt-3 mt-2 border-t border-border-light">
+                                <div className="flex items-center gap-2">
+                                    {isLoggedIn && userName && (
+                                        <span className="text-sm text-text-secondary">Hi, {userName}</span>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <ThemeToggle header={true} />
+                                    <ProfileButton header={true} />
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </header>
     );
 }

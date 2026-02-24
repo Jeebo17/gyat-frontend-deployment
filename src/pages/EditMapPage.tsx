@@ -7,6 +7,7 @@ import { LoadingPage } from "../pages";
 import { DragAndDropMenu } from "../components/DragAndDropMenu";
 import ToggleSwitch from "../components/ToggleSwitch";
 import { FaRegCaretSquareUp, FaRegCaretSquareDown } from "react-icons/fa";
+import { IoChevronForward, IoChevronBack } from "react-icons/io5";
 import type { GymFloorDTO, GymLayoutDTO } from "../types/api";
 import type { TileData } from "../types/tile";
 import { getLayout } from "../services/layoutService";
@@ -30,6 +31,7 @@ function EditMapPage() {
     const [isLayoutLoading, setIsLayoutLoading] = useState(true);
     const [layoutLoadError, setLayoutLoadError] = useState<string | null>(null);
     const [tileOverrides, setTileOverrides] = useState<TileData[] | null>(null);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     //TEMP
     const layoutId = 69;
@@ -118,29 +120,52 @@ function EditMapPage() {
     }
 
     return (
-        <div className="fixed inset-0 h-full w-full bg-bg-primary text-text-primary transition-colors duration-500 p-4 flex flex-col">
+        <div className="fixed inset-0 h-full w-full bg-bg-primary text-text-primary transition-colors duration-500 p-2 sm:p-4 flex flex-col">
             <Header />
 
-            <div className="flex flex-row flex-1 gap-4 mt-16 pt-2 overflow-hidden">
-                <DragAndDropMenu />
-                <div className="flex-1 min-w-0">
+            <div className="flex flex-row flex-1 gap-2 sm:gap-4 mt-14 pt-2 overflow-hidden">
+                {/* Mobile sidebar toggle */}
+                <button
+                    className="md:hidden fixed left-0 top-1/2 -translate-y-1/2 z-50 bg-bg-secondary border border-border-light rounded-r-lg p-1.5 shadow-md"
+                    onClick={() => setSidebarOpen(prev => !prev)}
+                    aria-label={sidebarOpen ? 'Close equipment panel' : 'Open equipment panel'}
+                >
+                    {sidebarOpen ? <IoChevronBack size={20} /> : <IoChevronForward size={20} />}
+                </button>
+
+                {/* Sidebar: always visible on md+, toggleable on mobile */}
+                <div className={`${
+                    sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                } md:translate-x-0 fixed md:relative z-40 md:z-auto transition-transform duration-200 h-[calc(100%-5rem)] md:h-full`}>
+                    <DragAndDropMenu />
+                </div>
+
+                {/* Overlay for mobile sidebar */}
+                {sidebarOpen && (
+                    <div
+                        className="md:hidden fixed inset-0 bg-black/30 z-30"
+                        onClick={() => setSidebarOpen(false)}
+                    />
+                )}
+
+                <div className="flex-1 min-w-0 flex flex-col">
 
                     {/* Edit-mode toolbar */}
-                    <div className="z-30 relative flex flex-row items-center w-full">
-                        <span className="flex flex-row items-center gap-4">
-                            <p className="text-sm font-semibold select-none px-2 py-1 rounded bg-accent-primary text-white">
+                    <div className="z-30 relative flex flex-col sm:flex-row items-start sm:items-center w-full gap-2 sm:gap-0">
+                        <span className="flex flex-row items-center gap-2 sm:gap-4 flex-wrap">
+                            <p className="text-xs sm:text-sm font-semibold select-none px-2 py-1 rounded bg-accent-primary text-white">
                                 Edit Mode
                             </p>
                             <button
-                                className="text-sm select-none underline hover:text-accent-primary transition-colors"
+                                className="text-xs sm:text-sm select-none underline hover:text-accent-primary transition-colors"
                                 onClick={() => navigate("/map")}
                             >
                                 Back to View
                             </button>
                         </span>
 
-                        {/* Absolutely centered floor buttons */}
-                        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 whitespace-nowrap">
+                        {/* Floor buttons */}
+                        <div className="sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center gap-2 sm:gap-3 whitespace-nowrap">
                             <button
                                 type="button"
                                 className="flex items-center justify-center text-text-primary hover:text-accent-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
@@ -148,9 +173,9 @@ function EditMapPage() {
                                 disabled={floor <= 0}
                                 aria-label="Previous floor"
                             >
-                                <FaRegCaretSquareDown size={32} />
+                                <FaRegCaretSquareDown size={28} />
                             </button>
-                            <span className="select-none min-w-32 text-center flex-shrink-0 font-semibold">
+                            <span className="select-none min-w-24 sm:min-w-32 text-center flex-shrink-0 font-semibold text-sm sm:text-base">
                                 {currentFloor?.name ?? `Floor ${floor + 1}`}
                             </span>
                             <button
@@ -160,12 +185,12 @@ function EditMapPage() {
                                 disabled={floor >= maxFloorIndex}
                                 aria-label="Next floor"
                             >
-                                <FaRegCaretSquareUp size={32} />
+                                <FaRegCaretSquareUp size={28} />
                             </button>
                         </div>
 
-                        <div className="ml-auto flex flex-row items-center gap-4">
-                            <span className="text-sm select-none">Snap to grid</span>
+                        <div className="sm:ml-auto flex flex-row items-center gap-2 sm:gap-4">
+                            <span className="text-xs sm:text-sm select-none">Snap to grid</span>
                             <ToggleSwitch checked={snapToGridState} onChange={setSnapToGridState} />
                         </div>
                     </div>

@@ -93,21 +93,102 @@ export async function getFloorTiles(
     };
 }
 
-// export function getInitialTiles(): TileData[] {
-//     return [
-//         { id: 1, xCoord: 20, yCoord: 160, width: 240, height: 100, rotation: 0, colour: "red", equipment: treadmillEquipment },
-//         { id: 2, xCoord: 20, yCoord: 280, width: 240, height: 100, rotation: 0, colour: "red", equipment: { name: "Treadmill", icon: TbTreadmill } },
-//         { id: 3, xCoord: 20, yCoord: 400, width: 240, height: 100, rotation: 0, colour: "red", equipment: { name: "Treadmill", icon: TbTreadmill } },
-//         { id: 4, xCoord: 20, yCoord: 540, width: 240, height: 100, rotation: 0, colour: "blue", equipment: { name: "Rowing Machine", icon: MdRowing } },
-//         { id: 5, xCoord: 20, yCoord: 660, width: 240, height: 100, rotation: 0, colour: "blue", equipment: { name: "Rowing Machine", icon: MdRowing } },
-//         { id: 6, xCoord: 400, yCoord: 20, width: 240, height: 160, rotation: 0, colour: "green", equipment: { name: "Racks", icon: GiWeightLiftingUp  } },
-//         { id: 7, xCoord: 700, yCoord: 20, width: 240, height: 160, rotation: 0, colour: "green", equipment: { name: "Racks", icon: GiWeightLiftingUp  } },
-//         { id: 8, xCoord: 1000, yCoord: 20, width: 240, height: 160, rotation: 0, colour: "green", equipment: { name: "Racks", icon: GiWeightLiftingUp  } },
-//         { id: 9, xCoord: 1140, yCoord: 340, width: 550, height: 300, rotation: 0, colour: "purple", equipment: { name: "Free Weights", icon: IoBarbell } },
-//         { id: 10, xCoord: 400, yCoord: 500, width: 500, height: 280, rotation: 0, colour: "orange", equipment: { name: "Open Space", icon: GrYoga } },
-//         { id: 11, xCoord: 600, yCoord: 300, width: 100, height: 100, rotation: 0, colour: "yellow", equipment: { name: "Resistance Machine", icon: MdElectricBolt } },
-//         { id: 12, xCoord: 800, yCoord: 300, width: 100, height: 100, rotation: 0, colour: "yellow", equipment: { name: "Resistance Machine", icon: MdElectricBolt } },
-//         { id: 13, xCoord: 950, yCoord: 300, width: 100, height: 100, rotation: 0, colour: "yellow", equipment: { name: "Resistance Machine", icon: MdElectricBolt } },
-//         { id: 14, xCoord: 1000, yCoord: 760, width: 160, height: 40, rotation: 0, colour: "gray", equipment: { name: "Entrance", icon: undefined }, canHover: false },
-//     ];
-// }
+export function getPreviewTiles(): TileData[] {
+    return [
+        {
+            id: 1, xCoord: 20, yCoord: 160, width: 240, height: 100, rotation: 0, colour: "red",
+            equipment: {
+                name: "Treadmill",
+                description: "A motorised belt for walking or running indoors.",
+                benefits: ["Running", "Walking", "Interval sprints"],
+                musclesTargeted: ["Quadriceps", "Hamstrings", "Calves", "Glutes"],
+            },
+        },
+        {
+            id: 2, xCoord: 20, yCoord: 280, width: 240, height: 100, rotation: 0, colour: "red",
+            equipment: {
+                name: "Treadmill",
+                description: "A motorised belt for walking or running indoors.",
+                benefits: ["Running", "Walking", "Interval sprints"],
+                musclesTargeted: ["Quadriceps", "Hamstrings", "Calves", "Glutes"],
+            },
+        },
+        {
+            id: 3, xCoord: 20, yCoord: 400, width: 240, height: 100, rotation: 0, colour: "red",
+            equipment: {
+                name: "Treadmill",
+                description: "A motorised belt for walking or running indoors.",
+                benefits: ["Running", "Walking", "Interval sprints"],
+                musclesTargeted: ["Quadriceps", "Hamstrings", "Calves", "Glutes"],
+            },
+        },
+        {
+            id: 4, xCoord: 20, yCoord: 540, width: 240, height: 100, rotation: 0, colour: "blue",
+            equipment: {
+                name: "Rowing Machine",
+                description: "Simulates the action of watercraft rowing for a full-body workout.",
+                benefits: ["Rowing", "HIIT intervals", "Endurance training"],
+                musclesTargeted: ["Back", "Biceps", "Legs", "Core"],
+            },
+        },
+        {
+            id: 5, xCoord: 20, yCoord: 660, width: 240, height: 100, rotation: 0, colour: "blue",
+            equipment: {
+                name: "Rowing Machine",
+                description: "Simulates the action of watercraft rowing for a full-body workout.",
+                benefits: ["Rowing", "HIIT intervals", "Endurance training"],
+                musclesTargeted: ["Back", "Biceps", "Legs", "Core"],
+            },
+        },
+        {
+            id: 6, xCoord: 300, yCoord: 20, width: 240, height: 160, rotation: 0, colour: "green",
+            equipment: {
+                name: "Racks",
+                description: "Squat / power rack for barbell exercises.",
+                benefits: ["Squats", "Bench press", "Overhead press", "Barbell rows"],
+                musclesTargeted: ["Quadriceps", "Glutes", "Chest", "Shoulders", "Back"],
+            },
+        },
+        {
+            id: 7, xCoord: 600, yCoord: 20, width: 240, height: 160, rotation: 0, colour: "green",
+            equipment: {
+                name: "Racks",
+                description: "Squat / power rack for barbell exercises.",
+                benefits: ["Squats", "Bench press", "Overhead press", "Barbell rows"],
+                musclesTargeted: ["Quadriceps", "Glutes", "Chest", "Shoulders", "Back"],
+            },
+        },
+        {
+            id: 9, xCoord: 950, yCoord: 50, width: 240, height: 430, rotation: 0, colour: "purple",
+            equipment: {
+                name: "Free Weights",
+                description: "Dumbbells and barbells for strength training.",
+                benefits: ["Bicep curls", "Shoulder press", "Deadlifts", "Lunges"],
+                musclesTargeted: ["Biceps", "Triceps", "Shoulders", "Back", "Legs"],
+            },
+        },
+        {
+            id: 10, xCoord: 350, yCoord: 550, width: 500, height: 230, rotation: 0, colour: "orange",
+            equipment: {
+                name: "Open Space",
+                description: "Open area for stretching, yoga, and bodyweight exercises.",
+                benefits: ["Yoga", "Stretching", "Bodyweight exercises", "Warm-up"],
+                musclesTargeted: ["Full body"],
+            },
+        },
+        {
+            id: 11, xCoord: 450, yCoord: 300, width: 250, height: 130, rotation: 0, colour: "yellow",
+            equipment: {
+                name: "Resistance Machine",
+                description: "Cable or pin-loaded machine for targeted resistance exercises.",
+                benefits: ["Lat pulldown", "Chest fly", "Leg extension", "Cable row"],
+                musclesTargeted: ["Chest", "Back", "Shoulders", "Legs"],
+            },
+        },
+        {
+            id: 14, xCoord: 1000, yCoord: 750, width: 160, height: 20, rotation: 0, colour: "gray",
+            equipment: { name: "Entrance" },
+            canHover: false,
+        },
+    ];
+}

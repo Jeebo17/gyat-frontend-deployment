@@ -9,6 +9,8 @@ import ShinyText from "./effects/ShinyText";
 
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
+const PREVIEW_BASE_WIDTH = 1200;
+const PREVIEW_BASE_HEIGHT = 800;
 const GRID_SIZE = 20;
 const CELL_SIZE = 200; // spatial hash cell size (px)
 
@@ -55,6 +57,7 @@ interface InteractiveMapProps {
     floorLoadError?: string | null;
     onTilesChange?: (tiles: TileData[]) => void;
     highlightedTileId?: number | null;
+    previewMode?: boolean;
 }
 
 function InteractiveMap({
@@ -65,6 +68,7 @@ function InteractiveMap({
     floorLoadError = null,
     onTilesChange,
     highlightedTileId = null,
+    previewMode = false,
 }: InteractiveMapProps) {
     const [selectedMachine, setSelectedMachine] = useState<TileData | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -94,6 +98,8 @@ function InteractiveMap({
 
     const spatialIndexRef = useRef<Map<string, TileData[]>>(buildSpatialIndex([]));
     const [gridSize, setGridSize] = useState(GRID_SIZE);
+    const mapWidth = previewMode ? PREVIEW_BASE_WIDTH : BASE_WIDTH;
+    const mapHeight = previewMode ? PREVIEW_BASE_HEIGHT : BASE_HEIGHT;
     const [scale, setScale] = useState(1);
     const [autoScale, setAutoScale] = useState(true);
     const [, setHistory] = useState<TileHistoryEntry[]>([]);
@@ -123,8 +129,8 @@ function InteractiveMap({
             const containerWidth = container.clientWidth;
             const containerHeight = container.clientHeight;
 
-            const scaleX = containerWidth / BASE_WIDTH;
-            const scaleY = containerHeight / BASE_HEIGHT;
+            const scaleX = containerWidth / mapWidth;
+            const scaleY = containerHeight / mapHeight;
             const newScale = Math.min(scaleX, scaleY, 1);
 
             setScale(newScale);
@@ -133,7 +139,7 @@ function InteractiveMap({
         updateScale();
         window.addEventListener('resize', updateScale);
         return () => window.removeEventListener('resize', updateScale);
-    }, [autoScale]);
+    }, [autoScale, mapHeight, mapWidth]);
 
     // Listen for Ctrl+Z / Cmd+Z to undo the last tile change
     useEffect(() => {
@@ -293,30 +299,35 @@ function InteractiveMap({
     };
 
     return (
-        <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-2">
+        <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-1 sm:pt-2">
             <div
                 style={{
                     position: "absolute",
-                    width: "min(95vw, " + BASE_WIDTH + "px)",
-                    height: "min(95vh, " + BASE_HEIGHT + "px)",
+                    width: `min(100%, ${mapWidth}px)`,
+                    height: `min(100%, ${mapHeight}px)`,
                     backgroundColor: "transparent",
                 }}
             >
-                <ZoomControls
-                    scale={scale}
-                    onZoomIn={zoomIn}
-                    onZoomOut={zoomOut}
-                    onReset={resetZoom}
-                />
+                {!previewMode && (
+                    <ZoomControls
+                        scale={scale}
+                        onZoomIn={zoomIn}
+                        onZoomOut={zoomOut}
+                        onReset={resetZoom}
+                    />
+                )}
+
             </div>
 
             {/* Map container */}
             <div
                 ref={containerRef}
-                className="relative bg-bg-secondary rounded-2xl overflow-auto shadow-lg transition-colors duration-500"
+                className={`relative bg-bg-secondary rounded-xl sm:rounded-2xl ${!previewMode ? 'overflow-auto' : 'overflow-hidden'} shadow-lg transition-colors duration-500 touch-pan-x touch-pan-y`}
                 style={{
-                    width: BASE_WIDTH,
-                    height: BASE_HEIGHT,
+                    width: mapWidth,
+                    height: mapHeight,
+                    maxWidth: '100%',
+                    maxHeight: '100%',
                     scrollbarColor: theme === 'dark' ? '#999999 transparent' : '#808080 transparent',
                     scrollbarWidth: 'thin'
                 }}
@@ -339,8 +350,8 @@ function InteractiveMap({
                     style={{
                         transform: `scale(${scale})`,
                         transformOrigin: "top left",
-                        width: BASE_WIDTH,
-                        height: BASE_HEIGHT,
+                        width: mapWidth,
+                        height: mapHeight,
                         backgroundImage: `
                             linear-gradient(to right, var(--grid-line-color, rgba(255,255,255,0.07)) 1px, transparent 1px),
                             linear-gradient(to bottom, var(--grid-line-color, rgba(255,255,255,0.07)) 1px, transparent 1px)
@@ -351,6 +362,7 @@ function InteractiveMap({
                         left: 0,
                         borderRadius: "16px",
                     }}
+                    onClick={previewMode ? () => setSelectedMachine(null) : undefined}
                 >
                     {/* Border */}
                     <div style={{
@@ -393,14 +405,14 @@ function InteractiveMap({
                                 gridSize={gridSize}
                                 snap={snap}
                                 canPlace={canPlace}
-                                onUpdate={editMode ? (updates) => {
+                                onUpdate={(editMode || previewMode) ? (updates) => {
                                     setHistory(prev => {
                                         const newHistory = [...prev, tile];
                                         return newHistory.slice(-50); // limit history to last 50 changes
                                     });
                                     tile.id !== undefined && updateTile(tile.id, updates);
                                 } : undefined}
-                                onClick={!editMode ? () => setSelectedMachine({ ...tile, onUpdate: () => {} }) : undefined}
+                                onClick={!editMode && !previewMode ? () => setSelectedMachine({ ...tile, onUpdate: () => {} }) : undefined}
                                 editMode={editMode}
                                 onDelete={editMode ? () => {
                                     setHistory(prev => {
@@ -409,13 +421,21 @@ function InteractiveMap({
                                     });
                                     deleteTile(tile.id);
                                 } : undefined}
+                                previewMode={previewMode}
                             />
                         ))}
+
                     </div>
                 </div>
             </div>
 
-            {!editMode && selectedMachine && <MachineModal tile={selectedMachine} onClose={() => setSelectedMachine(null)} />}
+            {!editMode && selectedMachine && (
+                <MachineModal
+                    tile={selectedMachine}
+                    onClose={() => setSelectedMachine(null)}
+                    containerMode={previewMode}
+                />
+            )}
         </div>
     );
 }

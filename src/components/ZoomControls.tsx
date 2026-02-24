@@ -17,7 +17,7 @@ const ZoomControls: FC<ZoomControlsProps> = ({ onZoomIn, onZoomOut, onReset }) =
     }`;
 
     return (
-        <div className="absolute bottom-4 right-4 z-30 flex flex-col gap-2">
+        <div className="absolute bottom-4 right-4 z-30 flex flex-col gap-1.5 sm:gap-2">
             <button 
                 onClick={onZoomIn} 
                 className={buttonClasses}

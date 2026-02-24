@@ -36,6 +36,7 @@ function Tile({
     snap = (v) => v,
     onDelete,
     highlighted = false,
+    previewMode = false,
 }: TileData) {
     const [isDragging, setIsDragging] = useState(false);
     const [isResizing, setIsResizing] = useState<ResizeHandle | null>(null);
@@ -66,7 +67,7 @@ function Tile({
         : "bg-gray-600";
 
     const handleMouseDown = (e: React.MouseEvent) => {
-        if (!editMode || !onUpdate) return;
+        if ((!editMode && !previewMode) || !onUpdate) return;
         e.stopPropagation();
 
         setIsDragging(true);
@@ -225,7 +226,7 @@ function Tile({
                 justify-center
                 absolute
                 select-none
-                ${editMode ? "cursor-move" : ""}
+                ${(editMode && !previewMode) ? "cursor-move" : ""}
                 ${canHover && !editMode ? "cursor-pointer hover:brightness-110 hover:border-2 border-text-primary" : ""}
                 ${highlighted ? "ring-4 ring-accent-primary" : ""}
                 ${theme.theme === 'dark' ? 'opacity-100' : 'brightness-90'}
@@ -238,10 +239,15 @@ function Tile({
                 transform: `rotate(${rotation}deg)`,
             }}
             onMouseDown={handleMouseDown}
-            onClick={!editMode ? onClick : undefined}
+            onClick={!editMode ? (e) => {
+                if (isDragging || isResizing) return;
+                e.stopPropagation();
+                onClick?.();
+            } : undefined}
             aria-label={equipment.name}
         >
-            <p className="truncate">{equipment.name}</p>
+            {/* TODO: Truncate? */}
+            <p className={`${previewMode ? "text-2xl" : "truncate"}`}>{equipment.name}</p>
             {equipment.icon && <equipment.icon className="absolute bottom-2 right-2 w-6 h-6 opacity-100" />}
 
             {editMode && onUpdate && (

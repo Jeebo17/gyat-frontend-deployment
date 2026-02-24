@@ -9,6 +9,8 @@ type Settings = {
   setReducedMotion: (value: boolean) => void;
   highContrast: boolean;
   setHighContrast: (value: boolean) => void;
+  soundEnabled: boolean;
+  setSoundEnabled: (value: boolean) => void;
 };
 
 const SettingsContext = createContext<Settings | undefined>(undefined);
@@ -17,6 +19,7 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
   const [fontScale, setFontScale] = useState(1);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   useEffect(() => {
     if (highContrast) {
@@ -26,14 +29,20 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
     }
     }, [highContrast]);
 
+  // Apply fontScale to the root <html> element so all rem-based sizes
+  // (including Tailwind classes like text-4xl) scale proportionally.
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${fontScale * 100}%`;
+    return () => {
+      document.documentElement.style.fontSize = '';
+    };
+  }, [fontScale]);
+
   return (
     <SettingsContext.Provider
-      value={{ fontScale, setFontScale, reducedMotion, setReducedMotion, highContrast, setHighContrast
-}}
+      value={{ fontScale, setFontScale, reducedMotion, setReducedMotion, highContrast, setHighContrast, soundEnabled, setSoundEnabled }}
     >
-      <div style={{ fontSize: `${fontScale}rem` }}>
         {children}
-      </div>
     </SettingsContext.Provider>
   );
 

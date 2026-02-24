@@ -1,4 +1,4 @@
-import useSound from 'use-sound';
+import { useAppSound } from '../hooks/useAppSound';
 import popSound from '../assets/sounds/pop.mp3';
 
 interface ToggleSwitchProps {
@@ -8,7 +8,7 @@ interface ToggleSwitchProps {
 }
 
 const ToggleSwitch = ({ checked, onChange, highlight = true }: ToggleSwitchProps) => {
-    const [play] = useSound(popSound, { volume: 0.2 });
+    const [play] = useAppSound(popSound, { volume: 0.2 });
 
     return (
         <label className='flex cursor-pointer select-none items-center'>

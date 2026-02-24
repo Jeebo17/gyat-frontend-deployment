@@ -123,11 +123,13 @@ function MapPage() {
 
             <Header />
 
-            <div className="mt-16 relative flex flex-row items-center w-full py-3 px-4 flex-shrink-0 select-none">
-                <SearchBar searchData={searchData} onSelect={handleSearchSelect} />
+            <div className="mt-14 relative flex flex-col sm:flex-row items-center w-full py-2 sm:py-3 px-3 sm:px-4 flex-shrink-0 select-none gap-2 sm:gap-0">
+                <div className="w-full sm:w-auto">
+                    <SearchBar searchData={searchData} onSelect={handleSearchSelect} />
+                </div>
 
-                {/* Absolutely centered floor buttons */}
-                <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 whitespace-nowrap">
+                {/* Floor buttons - centered on desktop, inline on mobile */}
+                <div className="sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center gap-3 whitespace-nowrap">
                     <button
                         type="button"
                         className="flex items-center justify-center text-text-primary hover:text-accent-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
@@ -135,9 +137,9 @@ function MapPage() {
                         disabled={floor <= 0}
                         aria-label="Previous floor"
                     >
-                        <FaRegCaretSquareDown size={32} />
+                        <FaRegCaretSquareDown size={28} className="sm:w-8 sm:h-8" />
                     </button>
-                    <span className="select-none min-w-32 text-center flex-shrink-0 font-semibold">
+                    <span className="select-none min-w-24 sm:min-w-32 text-center flex-shrink-0 font-semibold text-sm sm:text-base">
                         {currentFloor?.name ?? `Floor ${floor + 1}`}
                     </span>
                     <button
@@ -147,7 +149,7 @@ function MapPage() {
                         disabled={floor >= maxFloorIndex}
                         aria-label="Next floor"
                     >
-                        <FaRegCaretSquareUp size={32} />
+                        <FaRegCaretSquareUp size={28} className="sm:w-8 sm:h-8" />
                     </button>
                 </div>
 
@@ -155,7 +157,7 @@ function MapPage() {
                 {isAdmin && isLoggedIn && (
                     <button
                         onClick={() => navigate("/map/edit")}
-                        className="ml-auto px-4 py-2 rounded-lg bg-accent-primary text-white text-sm font-medium shadow hover:opacity-90 transition-opacity flex-shrink-0"
+                        className="sm:ml-auto px-3 sm:px-4 py-2 rounded-lg bg-accent-primary text-white text-xs sm:text-sm font-medium shadow hover:opacity-90 transition-opacity flex-shrink-0"
                     >
                         Edit Map
                     </button>

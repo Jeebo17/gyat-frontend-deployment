@@ -30,14 +30,14 @@ export function SearchBar({ searchData, onSelect }: SearchBarProps) {
     }, []);
 
     return (
-        <div ref={wrapperRef} className="relative w-64">
+        <div ref={wrapperRef} className="relative w-full sm:w-64">
             <input
                 type="text"
                 placeholder="Search for equipment..."
                 value={query}
                 onChange={e => { setQuery(e.target.value); setOpen(true); }}
                 onFocus={() => setOpen(true)}
-                className="w-full px-4 py-2 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 bg-bg-tertiary"
+                className="w-full px-3 sm:px-4 py-2 rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 bg-bg-tertiary text-sm sm:text-base"
             />
             {open && filtered.length > 0 && (
                 <ul className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-lg bg-bg-secondary shadow-lg border border-bg-tertiary">
