@@ -436,6 +436,12 @@ function InteractiveMap({
                     tile={selectedMachine}
                     onClose={() => setSelectedMachine(null)}
                     containerMode={previewMode}
+                    editMode={editMode}
+                    onTileChange={editMode ? (equipmentUpdates) => {
+                        const updatedEquipment = { ...selectedMachine.equipment, ...equipmentUpdates };
+                        setSelectedMachine({ ...selectedMachine, equipment: updatedEquipment });
+                        updateTile(selectedMachine.id, { equipment: updatedEquipment });
+                    } : undefined}
                 />
             )}
         </div>

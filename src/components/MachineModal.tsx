@@ -1,9 +1,36 @@
 import { RxCross2 } from "react-icons/rx";
-import { TileData } from "../types/tile";
+import type { TileData } from "../types/tile";
+import type { EquipmentProps } from "../types/equipment";
 
-function MachineModal({ tile, onClose, containerMode = false }: { tile: TileData, onClose: () => void, containerMode?: boolean }) {
+interface MachineModalProps {
+    tile: TileData;
+    onClose: () => void;
+    containerMode?: boolean;
+    editMode?: boolean;
+    onTileChange?: (equipmentUpdates: Partial<EquipmentProps>) => void;
+}
+
+const parseMultilineList = (value: string): string[] | undefined => {
+    const items = value
+        .split("\n")
+        .map(item => item.trim())
+        .filter(Boolean);
+
+    return items.length > 0 ? items : undefined;
+};
+
+function MachineModal({
+    tile,
+    onClose,
+    containerMode = false,
+    editMode = false,
+    onTileChange,
+}: MachineModalProps) {
+    const inputClasses = "w-full rounded-md border border-white/30 bg-black/30 px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-accent-primary";
+    const textareaClasses = "w-full rounded-md border border-white/30 bg-black/30 px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-accent-primary resize-y min-h-[120px]";
+
     return (
-        <div className={`${containerMode ? 'absolute' : 'fixed'} inset-0 flex items-center justify-center z-40 cursor-pointer select-none`} onClick={onClose}>
+        <div className={`${containerMode ? 'absolute' : 'fixed'} inset-0 flex items-center justify-center z-40 cursor-pointer ${editMode ? '' : 'select-none'}`} onClick={onClose}>
             <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm select-none"></div>
 
             <div
@@ -14,7 +41,20 @@ function MachineModal({ tile, onClose, containerMode = false }: { tile: TileData
                     <RxCross2 className="w-8 h-8 sm:w-12 sm:h-12"/>
                 </button>
 
-                <h1 className="text-xl sm:text-2xl md:text-3xl select-none text-white flex-shrink-0 pr-10">{tile.equipment.name}</h1>
+                {editMode ? (
+                    <div className="flex-shrink-0 pr-10">
+                        <label htmlFor="machine-name-input" className="sr-only">Equipment name</label>
+                        <input
+                            id="machine-name-input"
+                            className={inputClasses}
+                            value={tile.equipment.name}
+                            onChange={(e) => onTileChange?.({ name: e.target.value })}
+                            placeholder="Equipment name"
+                        />
+                    </div>
+                ) : (
+                    <h1 className="text-xl sm:text-2xl md:text-3xl select-none text-white flex-shrink-0 pr-10">{tile.equipment.name}</h1>
+                )}
 
                 <div className="grid grid-cols-1 gap-4 sm:gap-6 mt-4 sm:mt-6 md:grid-cols-2 xl:grid-cols-3 xl:grid-rows-2 flex-1 min-h-0 overflow-y-auto">
                     <div className="flex flex-col row-span-1 md:row-span-2 items-center justify-center bg-black/20 rounded-lg p-3 sm:p-4 min-h-0">
@@ -27,7 +67,16 @@ function MachineModal({ tile, onClose, containerMode = false }: { tile: TileData
                         {/* Equipment description */}
                         <div className="w-full mt-4 p-2 text-white overflow-y-auto flex-1 min-h-0 scrollbar-thumb-only">
                             <h3 className="text-xl mb-2 select-none font-semibold">Description</h3>
-                            <p className="select-none">{tile.equipment.description}</p>
+                            {editMode ? (
+                                <textarea
+                                    className={textareaClasses}
+                                    value={tile.equipment.description ?? ""}
+                                    onChange={(e) => onTileChange?.({ description: e.target.value || undefined })}
+                                    placeholder="Add a description..."
+                                />
+                            ) : (
+                                <p className="select-none">{tile.equipment.description}</p>
+                            )}
                         </div>
                     </div>
 
@@ -35,26 +84,58 @@ function MachineModal({ tile, onClose, containerMode = false }: { tile: TileData
                         {/* Benefits */}
                         <h3 className="text-xl mb-2 select-none font-semibold flex-shrink-0">List of exercises:</h3>
                         <div className="overflow-y-auto flex-1 min-h-0 scrollbar-thumb-only">
-                            <ul className="list-disc list-outside pl-5 space-y-2">
-                                {tile.equipment.benefits?.map((benefit: string, idx: number) => (
-                                    <li key={idx}>{benefit}</li>
-                                ))}
-                            </ul>
+                            {editMode ? (
+                                <textarea
+                                    key={`benefits-${tile.id}`}
+                                    className={textareaClasses}
+                                    defaultValue={(tile.equipment.benefits ?? []).join("\n")}
+                                    onChange={(e) => onTileChange?.({ benefits: parseMultilineList(e.target.value) })}
+                                    placeholder={"One exercise per line\nExample:\nLat pulldown\nCable row"}
+                                />
+                            ) : (
+                                <ul className="list-disc list-outside pl-5 space-y-2">
+                                    {tile.equipment.benefits?.map((benefit: string, idx: number) => (
+                                        <li key={idx}>{benefit}</li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
                     </div>
                     
                     <div className="rounded-lg p-4 overflow-y-auto text-white bg-black/20 min-h-0 scrollbar-thumb-only">
                         {/* Muscles trained */}
                         <h3 className="text-xl mb-2 select-none font-semibold">Muscles trained</h3>
-                        <ul className="list-disc list-outside pl-5 space-y-2">
-                            {tile.equipment.musclesTargeted?.map((muscle: string, idx: number) => (
-                                <li key={idx}>{muscle}</li>
-                            ))}
-                        </ul>
+                        {editMode ? (
+                            <textarea
+                                key={`muscles-${tile.id}`}
+                                className={textareaClasses}
+                                defaultValue={(tile.equipment.musclesTargeted ?? []).join("\n")}
+                                onChange={(e) => onTileChange?.({ musclesTargeted: parseMultilineList(e.target.value) })}
+                                placeholder={"One muscle group per line\nExample:\nBack\nBiceps"}
+                            />
+                        ) : (
+                            <ul className="list-disc list-outside pl-5 space-y-2">
+                                {tile.equipment.musclesTargeted?.map((muscle: string, idx: number) => (
+                                    <li key={idx}>{muscle}</li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
                     
                     <div className="rounded-lg p-4 overflow-y-auto text-white bg-black/20 min-h-0 scrollbar-thumb-only">
                         <h3 className="text-xl mb-2 select-none font-semibold">Video</h3>
+                        {editMode && (
+                            <div className="mb-3">
+                                <label htmlFor="machine-video-url" className="sr-only">Video URL</label>
+                                <input
+                                    id="machine-video-url"
+                                    className={inputClasses}
+                                    value={tile.equipment.videoUrl ?? ""}
+                                    onChange={(e) => onTileChange?.({ videoUrl: e.target.value || undefined })}
+                                    placeholder="https://..."
+                                />
+                            </div>
+                        )}
                         <div className="w-full bg-gray-100 rounded-sm text-black aspect-video text-center justify-center flex items-center">
                             {tile.equipment.videoUrl ? (
                                 <iframe
