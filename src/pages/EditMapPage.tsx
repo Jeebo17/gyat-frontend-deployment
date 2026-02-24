@@ -32,9 +32,9 @@ function EditMapPage() {
     const [tileOverrides, setTileOverrides] = useState<TileData[] | null>(null);
 
     //TEMP
-    const layoutId = 50;
-    const parsedLayoutId = Number(import.meta.env.VITE_LAYOUT_ID ?? "50");
-    const DEFAULT_LAYOUT_ID = Number.isFinite(parsedLayoutId) && parsedLayoutId > 0 ? parsedLayoutId : 50;
+    const layoutId = 69;
+    const parsedLayoutId = Number(import.meta.env.VITE_LAYOUT_ID ?? "69");
+    const DEFAULT_LAYOUT_ID = Number.isFinite(parsedLayoutId) && parsedLayoutId > 0 ? parsedLayoutId : 69;
     const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : DEFAULT_LAYOUT_ID;
 
     // Derive floors from the cached layout
