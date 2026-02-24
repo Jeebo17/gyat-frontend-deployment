@@ -12,17 +12,17 @@ interface LogoutButtonProps {
 
 export function LogoutButton({ header = false }: LogoutButtonProps) {
     const navigate = useNavigate();
-    const { isLoggedIn, logout } = useAuth();
+    const { isLoggedIn, isLoading, logout } = useAuth();
     const [isClicking, setIsClicking] = useState(false);
     const [play] = useSound(popSound, { volume: 0.3 });
 
-    if (!isLoggedIn) {
+    if (isLoading || !isLoggedIn) {
         return null;
     }
 
-    const handleClick = () => {
+    const handleClick = async () => {
         play();
-        logout();
+        await logout();
         navigate("/login");
         setIsClicking(true);
         setTimeout(() => setIsClicking(false), 400);

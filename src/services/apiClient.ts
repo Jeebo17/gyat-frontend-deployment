@@ -11,7 +11,11 @@ async function request<T>(
         ...options.headers,
     };
 
-    const response = await fetch(url, { ...options, headers });
+    const response = await fetch(url, {
+        credentials: "include",
+        ...options,
+        headers,
+    });
 
     if (!response.ok) {
         const errorBody = await response.text().catch(() => "Unknown error");
