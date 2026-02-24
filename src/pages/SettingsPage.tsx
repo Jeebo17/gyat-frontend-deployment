@@ -16,16 +16,16 @@ function SettingsPage() {
 
       <Header />
 
-      <div className="flex flex-1 items-center justify-center p-4 sm:p-6 pt-20 sm:pt-6">
+      <div className="flex flex-1 items-center justify-center p-6">
 
         <motion.div
         initial={reducedMotion ? false : { opacity: 0, y: 20 }}
         animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
         transition={reducedMotion ? { duration: 0 } : { duration: 0.6 }}
-          className="w-full max-w-xl p-5 sm:p-8 bg-bg-secondary/50 backdrop-blur-lg rounded-2xl border-2 border-neutral-700/30"
+          className="w-full max-w-xl p-8 bg-bg-secondary/50 backdrop-blur-lg rounded-2xl border-2 border-neutral-700/30"
         >
 
-          <h1 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6">
+          <h1 className="text-3xl font-semibold mb-6">
             Accessibility Settings
           </h1>
 
