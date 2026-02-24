@@ -247,7 +247,8 @@ function Tile({
             } : undefined}
             aria-label={equipment.name}
         >
-            <p className={`truncate ${previewMode ? "text-xl" : ""}`}>{equipment.name}</p>
+            {/* TODO: Truncate? */}
+            <p className={`${previewMode ? "text-2xl" : "truncate"}`}>{equipment.name}</p>
             {equipment.icon && <equipment.icon className="absolute bottom-2 right-2 w-6 h-6 opacity-100" />}
 
             {editMode && onUpdate && (

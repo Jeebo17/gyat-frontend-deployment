@@ -90,6 +90,10 @@ function HomePage() {
 
                 <div className="px-2 sm:px-6 w-full lg:w-auto">
                     <div className="mx-auto w-full max-w-6xl px-2 sm:px-4">
+
+                        {/* <h1 className="text-2xl sm:text-3xl font-semibold mb-4">
+                            Try me!
+                        </h1> */}
                         <div className="w-full h-[400px] sm:h-[500px] lg:h-[600px] relative">
                             <InteractiveMap editMode={false} previewMode={true} floorTiles={getPreviewTiles()} />
                         </div>
