@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import { useState } from 'react';
 import { IoHomeOutline, IoHome, IoMapOutline, IoMap, IoSettingsOutline, IoSettings } from 'react-icons/io5';
 import { useNavigate } from 'react-router';
 import { ThemeToggle } from './ThemeToggle';
@@ -88,13 +87,9 @@ type HeaderItemProps = {
 };
 
 function HeaderItem({ icon, label, selected, onClick }: HeaderItemProps) {
-    const [isHovered, setIsHovered] = useState(false);
-
     return (
         <motion.button
             onClick={onClick}
-            onHoverStart={() => setIsHovered(true)}
-            onHoverEnd={() => setIsHovered(false)}
             className={`
                 relative flex items-center gap-2 px-4 h-14
                 transition-colors duration-150
@@ -106,13 +101,9 @@ function HeaderItem({ icon, label, selected, onClick }: HeaderItemProps) {
             disabled={selected}
             aria-current={selected ? 'page' : undefined}
         >
-            {/* <motion.div 
-                className="text-md"
-                animate={isHovered && !selected ? { rotate: [0, -20, 20, 0] } : { rotate: 0 }}
-                transition={{ duration: 0.6 }}
-            >
+            <motion.div className="text-md">
                 {icon}
-            </motion.div> */}
+            </motion.div>
             <span className="text-md font-light tracking-wide">
                 {label}
             </span>

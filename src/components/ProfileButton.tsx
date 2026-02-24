@@ -14,9 +14,10 @@ export function ProfileButton({ header = false }: ProfileButtonProps) {
     const navigate = useNavigate();
     const [isClicking, setIsClicking] = useState(false);
     const [play] = useSound(popSound, { volume: 0.3 });
-    const { isLoggedIn } = useAuth();
+    const { isLoggedIn, isLoading } = useAuth();
 
     const handleClick = () => {
+        if (isLoading) return;
         play();
         if (isLoggedIn) { 
             navigate('/profile'); 

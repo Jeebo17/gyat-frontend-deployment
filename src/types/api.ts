@@ -108,3 +108,31 @@ export interface UpdateFloorRequest {
     name: string;
     levelOrder: number;
 }
+
+// ─── Auth DTOs ───────────────────────────────────────────────────────────────
+
+export interface LoginRequest {
+    usernameOrEmail: string;
+    password: string;
+}
+
+export interface RegisterRequest {
+    username: string;
+    password: string;
+    email: string;
+}
+
+export interface AuthResponse {
+    id: number | null;
+    username: string | null;
+    email: string | null;
+    role: string | null;
+    message: string;
+}
+
+export interface ManagerProfileResponse {
+    id: number;
+    username: string;
+    email: string;
+    role: string;
+}
