@@ -31,7 +31,6 @@ function Tile({
     canHover = true,
     onClick,
     editMode,
-    dragOnly = false,
     scale = 1,
     gridSize = 20,
     snap = (v) => v,
@@ -68,7 +67,7 @@ function Tile({
         : "bg-gray-600";
 
     const handleMouseDown = (e: React.MouseEvent) => {
-        if ((!editMode && !dragOnly) || !onUpdate) return;
+        if ((!editMode && !previewMode) || !onUpdate) return;
         e.stopPropagation();
 
         setIsDragging(true);
@@ -227,7 +226,7 @@ function Tile({
                 justify-center
                 absolute
                 select-none
-                ${(editMode || dragOnly) ? "cursor-move" : ""}
+                ${(editMode && !previewMode) ? "cursor-move" : ""}
                 ${canHover && !editMode ? "cursor-pointer hover:brightness-110 hover:border-2 border-text-primary" : ""}
                 ${highlighted ? "ring-4 ring-accent-primary" : ""}
                 ${theme.theme === 'dark' ? 'opacity-100' : 'brightness-90'}

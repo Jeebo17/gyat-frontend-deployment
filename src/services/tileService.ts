@@ -141,7 +141,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 6, xCoord: 400, yCoord: 20, width: 240, height: 160, rotation: 0, colour: "green",
+            id: 6, xCoord: 300, yCoord: 20, width: 240, height: 160, rotation: 0, colour: "green",
             equipment: {
                 name: "Racks",
                 description: "Squat / power rack for barbell exercises.",
@@ -150,7 +150,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 7, xCoord: 700, yCoord: 20, width: 240, height: 160, rotation: 0, colour: "green",
+            id: 7, xCoord: 600, yCoord: 20, width: 240, height: 160, rotation: 0, colour: "green",
             equipment: {
                 name: "Racks",
                 description: "Squat / power rack for barbell exercises.",
@@ -159,16 +159,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 8, xCoord: 1000, yCoord: 20, width: 240, height: 160, rotation: 0, colour: "green",
-            equipment: {
-                name: "Racks",
-                description: "Squat / power rack for barbell exercises.",
-                benefits: ["Squats", "Bench press", "Overhead press", "Barbell rows"],
-                musclesTargeted: ["Quadriceps", "Glutes", "Chest", "Shoulders", "Back"],
-            },
-        },
-        {
-            id: 9, xCoord: 1260, yCoord: 240, width: 300, height: 430, rotation: 0, colour: "purple",
+            id: 9, xCoord: 950, yCoord: 50, width: 240, height: 430, rotation: 0, colour: "purple",
             equipment: {
                 name: "Free Weights",
                 description: "Dumbbells and barbells for strength training.",
@@ -177,7 +168,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 10, xCoord: 400, yCoord: 500, width: 500, height: 280, rotation: 0, colour: "orange",
+            id: 10, xCoord: 350, yCoord: 550, width: 500, height: 230, rotation: 0, colour: "orange",
             equipment: {
                 name: "Open Space",
                 description: "Open area for stretching, yoga, and bodyweight exercises.",
@@ -186,7 +177,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 11, xCoord: 500, yCoord: 270, width: 250, height: 130, rotation: 0, colour: "yellow",
+            id: 11, xCoord: 450, yCoord: 300, width: 250, height: 130, rotation: 0, colour: "yellow",
             equipment: {
                 name: "Resistance Machine",
                 description: "Cable or pin-loaded machine for targeted resistance exercises.",
@@ -195,16 +186,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 12, xCoord: 800, yCoord: 270, width: 250, height: 130, rotation: 0, colour: "yellow",
-            equipment: {
-                name: "Resistance Machine",
-                description: "Cable or pin-loaded machine for targeted resistance exercises.",
-                benefits: ["Lat pulldown", "Chest fly", "Leg extension", "Cable row"],
-                musclesTargeted: ["Chest", "Back", "Shoulders", "Legs"],
-            },
-        },
-        {
-            id: 14, xCoord: 1000, yCoord: 760, width: 160, height: 40, rotation: 0, colour: "gray",
+            id: 14, xCoord: 1000, yCoord: 750, width: 160, height: 20, rotation: 0, colour: "gray",
             equipment: { name: "Entrance" },
             canHover: false,
         },

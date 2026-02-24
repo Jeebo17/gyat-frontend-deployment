@@ -40,9 +40,6 @@ export interface TileData {
     // Whether the tile is in edit mode.
     editMode?: boolean;
 
-    // Allow dragging without resize/delete/rotate controls.
-    dragOnly?: boolean;
-
     // Scaling factor applied to tile measurements.
     scale?: number;
 

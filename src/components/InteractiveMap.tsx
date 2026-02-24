@@ -9,7 +9,7 @@ import ShinyText from "./effects/ShinyText";
 
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
-const PREVIEW_BASE_WIDTH = 1600;
+const PREVIEW_BASE_WIDTH = 1200;
 const PREVIEW_BASE_HEIGHT = 800;
 const GRID_SIZE = 20;
 const CELL_SIZE = 200; // spatial hash cell size (px)
@@ -322,7 +322,7 @@ function InteractiveMap({
             {/* Map container */}
             <div
                 ref={containerRef}
-                className="relative bg-bg-secondary rounded-xl sm:rounded-2xl overflow-auto shadow-lg transition-colors duration-500 touch-pan-x touch-pan-y"
+                className={`relative bg-bg-secondary rounded-xl sm:rounded-2xl ${!previewMode ? 'overflow-auto' : 'overflow-hidden'} shadow-lg transition-colors duration-500 touch-pan-x touch-pan-y`}
                 style={{
                     width: mapWidth,
                     height: mapHeight,
@@ -405,7 +405,6 @@ function InteractiveMap({
                                 gridSize={gridSize}
                                 snap={snap}
                                 canPlace={canPlace}
-                                dragOnly={previewMode}
                                 onUpdate={(editMode || previewMode) ? (updates) => {
                                     setHistory(prev => {
                                         const newHistory = [...prev, tile];
@@ -413,7 +412,7 @@ function InteractiveMap({
                                     });
                                     tile.id !== undefined && updateTile(tile.id, updates);
                                 } : undefined}
-                                onClick={!editMode ? () => setSelectedMachine({ ...tile, onUpdate: () => {} }) : undefined}
+                                onClick={!editMode && !previewMode ? () => setSelectedMachine({ ...tile, onUpdate: () => {} }) : undefined}
                                 editMode={editMode}
                                 onDelete={editMode ? () => {
                                     setHistory(prev => {
