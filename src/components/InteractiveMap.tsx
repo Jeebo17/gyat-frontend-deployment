@@ -433,7 +433,6 @@ function InteractiveMap({
                 <MachineModal
                     tile={selectedMachine}
                     onClose={() => setSelectedMachine(null)}
-                    preview={previewMode}
                     containerMode={previewMode}
                 />
             )}
