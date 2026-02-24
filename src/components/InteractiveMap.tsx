@@ -410,9 +410,11 @@ function InteractiveMap({
                                         const newHistory = [...prev, tile];
                                         return newHistory.slice(-50); // limit history to last 50 changes
                                     });
-                                    tile.id !== undefined && updateTile(tile.id, updates);
+                                    if (tile.id !== undefined) {
+                                        updateTile(tile.id, updates);
+                                    }
                                 } : undefined}
-                                onClick={!editMode && !previewMode ? () => setSelectedMachine({ ...tile, onUpdate: () => {} }) : undefined}
+                                onClick={!previewMode ? () => setSelectedMachine({ ...tile, onUpdate: () => {} }) : undefined}
                                 editMode={editMode}
                                 onDelete={editMode ? () => {
                                     setHistory(prev => {
@@ -429,7 +431,7 @@ function InteractiveMap({
                 </div>
             </div>
 
-            {!editMode && selectedMachine && (
+            { selectedMachine && (
                 <MachineModal
                     tile={selectedMachine}
                     onClose={() => setSelectedMachine(null)}
