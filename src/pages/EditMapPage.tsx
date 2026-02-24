@@ -16,13 +16,13 @@ import { useAuth } from "../context/AuthContext";
 
 function EditMapPage() {
     const navigate = useNavigate();
-    const { isLoggedIn } = useAuth();
+    const { isLoggedIn, isLoading: isAuthLoading } = useAuth();
 
     useEffect(() => {
-        if (!isLoggedIn) {
+        if (!isAuthLoading && !isLoggedIn) {
             navigate("/login", { replace: true });
         }
-    }, [isLoggedIn, navigate]);
+    }, [isAuthLoading, isLoggedIn, navigate]);
 
     const [loading, setLoading] = useState(true);
     const [snapToGridState, setSnapToGridState] = useState(true);
@@ -30,14 +30,13 @@ function EditMapPage() {
     const [layout, setLayout] = useState<GymLayoutDTO | null>(null);
     const [isLayoutLoading, setIsLayoutLoading] = useState(true);
     const [layoutLoadError, setLayoutLoadError] = useState<string | null>(null);
-    const [refreshVersion, setRefreshVersion] = useState(0);
     const [tileOverrides, setTileOverrides] = useState<TileData[] | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     //TEMP
-    const layoutId = 50;
-    const parsedLayoutId = Number(import.meta.env.VITE_LAYOUT_ID ?? "50");
-    const DEFAULT_LAYOUT_ID = Number.isFinite(parsedLayoutId) && parsedLayoutId > 0 ? parsedLayoutId : 50;
+    const layoutId = 69;
+    const parsedLayoutId = Number(import.meta.env.VITE_LAYOUT_ID ?? "69");
+    const DEFAULT_LAYOUT_ID = Number.isFinite(parsedLayoutId) && parsedLayoutId > 0 ? parsedLayoutId : 69;
     const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : DEFAULT_LAYOUT_ID;
 
     // Derive floors from the cached layout
@@ -94,7 +93,7 @@ function EditMapPage() {
 
         void loadLayout();
         return () => { active = false; };
-    }, [resolvedLayoutId, refreshVersion]);
+    }, [resolvedLayoutId]);
 
     const handleTilesChange = useCallback((newTiles: TileData[]) => {
         setTileOverrides(newTiles);
@@ -112,7 +111,7 @@ function EditMapPage() {
         checkAdmin();
     }, [navigate]);
 
-    if (loading) {
+    if (loading || isAuthLoading) {
         return (
             <div className="min-h-screen bg-bg-primary text-text-primary transition-colors duration-300">
                 <LoadingPage />

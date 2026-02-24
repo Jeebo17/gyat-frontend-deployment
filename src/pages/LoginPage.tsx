@@ -1,69 +1,70 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import Header from '../components/Header';
-import { authenticateTempUser } from '../services/tempAuth';
-import { useAuth } from '../context/AuthContext';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import Header from "../components/Header";
+import { loginManager } from "../services/authService";
+import { useAuth } from "../context/AuthContext";
 
 function LoginPage() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+    const [usernameOrEmail, setUsernameOrEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { login, isLoggedIn, isLoading: isAuthLoading } = useAuth();
 
-    // Validate email format
-    const isValidEmail = (value: string) => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(value);
-    };
+    useEffect(() => {
+        if (!isAuthLoading && isLoggedIn) {
+            navigate("/", { replace: true });
+        }
+    }, [isAuthLoading, isLoggedIn, navigate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        if (isLoading) return;
-        setError('');
+        if (isLoading || isAuthLoading) return;
+        setError("");
 
-        if (!email.trim() || !password.trim()) {
-            setError('Invalid credentials. Please try again.');
-            return;
-        }
-
-        if (!isValidEmail(email)) {
-            setError('Invalid credentials. Please try again.');
+        if (!usernameOrEmail.trim() || !password.trim()) {
+            setError("Invalid credentials. Please try again.");
             return;
         }
 
         if (password.length > 128) {
-            setError('Invalid credentials. Please try again.');
+            setError("Invalid credentials. Please try again.");
             return;
         }
 
         setIsLoading(true);
         
         try {
-            const result = authenticateTempUser(email.trim(), password);
+            const result = await loginManager({
+                usernameOrEmail: usernameOrEmail.trim(),
+                password,
+            });
 
-            if (!result?.ok) {
-                setError('Invalid credentials. Please try again.');
+            if (
+                typeof result.id !== "number" ||
+                typeof result.username !== "string" ||
+                typeof result.email !== "string" ||
+                typeof result.role !== "string"
+            ) {
+                setError(result?.message || "Authentication failed. Please try again.");
                 return;
             }
 
-            if (!result.userName) {
-                setError('Authentication failed. Please try again.');
-                return;
-            }
-
-
-            setEmail('');
-            setPassword('');
-            login(result.userName);
-            navigate('/');
+            setUsernameOrEmail("");
+            setPassword("");
+            login({
+                id: result.id,
+                username: result.username,
+                email: result.email,
+                role: result.role,
+            });
+            navigate("/");
         } catch (err) {
-
-            console.error('Login error:', err);
-            setError('An error occurred. Please try again.');
+            console.error("Login error:", err);
+            setError(err instanceof Error ? err.message : "An error occurred. Please try again.");
         } finally {
             setIsLoading(false);
         }
@@ -89,16 +90,16 @@ function LoginPage() {
                         <p className="text-red-500 text-sm">{error}</p>
                     )}
                     <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-2">
-                            Email
+                        <label htmlFor="usernameOrEmail" className="block text-sm font-medium text-text-secondary mb-2">
+                            Username or Email
                         </label>
                         <input
-                            type="email"
-                            id="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            type="text"
+                            id="usernameOrEmail"
+                            value={usernameOrEmail}
+                            onChange={(e) => setUsernameOrEmail(e.target.value)}
                             className="w-full px-4 py-3 rounded-lg bg-bg-tertiary text-text-primary border border-transparent focus:border-accent-primary focus:outline-none transition-colors"
-                            placeholder="Enter your email"
+                            placeholder="Enter username or email"
                             required
                         />
                     </div>
@@ -120,12 +121,12 @@ function LoginPage() {
 
                     <motion.button
                         type="submit"
-                        disabled={isLoading}
+                        disabled={isLoading || isAuthLoading}
                         whileHover={{ scale: isLoading ? 1 : 1.02 }}
                         whileTap={{ scale: isLoading ? 1 : 0.98 }}
                         className="w-full py-3 px-4 rounded-lg bg-accent-primary text-white font-medium hover:bg-accent-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {isLoading ? 'Signing in...' : 'Sign In'}
+                        {isLoading || isAuthLoading ? "Signing in..." : "Sign In"}
                     </motion.button>
                 </form>
 

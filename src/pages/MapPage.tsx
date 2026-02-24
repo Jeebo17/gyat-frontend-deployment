@@ -8,13 +8,13 @@ import { isAdminTEST } from '../services/isAdmin';
 import type { GymFloorDTO, GymLayoutDTO } from '../types/api';
 import { FaRegCaretSquareUp, FaRegCaretSquareDown } from 'react-icons/fa';
 import { SearchBar } from '../components/SearchBar';
-import { getLayout } from "../services/layoutService";
+import { getLayoutPublic } from "../services/layoutService";
 import { mapComponentToTile } from "../services/tileService";
 import type { TileSearchProps } from '../types/tile';
 import { useAuth } from '../context/AuthContext';
 
-const parsedLayoutId = Number(import.meta.env.VITE_LAYOUT_ID ?? "50");
-const DEFAULT_LAYOUT_ID = Number.isFinite(parsedLayoutId) && parsedLayoutId > 0 ? parsedLayoutId : 50;
+const parsedLayoutId = Number(import.meta.env.VITE_LAYOUT_ID ?? "69");
+const DEFAULT_LAYOUT_ID = Number.isFinite(parsedLayoutId) && parsedLayoutId > 0 ? parsedLayoutId : 69;
 
 function MapPage() {
     const [loading, setLoading] = useState(true);
@@ -62,7 +62,7 @@ function MapPage() {
             setLayoutLoadError(null);
 
             try {
-                const data = await getLayout(resolvedLayoutId);
+                const data = await getLayoutPublic(resolvedLayoutId);
                 if (!active) return;
                 setLayout(data);
 

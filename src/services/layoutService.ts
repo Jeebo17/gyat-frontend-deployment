@@ -10,6 +10,7 @@ import type {
  *
  * Endpoints covered:
  *   GET    /api/layouts/:id
+ *   GET    /api/public/layouts/:id
  *   POST   /api/layouts
  *   PUT    /api/layouts/:id
  *   DELETE /api/layouts/:id
@@ -18,6 +19,11 @@ import type {
 // Fetch a single layout (including its floors & components).
 export async function getLayout(id: number): Promise<GymLayoutDTO> {
     return request<GymLayoutDTO>(`/api/layouts/${id}`);
+}
+
+// Fetch a single layout through the public endpoint (view-only access).
+export async function getLayoutPublic(id: number): Promise<GymLayoutDTO> {
+    return request<GymLayoutDTO>(`/api/public/layouts/${id}`);
 }
 
 // Create a new layout.

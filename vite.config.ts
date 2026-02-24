@@ -17,6 +17,10 @@ export default defineConfig(({ mode }) => {
           target: backendTarget,
           changeOrigin: true,
         },
+        '/logout': {
+          target: backendTarget,
+          changeOrigin: true,
+        },
       },
     },
   };
