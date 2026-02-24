@@ -8,6 +8,7 @@ import { useTheme } from '../context/ThemeContext';
 import {useSettings } from '../context/SettingsContext';
 import InteractiveMap from '../components/InteractiveMap';
 import { getPreviewTiles } from "../services/tileService";
+import cursor from '../assets/images/arrowhead-cursor.svg';
 
 
 function HomePage() {
@@ -39,7 +40,7 @@ function HomePage() {
     ];
 
     return (
-        <div className="min-h-screen text-text-primary transition-colors duration-300 select-none">
+        <div className="min-h-screen text-text-primary transition-colors duration-300 select-none" style={{ cursor: `url(${cursor}) 12 12, auto` }}>
             <Header />
 
             <div className="absolute w-full h-full top-0 left-0 overflow-hidden -z-10">

@@ -422,6 +422,7 @@ function InteractiveMap({
                                     });
                                     deleteTile(tile.id);
                                 } : undefined}
+                                previewMode={previewMode}
                             />
                         ))}
 

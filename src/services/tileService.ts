@@ -186,7 +186,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 11, xCoord: 650, yCoord: 300, width: 100, height: 100, rotation: 0, colour: "yellow",
+            id: 11, xCoord: 500, yCoord: 270, width: 250, height: 130, rotation: 0, colour: "yellow",
             equipment: {
                 name: "Resistance Machine",
                 description: "Cable or pin-loaded machine for targeted resistance exercises.",
@@ -195,16 +195,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 12, xCoord: 800, yCoord: 300, width: 100, height: 100, rotation: 0, colour: "yellow",
-            equipment: {
-                name: "Resistance Machine",
-                description: "Cable or pin-loaded machine for targeted resistance exercises.",
-                benefits: ["Lat pulldown", "Chest fly", "Leg extension", "Cable row"],
-                musclesTargeted: ["Chest", "Back", "Shoulders", "Legs"],
-            },
-        },
-        {
-            id: 13, xCoord: 950, yCoord: 300, width: 100, height: 100, rotation: 0, colour: "yellow",
+            id: 12, xCoord: 800, yCoord: 270, width: 250, height: 130, rotation: 0, colour: "yellow",
             equipment: {
                 name: "Resistance Machine",
                 description: "Cable or pin-loaded machine for targeted resistance exercises.",

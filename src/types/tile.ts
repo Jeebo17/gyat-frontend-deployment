@@ -58,6 +58,9 @@ export interface TileData {
 
     // Whether the tile should be highlighted (e.g. for search).
     highlighted?: boolean;
+
+    // Whether the tile is in preview mode
+    previewMode?: boolean;
 }
 
 export interface TileTemplate {

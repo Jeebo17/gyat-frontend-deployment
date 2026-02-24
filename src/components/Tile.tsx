@@ -37,6 +37,7 @@ function Tile({
     snap = (v) => v,
     onDelete,
     highlighted = false,
+    previewMode = false,
 }: TileData) {
     const [isDragging, setIsDragging] = useState(false);
     const [isResizing, setIsResizing] = useState<ResizeHandle | null>(null);
@@ -246,7 +247,7 @@ function Tile({
             } : undefined}
             aria-label={equipment.name}
         >
-            <p className="truncate">{equipment.name}</p>
+            <p className={`truncate ${previewMode ? "text-xl" : ""}`}>{equipment.name}</p>
             {equipment.icon && <equipment.icon className="absolute bottom-2 right-2 w-6 h-6 opacity-100" />}
 
             {editMode && onUpdate && (
