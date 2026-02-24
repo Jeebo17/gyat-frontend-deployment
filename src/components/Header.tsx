@@ -54,7 +54,10 @@ export default function Header({ className = '' }: HeaderProps) {
             >
                 <div className="flex items-center gap-1">
                     <h1>
-                        <span className="text-xl sm:text-2xl text-text-primary mr-2 sm:mr-6">GYAT</span>
+                        <span 
+                            className="text-xl sm:text-2xl text-text-primary mr-2 sm:mr-6"
+                            onClick={() => navigate("/")}
+                        >GYAT</span>
                     </h1>
 
                     {/* Desktop nav items */}

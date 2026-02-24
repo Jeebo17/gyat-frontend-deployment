@@ -6,6 +6,8 @@ import Header from '../components/Header';
 import Silk from '../backgrounds/Silk';
 import { useTheme } from '../context/ThemeContext';
 import {useSettings } from '../context/SettingsContext';
+import InteractiveMap from '../components/InteractiveMap';
+import { getPreviewTiles } from "../services/tileService";
 
 
 function HomePage() {
@@ -22,7 +24,7 @@ function HomePage() {
         {
             icon: <IoFitnessOutline className="w-8 h-8" />,
             title: "Equipment Tracking",
-            description: "Find and track gym machines in real-time"
+            description: "Find and track gym machines in \"real-time\""
         },
         {
             icon: <IoLocationOutline className="w-8 h-8" />,
@@ -84,9 +86,14 @@ function HomePage() {
                     </motion.div>
                 </div>
 
+
                 <div className="px-2 sm:px-6 w-full lg:w-auto">
-                    <div className="max-w-4xl mx-auto px-2 sm:px-4">
-                        <motion.div
+                    <div className="mx-auto w-full max-w-6xl px-2 sm:px-4">
+                        <div className="w-full h-[400px] sm:h-[500px] lg:h-[600px] relative">
+                            <InteractiveMap editMode={false} previewMode={true} floorTiles={getPreviewTiles()} />
+                        </div>
+
+                        {/* <motion.div
                             initial={reducedMotion ? false : { opacity: 0, y: 20 }}
                             animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
                             transition={reducedMotion ? { duration: 0 } : { duration: 0.6 }}
@@ -116,7 +123,7 @@ function HomePage() {
                                     </div>
                                 </motion.div>
                             ))}
-                        </motion.div>
+                        </motion.div> */}
                     </div>
                 </div>
             </div>
