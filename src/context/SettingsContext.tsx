@@ -26,14 +26,21 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
     }
     }, [highContrast]);
 
+  // Apply fontScale to the root <html> element so all rem-based sizes
+  // (including Tailwind classes like text-4xl) scale proportionally.
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${fontScale * 100}%`;
+    return () => {
+      document.documentElement.style.fontSize = '';
+    };
+  }, [fontScale]);
+
   return (
     <SettingsContext.Provider
       value={{ fontScale, setFontScale, reducedMotion, setReducedMotion, highContrast, setHighContrast
 }}
     >
-      <div style={{ fontSize: `${fontScale}rem` }}>
         {children}
-      </div>
     </SettingsContext.Provider>
   );
 
