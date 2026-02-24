@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 
 
 function SettingsPage() {
-  const { fontScale, setFontScale } = useSettings();
+  const { fontScale, setFontScale, soundEnabled, setSoundEnabled } = useSettings();
   const navigate = useNavigate();
   const { reducedMotion } = useSettings();
   const { setReducedMotion } = useSettings();
@@ -48,6 +48,19 @@ function SettingsPage() {
 
           <div className="mb-6 flex items-center justify-between">
             <label className="font-medium">
+            Enable Sound Effects
+            </label>
+
+            <input
+                type="checkbox"
+                checked={soundEnabled}
+                onChange={(e) => setSoundEnabled(e.target.checked)}
+                className="w-5 h-5 accent-accent-primary"
+            />
+          </div>
+
+          <div className="mb-6 flex items-center justify-between">
+            <label className="font-medium">
             Reduced Animations
             </label>
 
@@ -57,7 +70,7 @@ function SettingsPage() {
                 onChange={(e) => setReducedMotion(e.target.checked)}
                 className="w-5 h-5 accent-accent-primary"
             />
-            </div>
+          </div>
 
           <div className="mb-6 flex items-center justify-between">
             <label className="font-medium">

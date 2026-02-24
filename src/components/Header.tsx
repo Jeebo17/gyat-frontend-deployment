@@ -4,9 +4,10 @@ import { IoHomeOutline, IoHome, IoMapOutline, IoMap, IoSettingsOutline, IoSettin
 import { useNavigate } from 'react-router';
 import { ThemeToggle } from './ThemeToggle';
 import { ProfileButton } from './ProfileButton';
-import useSound from 'use-sound';
+import { useAppSound } from '../hooks/useAppSound';
 import popSound from '../assets/sounds/pop.mp3';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 
 export type HeaderProps = {
     className?: string;
@@ -15,9 +16,10 @@ export type HeaderProps = {
 export default function Header({ className = '' }: HeaderProps) {
     const navigate = useNavigate();
     const selectedPage = window.location.pathname;
-    const [play] = useSound(popSound, { volume: 0.3 });
+    const [play] = useAppSound(popSound, { volume: 0.3 });
     const { isLoggedIn, userName } = useAuth();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const { soundEnabled } = useSettings();
 
     const items = [
         {
@@ -63,7 +65,9 @@ export default function Header({ className = '' }: HeaderProps) {
                                 icon={item.icon}
                                 label={item.label}
                                 onClick={() => {
-                                    play();
+                                    if (soundEnabled) {
+                                        play();
+                                    }
                                     item.onClick();
                                 }}
                                 selected={selectedPage === item.path}
@@ -106,7 +110,9 @@ export default function Header({ className = '' }: HeaderProps) {
                                 <button
                                     key={index}
                                     onClick={() => {
-                                        play();
+                                        if (soundEnabled) {
+                                            play();
+                                        }
                                         item.onClick();
                                         setMobileMenuOpen(false);
                                     }}

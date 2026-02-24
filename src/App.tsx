@@ -1,6 +1,5 @@
 import { Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
-import useSound from 'use-sound';
 import { 
   Map, 
   HomePage, 
@@ -12,9 +11,10 @@ import {
   EditMapPage
 } from './pages';
 import startSound from './assets/sounds/start.mp3';
+import { useAppSound } from './hooks/useAppSound';
 
 function App() {
-  const [play] = useSound(startSound, { volume: 0.3 });
+  const [play] = useAppSound(startSound, { volume: 0.3 });
 
   useEffect(() => {
     play();

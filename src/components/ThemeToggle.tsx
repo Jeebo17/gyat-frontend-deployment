@@ -2,7 +2,7 @@ import { IoSunnyOutline, IoMoonOutline } from "react-icons/io5";
 import { useTheme } from '../context/ThemeContext';
 import { motion } from "framer-motion";
 import { useState } from "react";
-import useSound from 'use-sound';
+import { useAppSound } from '../hooks/useAppSound';
 import popSound from '../assets/sounds/pop.mp3';
 
 interface ThemeToggleProps {
@@ -12,7 +12,7 @@ interface ThemeToggleProps {
 export function ThemeToggle({ header = false }: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme();
   const [isClicking, setIsClicking] = useState(false);
-  const [play] = useSound(popSound, { volume: 0.3 });
+  const [play] = useAppSound(popSound, { volume: 0.3 });
 
   return (
     <div className="z-50">

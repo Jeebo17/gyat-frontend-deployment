@@ -2,9 +2,10 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { IoLogOutOutline } from "react-icons/io5";
 import { useNavigate } from "react-router";
-import useSound from "use-sound";
+import { useAppSound } from '../hooks/useAppSound';
 import popSound from "../assets/sounds/pop.mp3";
 import { useAuth } from "../context/AuthContext";
+import { useSettings } from "../context/SettingsContext";
 
 interface LogoutButtonProps {
     header?: boolean;
@@ -14,14 +15,17 @@ export function LogoutButton({ header = false }: LogoutButtonProps) {
     const navigate = useNavigate();
     const { isLoggedIn, logout } = useAuth();
     const [isClicking, setIsClicking] = useState(false);
-    const [play] = useSound(popSound, { volume: 0.3 });
+    const [play] = useAppSound(popSound, { volume: 0.3 });
+    const { soundEnabled } = useSettings();
 
     if (!isLoggedIn) {
         return null;
     }
 
     const handleClick = () => {
-        play();
+        if (soundEnabled) {
+            play();
+        }
         logout();
         navigate("/login");
         setIsClicking(true);
