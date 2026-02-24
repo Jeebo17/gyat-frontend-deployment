@@ -293,12 +293,12 @@ function InteractiveMap({
     };
 
     return (
-        <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-2">
+        <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-1 sm:pt-2">
             <div
                 style={{
                     position: "absolute",
-                    width: "min(95vw, " + BASE_WIDTH + "px)",
-                    height: "min(95vh, " + BASE_HEIGHT + "px)",
+                    width: "min(100%, " + BASE_WIDTH + "px)",
+                    height: "min(100%, " + BASE_HEIGHT + "px)",
                     backgroundColor: "transparent",
                 }}
             >
@@ -313,10 +313,12 @@ function InteractiveMap({
             {/* Map container */}
             <div
                 ref={containerRef}
-                className="relative bg-bg-secondary rounded-2xl overflow-auto shadow-lg transition-colors duration-500"
+                className="relative bg-bg-secondary rounded-xl sm:rounded-2xl overflow-auto shadow-lg transition-colors duration-500 touch-pan-x touch-pan-y"
                 style={{
                     width: BASE_WIDTH,
                     height: BASE_HEIGHT,
+                    maxWidth: '100%',
+                    maxHeight: '100%',
                     scrollbarColor: theme === 'dark' ? '#999999 transparent' : '#808080 transparent',
                     scrollbarWidth: 'thin'
                 }}

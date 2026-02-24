@@ -17,27 +17,27 @@ const ZoomControls: FC<ZoomControlsProps> = ({ onZoomIn, onZoomOut, onReset }) =
     }`;
 
     return (
-        <div className="absolute bottom-4 right-4 z-30 flex flex-col gap-2">
+        <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-30 flex flex-col gap-1.5 sm:gap-2">
             <button 
                 onClick={onZoomIn} 
                 className={buttonClasses}
                 aria-label="Zoom in"
             >
-                <FaPlus size={25} />
+                <FaPlus className="w-4 h-4 sm:w-6 sm:h-6" />
             </button>
             <button 
                 onClick={onZoomOut} 
                 className={buttonClasses}
                 aria-label="Zoom out"
             >
-                <FaMinus size={25} />
+                <FaMinus className="w-4 h-4 sm:w-6 sm:h-6" />
             </button>
             <button 
                 onClick={onReset} 
                 className={buttonClasses}
                 aria-label="Reset zoom"
             >
-                <FaArrowRotateLeft size={25} />
+                <FaArrowRotateLeft className="w-4 h-4 sm:w-6 sm:h-6" />
             </button>
         </div>
     );

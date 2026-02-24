@@ -51,20 +51,20 @@ function HomePage() {
                 <div className="absolute inset-0 bg-bg-primary opacity-40"></div>
             </div>
             
-            <div className="relative flex flex-row items-center justify-center h-full w-full" style={{ minHeight: '100vh' }}>
+            <div className="relative flex flex-col lg:flex-row items-center justify-center min-h-screen w-full px-4 sm:px-6 pt-20 pb-10 lg:pt-14 lg:pb-0 gap-8 lg:gap-0">
                 <div className="max-w-4xl mx-auto text-center">
                     <motion.div
                         initial={reducedMotion ? false : { opacity: 0, y: 20 }}
                         animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
                         transition={reducedMotion ? { duration: 0 } : { duration: 0.6 }}
                     >
-                        <h1 className="text-5xl md:text-6xl font-bold mb-4">
+                        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4">
                             GYAT
                         </h1>
-                        <p className="text-xl md:text-2xl text-text-primary font-medium mb-2">
+                        <p className="text-lg sm:text-xl md:text-2xl text-text-primary font-medium mb-2">
                             The Gym App & Tracker
                         </p>
-                        <p className="text-text-primary max-w-xl mx-auto mt-4">
+                        <p className="text-sm sm:text-base text-text-primary max-w-xl mx-auto mt-4">
                             Navigate your gym smarter. Find equipment, track availability, and optimise your workout experience.
                         </p>
                     </motion.div>
@@ -73,24 +73,24 @@ function HomePage() {
                         initial={reducedMotion ? false : { opacity: 0, y: 20 }}
                         animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
                         transition={reducedMotion ? { duration: 0 } : { duration: 0.6 }}
-                        className="mt-10"
+                        className="mt-8 sm:mt-10"
                     >
                         <button
                             onClick={() => navigate('/map')}
-                            className="px-8 py-4 bg-accent-primary text-white font-semibold rounded-xl hover:bg-accent-hover transition-colors duration-200 shadow-lg hover:shadow-xl"
+                            className="px-6 sm:px-8 py-3 sm:py-4 bg-accent-primary text-white font-semibold rounded-xl hover:bg-accent-hover transition-colors duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
                         >
                             Open Gym Map
                         </button>
                     </motion.div>
                 </div>
 
-                <div className="px-6">
-                    <div className="max-w-4xl mx-auto px-4">
+                <div className="px-2 sm:px-6 w-full lg:w-auto">
+                    <div className="max-w-4xl mx-auto px-2 sm:px-4">
                         <motion.div
                             initial={reducedMotion ? false : { opacity: 0, y: 20 }}
                             animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
                             transition={reducedMotion ? { duration: 0 } : { duration: 0.6 }}
-                            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                            className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6"
                         >
                             {features.map((feature, index) => (
                                 <motion.div
@@ -99,7 +99,7 @@ function HomePage() {
                                     animate={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
                                     transition={reducedMotion ? { duration: 0 } : { duration: 0.6 }}
                     
-                                    className="p-6 bg-bg-secondary/50 backdrop-blur-lg rounded-2xl border-2 border-neutral-700/30 hover:border-neutral-600/50 transition-colors duration-200"
+                                    className="p-4 sm:p-6 bg-bg-secondary/50 backdrop-blur-lg rounded-2xl border-2 border-neutral-700/30 hover:border-neutral-600/50 transition-colors duration-200"
                                 >
                                     <div className="flex items-start gap-4">
                                         <div className="p-3 bg-bg-tertiary rounded-xl text-accent-primary">

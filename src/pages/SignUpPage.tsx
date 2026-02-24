@@ -22,14 +22,14 @@ function SignUpPage() {
     };
 
     return (
-        <div className="min-h-screen bg-bg-primary text-text-primary flex items-center justify-center">
+        <div className="min-h-screen bg-bg-primary text-text-primary flex items-center justify-center px-4 pt-16">
             <Header />
 
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="w-full max-w-md p-8 rounded-2xl bg-bg-secondary"
+                className="w-full max-w-md p-6 sm:p-8 rounded-2xl bg-bg-secondary"
             >
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-bold mb-2">Create Account</h1>

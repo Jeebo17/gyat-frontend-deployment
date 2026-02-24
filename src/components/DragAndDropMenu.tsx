@@ -40,8 +40,8 @@ export function DragAndDropMenu() {
     };
 
     return (
-        <div className="w-64 shrink-0 h-full flex flex-col gap-2 bg-bg-secondary rounded-2xl shadow-lg z-50 p-4 overflow-y-auto">
-            <h2 className="text-text-primary text-sm font-semibold select-none mb-2">Drag and drop</h2>
+        <div className="w-48 md:w-64 shrink-0 h-full flex flex-col gap-2 bg-bg-secondary rounded-2xl shadow-lg z-50 p-3 md:p-4 overflow-y-auto">
+            <h2 className="text-text-primary text-xs md:text-sm font-semibold select-none mb-2">Drag and drop</h2>
             {templates.map((template) => (
                 <div
                     key={template.equipment.name}
