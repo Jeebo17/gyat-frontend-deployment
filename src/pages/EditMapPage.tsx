@@ -11,9 +11,18 @@ import type { GymFloorDTO, GymLayoutDTO } from "../types/api";
 import type { TileData } from "../types/tile";
 import { getLayout } from "../services/layoutService";
 import { mapComponentToTile } from "../services/tileService";
+import { useAuth } from "../context/AuthContext";
 
 function EditMapPage() {
     const navigate = useNavigate();
+    const { isLoggedIn } = useAuth();
+
+    useEffect(() => {
+        if (!isLoggedIn) {
+            navigate("/login", { replace: true });
+        }
+    }, [isLoggedIn, navigate]);
+
     const [loading, setLoading] = useState(true);
     const [snapToGridState, setSnapToGridState] = useState(true);
     const [floor, setFloor] = useState<number>(0);
@@ -89,10 +98,6 @@ function EditMapPage() {
         setTileOverrides(newTiles);
     }, []);
 
-    const triggerRefresh = useCallback(() => {
-        setRefreshVersion(v => v + 1);
-    }, []);
-
     // Admin gate: redirect non-admins back to the map view
     useEffect(() => {
         const checkAdmin = async () => {
@@ -122,7 +127,7 @@ function EditMapPage() {
                 <div className="flex-1 min-w-0">
 
                     {/* Edit-mode toolbar */}
-                    <div className="z-30 flex flex-row items-center gap-4 w-full justify-between">
+                    <div className="z-30 relative flex flex-row items-center w-full">
                         <span className="flex flex-row items-center gap-4">
                             <p className="text-sm font-semibold select-none px-2 py-1 rounded bg-accent-primary text-white">
                                 Edit Mode
@@ -135,8 +140,8 @@ function EditMapPage() {
                             </button>
                         </span>
 
-
-                        <div className="flex items-center gap-3 whitespace-nowrap">
+                        {/* Absolutely centered floor buttons */}
+                        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 whitespace-nowrap">
                             <button
                                 type="button"
                                 className="flex items-center justify-center text-text-primary hover:text-accent-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
@@ -160,7 +165,7 @@ function EditMapPage() {
                             </button>
                         </div>
 
-                        <div className="flex flex-row items-center gap-4">
+                        <div className="ml-auto flex flex-row items-center gap-4">
                             <span className="text-sm select-none">Snap to grid</span>
                             <ToggleSwitch checked={snapToGridState} onChange={setSnapToGridState} />
                         </div>

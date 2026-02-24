@@ -6,7 +6,7 @@ type TempLogin = {
 
 // ⚠️  TEMPORARY DEV CREDENTIALS - REMOVE BEFORE PRODUCTION
 const TEMP_LOGIN: TempLogin = {
-    email: 'admin@admin',
+    email: 'admin@gyat.com',
     password: 'admin',
     userName: 'Admin'
 };
@@ -20,7 +20,6 @@ export function authenticateTempUser(email: string, password: string) {
     return {
         ok,
         userName: ok ? TEMP_LOGIN.userName : '',
-        // Note: isAdmin removed - should come from server only
     };
 }
 

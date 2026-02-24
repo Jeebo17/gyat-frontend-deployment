@@ -19,7 +19,6 @@ function LoginPage() {
         return emailRegex.test(value);
     };
 
-    // Simple rate limiting: prevent rapid submissions
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
