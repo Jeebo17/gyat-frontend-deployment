@@ -2,6 +2,23 @@ import { render, screen } from '@testing-library/react';
 import ToggleSwitch from '../ToggleSwitch';
 import { describe, it, expect, vi } from 'vitest';
 
+vi.mock('use-sound', () => ({
+    default: () => [vi.fn(), { stop: vi.fn(), pause: vi.fn() }],
+}));
+
+vi.mock('../../context/SettingsContext', () => ({
+    useSettings: () => ({
+        soundEnabled: true,
+        fontScale: 1,
+        setFontScale: vi.fn(),
+        reducedMotion: false,
+        setReducedMotion: vi.fn(),
+        highContrast: false,
+        setHighContrast: vi.fn(),
+        setSoundEnabled: vi.fn(),
+    }),
+}));
+
 describe('ToggleSwitch', () => {
     it('renders a button', () => {
         render(<ToggleSwitch checked={false} onChange={vi.fn()} />);
