@@ -35,13 +35,6 @@ interface MachineModalProps {
     saveSuccess?: string | null;
 }
 
-const parseMultilineList = (value: string): string[] => {
-    return value
-        .split("\n")
-        .map(item => item.trim())
-        .filter(Boolean);
-};
-
 const normalizeOptionalString = (value: string): string | undefined => {
     const trimmed = value.trim();
     return trimmed ? trimmed : undefined;
@@ -65,6 +58,7 @@ function MachineModal({
     saveError = null,
     saveSuccess = null,
 }: MachineModalProps) {
+    const [selectedExerciseForModal, setSelectedExerciseForModal] = useState<{ id?: number; name: string } | null>(null);
     const [previewMode, setPreviewMode] = useState(false);
     const [exerciseToAddId, setExerciseToAddId] = useState("");
     const [showCreateExerciseModal, setShowCreateExerciseModal] = useState(false);
@@ -89,6 +83,17 @@ function MachineModal({
         id: exerciseId,
         name: exerciseNameById.get(exerciseId) ?? selectedBenefits[index] ?? `Exercise #${exerciseId}`,
     }));
+    const readOnlyExercises = selectedExercises.length > 0
+        ? selectedExercises.map((exercise) => ({
+            id: exercise.id,
+            name: exercise.name,
+            key: `selected-${exercise.id}`,
+        }))
+        : (tile.equipment.benefits ?? []).map((benefit, index) => ({
+            id: undefined,
+            name: benefit,
+            key: `benefit-${index}`,
+        }));
     const selectableExerciseOptions = (tile.exerciseOptions ?? [])
         .filter((exercise) => !selectedExerciseIdSet.has(exercise.id));
     const selectedMuscleIdSet = useMemo(() => new Set(selectedMuscleIds), [selectedMuscleIds]);
@@ -191,6 +196,17 @@ function MachineModal({
         }
     };
 
+    const openExerciseModal = (exercise: { id?: number; name: string }) => {
+        setSelectedExerciseForModal({
+            id: exercise.id,
+            name: exercise.name,
+        });
+    };
+
+    const closeExerciseModal = () => {
+        setSelectedExerciseForModal(null);
+    };
+
     return (
         <div className={`${containerMode ? 'absolute' : 'fixed'} inset-0 flex items-center justify-center z-40 cursor-pointer ${showEditableFields ? '' : 'select-none'}`} onClick={onClose}>
             <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm select-none"></div>
@@ -218,36 +234,13 @@ function MachineModal({
                     <h1 className="text-xl sm:text-2xl md:text-3xl select-none text-white flex-shrink-0 pr-10">{tile.equipment.name}</h1>
                 )}
 
-                <div className="grid grid-cols-1 gap-4 sm:gap-6 mt-4 sm:mt-6 md:grid-cols-2 xl:grid-cols-3 xl:grid-rows-2 flex-1 min-h-0 overflow-y-auto">
-                    <div className="flex flex-col row-span-1 md:row-span-2 items-center justify-center bg-black/20 rounded-lg p-3 sm:p-4 min-h-0">
-                        {/* Equipment image */}
-                        <div className="bg-black/20 rounded-lg flex flex-col items-center justify-center w-full aspect-square flex-shrink-0 max-h-48 sm:max-h-none">
-                            {tile.equipment.icon && (
-                                <tile.equipment.icon className="w-12 h-12 sm:w-20 sm:h-20 mb-2 sm:mb-4 text-white" />
-                            )}
-                        </div>
-                        {/* Equipment description */}
-                        <div className="w-full mt-4 p-2 text-white overflow-y-auto flex-1 min-h-0 scrollbar-thumb-only">
-                            <h3 className="text-xl mb-2 select-none font-semibold">Description</h3>
-                            {showEditableFields ? (
-                                <textarea
-                                    className={textareaClasses}
-                                    value={tile.equipment.description ?? ""}
-                                    onChange={(e) => onTileChange?.({ description: e.target.value || undefined })}
-                                    placeholder="Add a description..."
-                                />
-                            ) : (
-                                <p className="select-none">{tile.equipment.description}</p>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="rounded-lg p-3 sm:p-4 row-span-1 md:row-span-2 text-white bg-black/20 flex flex-col min-h-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-6 flex-1 min-h-0 overflow-y-auto">
+                    <div className="rounded-lg p-3 sm:p-4 row-span-1 text-white bg-black/20 flex flex-col min-h-0">
                         {/* Benefits */}
                         <h3 className="text-xl mb-2 select-none font-semibold flex-shrink-0">List of exercises:</h3>
-                        <div className="overflow-y-auto flex-1 min-h-0 scrollbar-thumb-only">
+                        <div className="flex-1 min-h-0 flex flex-col">
                             {showEditableFields ? (
-                                <div className="space-y-3">
+                                <div className="space-y-3 flex flex-col min-h-0 flex-1">
                                     <div className="flex flex-col sm:flex-row gap-2">
                                         <label htmlFor="machine-exercise-select" className="sr-only">Exercise selector</label>
                                         <select
@@ -290,44 +283,44 @@ function MachineModal({
                                     {selectedExercises.length === 0 ? (
                                         <p className="text-white/70 text-sm">No exercises selected.</p>
                                     ) : (
-                                        <ul className="list-disc list-outside pl-5 space-y-2">
+                                        <ul className="space-y-2 overflow-y-auto min-h-0 flex-1 pr-1 scrollbar-thumb-only">
                                             {selectedExercises.map((exercise) => (
-                                                <li key={exercise.id}>{exercise.name}</li>
+                                                <li key={exercise.id}>
+                                                    <button
+                                                        type="button"
+                                                        className="w-full rounded-md border border-white/30 bg-black/30 px-3 py-2 text-left text-sm text-white transition-colors hover:bg-black/45 focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                                                        onClick={() => openExerciseModal(exercise)}
+                                                    >
+                                                        {exercise.name}
+                                                    </button>
+                                                </li>
                                             ))}
                                         </ul>
                                     )}
                                 </div>
                             ) : (
-                                <ul className="list-disc list-outside pl-5 space-y-2">
-                                    {tile.equipment.benefits?.map((benefit: string, idx: number) => (
-                                        <li key={idx}>{benefit}</li>
-                                    ))}
-                                </ul>
+                                readOnlyExercises.length === 0 ? (
+                                    <p className="text-white/70 text-sm">No exercises listed.</p>
+                                ) : (
+                                    <ul className="space-y-2 overflow-y-auto min-h-0 flex-1 pr-1 scrollbar-thumb-only">
+                                        {readOnlyExercises.map((exercise) => (
+                                            <li key={exercise.key}>
+                                                <button
+                                                    type="button"
+                                                    className="w-full rounded-md border border-white/30 bg-black/30 px-3 py-2 text-left text-sm text-white transition-colors hover:bg-black/45 focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                                                    onClick={() => openExerciseModal(exercise)}
+                                                >
+                                                    {exercise.name}
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )
                             )}
                         </div>
                     </div>
                     
-                    <div className="rounded-lg p-4 overflow-y-auto text-white bg-black/20 min-h-0 scrollbar-thumb-only">
-                        {/* Muscles trained */}
-                        <h3 className="text-xl mb-2 select-none font-semibold">Muscles trained</h3>
-                        {showEditableFields ? (
-                            <textarea
-                                key={`muscles-${tile.id}`}
-                                className={textareaClasses}
-                                defaultValue={(tile.equipment.musclesTargeted ?? []).join("\n")}
-                                onChange={(e) => onTileChange?.({ musclesTargeted: parseMultilineList(e.target.value) })}
-                                placeholder={"One muscle group per line\nExample:\nBack\nBiceps"}
-                            />
-                        ) : (
-                            <ul className="list-disc list-outside pl-5 space-y-2">
-                                {tile.equipment.musclesTargeted?.map((muscle: string, idx: number) => (
-                                    <li key={idx}>{muscle}</li>
-                                ))}
-                            </ul>
-                        )}
-                    </div>
-                    
-                    <div className="rounded-lg p-4 overflow-y-auto text-white bg-black/20 min-h-0 scrollbar-thumb-only">
+                    <div className="rounded-lg p-4 text-white bg-black/20 min-h-0">
                         <h3 className="text-xl mb-2 select-none font-semibold">Video</h3>
                         {showEditableFields && (
                             <div className="mb-3">
@@ -397,6 +390,91 @@ function MachineModal({
                 )}
 
             </div>
+
+            {selectedExerciseForModal && (
+                <div
+                    className="fixed inset-0 z-[70] flex items-center justify-center cursor-pointer"
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        closeExerciseModal();
+                    }}
+                >
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+                    <div
+                        className="relative z-10 backdrop-blur-2xl border-2 border-white/30 p-3 sm:p-4 md:p-6 rounded-2xl shadow-lg w-[95%] sm:w-11/12 md:w-4/5 h-[88%] sm:h-4/5 cursor-auto overflow-hidden flex flex-col"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <button
+                            aria-label="Close exercise details"
+                            className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white hover:text-red-500 transition-all duration-200 z-10"
+                            onClick={closeExerciseModal}
+                        >
+                            <RxCross2 className="w-8 h-8 sm:w-12 sm:h-12" />
+                        </button>
+
+                        <h2 className="text-xl sm:text-2xl md:text-3xl text-white flex-shrink-0 pr-10">Exercise Details</h2>
+                        <p className="mt-2 text-sm text-white/80">
+                            Read-only exercise view.
+                        </p>
+
+                        <div className="grid grid-cols-1 gap-4 sm:gap-6 mt-4 sm:mt-6 md:grid-cols-2 flex-1 min-h-0 overflow-y-auto">
+                            <div className="rounded-lg p-4 text-white bg-black/20 min-h-0 overflow-y-auto scrollbar-thumb-only">
+                                <h3 className="text-xl mb-2 font-semibold">Overview</h3>
+                                <ul className="list-disc list-outside pl-5 space-y-2 text-sm">
+                                    <li>Exercise: {selectedExerciseForModal.name}</li>
+                                    {typeof selectedExerciseForModal.id === "number" && (
+                                        <li>Exercise ID: {selectedExerciseForModal.id}</li>
+                                    )}
+                                    <li>Linked machine: {tile.equipment.name}</li>
+                                </ul>
+                                <p className="mt-3 text-sm text-white/80">
+                                    Exercise-specific description and difficulty are not available in this view yet.
+                                </p>
+                            </div>
+
+                            <div className="rounded-lg p-4 text-white bg-black/20 min-h-0 overflow-y-auto scrollbar-thumb-only">
+                                <h3 className="text-xl mb-2 font-semibold">Muscles</h3>
+                                {(tile.equipment.musclesTargeted ?? []).length === 0 ? (
+                                    <p className="text-sm text-white/70">No muscle data available.</p>
+                                ) : (
+                                    <ul className="list-disc list-outside pl-5 space-y-2 text-sm">
+                                        {tile.equipment.musclesTargeted?.map((muscle, idx) => (
+                                            <li key={`${muscle}-${idx}`}>{muscle}</li>
+                                        ))}
+                                    </ul>
+                                )}
+
+                                <h3 className="text-xl mt-4 mb-2 font-semibold">Video</h3>
+                                <div className="w-full bg-gray-100 rounded-sm text-black aspect-video text-center justify-center flex items-center">
+                                    {tile.equipment.videoUrl ? (
+                                        <iframe
+                                            width="100%"
+                                            height="100%"
+                                            src={tile.equipment.videoUrl}
+                                            title={`Exercise video for ${selectedExerciseForModal.name}`}
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                            className="rounded-sm"
+                                        ></iframe>
+                                    ) : (
+                                        <span className="text-xs">No video available</span>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-3 flex justify-end">
+                            <button
+                                type="button"
+                                className="px-4 py-2 rounded-md border border-white/40 text-white font-semibold hover:bg-white/10 transition-colors"
+                                onClick={closeExerciseModal}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {showCreateExerciseModal && (
                 <div

@@ -64,6 +64,25 @@ describe("MachineModal", () => {
         expect(screen.getByText("Lat Pulldown")).toBeInTheDocument();
     });
 
+    it("opens read-only exercise details when a listed exercise is clicked in edit mode", () => {
+        renderModal();
+
+        fireEvent.click(screen.getByRole("button", { name: "Lat Pulldown" }));
+
+        expect(screen.getByRole("heading", { name: "Exercise Details" })).toBeInTheDocument();
+        expect(screen.getByText("Exercise: Lat Pulldown")).toBeInTheDocument();
+        expect(screen.getByText("Linked machine: Cable Station")).toBeInTheDocument();
+    });
+
+    it("opens read-only exercise details when a listed exercise is clicked in non-edit mode", () => {
+        renderModal({ editMode: false });
+
+        fireEvent.click(screen.getByRole("button", { name: "Lat Pulldown" }));
+
+        expect(screen.getByRole("heading", { name: "Exercise Details" })).toBeInTheDocument();
+        expect(screen.getByText("Exercise: Lat Pulldown")).toBeInTheDocument();
+    });
+
     it("toggles to preview mode in edit flow", () => {
         renderModal();
 
