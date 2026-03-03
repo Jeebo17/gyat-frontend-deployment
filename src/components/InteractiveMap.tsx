@@ -8,7 +8,7 @@ import type { DragTileData } from "./DragAndDropMenu";
 import ShinyText from "./effects/ShinyText";
 import { updateComponent } from "../services/componentService";
 import { upsertEquipmentTypeOverride } from "../services/equipmentTypeService";
-import { createExercise, upsertExerciseOverride } from "../services/exerciseService";
+import { upsertExerciseOverride } from "../services/exerciseService";
 
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
@@ -60,6 +60,13 @@ const normalizeArray = (items?: string[]): string[] | undefined => {
 const normalizeOptionalString = (value?: string): string | undefined => {
     const trimmed = value?.trim();
     return trimmed ? trimmed : undefined;
+};
+
+const resolveExerciseNames = (tile: TileData, exerciseIds: number[]): string[] => {
+    const optionNameById = new Map((tile.exerciseOptions ?? []).map((exercise) => [exercise.id, exercise.name]));
+    return exerciseIds.map((exerciseId, index) =>
+        optionNameById.get(exerciseId) ?? tile.equipment.benefits?.[index] ?? `Exercise #${exerciseId}`
+    );
 };
 
 interface InteractiveMapProps {
@@ -336,10 +343,12 @@ function InteractiveMap({
             const equipmentTypeId = selectedMachine.equipmentTypeId;
             const normalizedName = normalizeOptionalString(selectedMachine.equipment.name);
             const normalizedDescription = normalizeOptionalString(selectedMachine.equipment.description);
-            const normalizedBenefits = normalizeArray(selectedMachine.equipment.benefits) ?? [];
+            const normalizedBenefits = normalizeArray(
+                resolveExerciseNames(selectedMachine, selectedMachine.exerciseIds ?? [])
+            ) ?? [];
             const normalizedVideoUrl = normalizeOptionalString(selectedMachine.equipment.videoUrl);
             const normalizedMuscles = normalizeArray(selectedMachine.equipment.musclesTargeted);
-            const existingExerciseIds = selectedMachine.exerciseIds ?? [];
+            const selectedExerciseIds = selectedMachine.exerciseIds ?? [];
 
             if (!normalizedName) {
                 throw new Error("Equipment name cannot be empty.");
@@ -360,9 +369,8 @@ function InteractiveMap({
                 description: normalizedDescription,
             });
 
-            const overrideSaves = existingExerciseIds.map((exerciseId, index) => {
+            const overrideSaves = selectedExerciseIds.map((exerciseId, index) => {
                 const payload = {
-                    name: normalizedBenefits[index],
                     videoUrl: index === 0 ? normalizedVideoUrl : undefined,
                 };
                 const hasData = Object.values(payload).some((value) => value !== undefined);
@@ -371,22 +379,9 @@ function InteractiveMap({
                 return upsertExerciseOverride(exerciseId, payload);
             });
 
-            const createdExerciseIds: number[] = [];
-            for (let index = existingExerciseIds.length; index < normalizedBenefits.length; index++) {
-                const created = await createExercise({
-                    equipmentTypeId,
-                    name: normalizedBenefits[index],
-                    description: "",
-                    videoUrl: index === 0 ? (normalizedVideoUrl ?? "") : "",
-                    difficulty: "",
-                    muscleIds: [],
-                });
-                createdExerciseIds.push(created.id);
-            }
-
             await Promise.all(overrideSaves);
 
-            const nextExerciseIds = [...existingExerciseIds, ...createdExerciseIds];
+            const nextExerciseIds = selectedExerciseIds;
             const updatedEquipment = {
                 ...selectedMachine.equipment,
                 name: normalizedName,
@@ -580,6 +575,19 @@ function InteractiveMap({
                     onTileChange={editMode ? (equipmentUpdates) => {
                         const updatedEquipment = { ...selectedMachine.equipment, ...equipmentUpdates };
                         setSelectedMachine({ ...selectedMachine, equipment: updatedEquipment });
+                        setMachineSaveError(null);
+                        setMachineSaveSuccess(null);
+                    } : undefined}
+                    onExerciseIdsChange={editMode ? (exerciseIds) => {
+                        const exerciseNames = resolveExerciseNames(selectedMachine, exerciseIds);
+                        setSelectedMachine({
+                            ...selectedMachine,
+                            exerciseIds,
+                            equipment: {
+                                ...selectedMachine.equipment,
+                                benefits: exerciseNames,
+                            },
+                        });
                         setMachineSaveError(null);
                         setMachineSaveSuccess(null);
                     } : undefined}

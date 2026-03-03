@@ -35,6 +35,10 @@ export const mapComponentToTile = (
         id: component.id,
         equipmentTypeId,
         exerciseIds: exercises.map((exercise) => exercise.id),
+        exerciseOptions: exercises.map((exercise) => ({
+            id: exercise.id,
+            name: exercise.name,
+        })),
         outOfOrder: component.outOfOrder ?? false,
         additionalInfo: component.additionalInfo ?? undefined,
         xCoord: component.xCoord,

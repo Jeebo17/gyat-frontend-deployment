@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { RxCross2 } from "react-icons/rx";
 import type { TileData } from "../types/tile";
 import type { EquipmentProps } from "../types/equipment";
@@ -9,6 +9,7 @@ interface MachineModalProps {
     containerMode?: boolean;
     editMode?: boolean;
     onTileChange?: (equipmentUpdates: Partial<EquipmentProps>) => void;
+    onExerciseIdsChange?: (exerciseIds: number[]) => void;
     onOutOfOrderChange?: (outOfOrder: boolean) => void;
     onSave?: () => Promise<void> | void;
     saving?: boolean;
@@ -29,6 +30,7 @@ function MachineModal({
     containerMode = false,
     editMode = false,
     onTileChange,
+    onExerciseIdsChange,
     onOutOfOrderChange,
     onSave,
     saving = false,
@@ -36,9 +38,47 @@ function MachineModal({
     saveSuccess = null,
 }: MachineModalProps) {
     const [previewMode, setPreviewMode] = useState(false);
+    const [exerciseToAddId, setExerciseToAddId] = useState("");
     const showEditableFields = editMode && !previewMode;
     const inputClasses = "w-full rounded-md border border-white/30 bg-black/30 px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-accent-primary";
     const textareaClasses = "w-full rounded-md border border-white/30 bg-black/30 px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-accent-primary resize-y min-h-[120px]";
+    const selectedExerciseIds = tile.exerciseIds ?? [];
+    const selectedExerciseIdSet = useMemo(() => new Set(selectedExerciseIds), [selectedExerciseIds]);
+    const selectedBenefits = tile.equipment.benefits ?? [];
+    const exerciseNameById = useMemo(
+        () => new Map((tile.exerciseOptions ?? []).map((exercise) => [exercise.id, exercise.name])),
+        [tile.exerciseOptions]
+    );
+    const selectedExercises = selectedExerciseIds.map((exerciseId, index) => ({
+        id: exerciseId,
+        name: exerciseNameById.get(exerciseId) ?? selectedBenefits[index] ?? `Exercise #${exerciseId}`,
+    }));
+    const selectableExerciseOptions = (tile.exerciseOptions ?? [])
+        .filter((exercise) => !selectedExerciseIdSet.has(exercise.id));
+
+    useEffect(() => {
+        if (selectableExerciseOptions.length === 0) {
+            if (exerciseToAddId) {
+                setExerciseToAddId("");
+            }
+            return;
+        }
+
+        const currentSelectedStillAvailable = selectableExerciseOptions
+            .some((exercise) => String(exercise.id) === exerciseToAddId);
+
+        if (!currentSelectedStillAvailable) {
+            setExerciseToAddId(String(selectableExerciseOptions[0].id));
+        }
+    }, [exerciseToAddId, selectableExerciseOptions]);
+
+    const handleAddExercise = () => {
+        const nextExerciseId = Number(exerciseToAddId);
+        if (!Number.isFinite(nextExerciseId)) return;
+        if (selectedExerciseIdSet.has(nextExerciseId)) return;
+
+        onExerciseIdsChange?.([...selectedExerciseIds, nextExerciseId]);
+    };
 
     return (
         <div className={`${containerMode ? 'absolute' : 'fixed'} inset-0 flex items-center justify-center z-40 cursor-pointer ${showEditableFields ? '' : 'select-none'}`} onClick={onClose}>
@@ -96,13 +136,46 @@ function MachineModal({
                         <h3 className="text-xl mb-2 select-none font-semibold flex-shrink-0">List of exercises:</h3>
                         <div className="overflow-y-auto flex-1 min-h-0 scrollbar-thumb-only">
                             {showEditableFields ? (
-                                <textarea
-                                    key={`benefits-${tile.id}`}
-                                    className={textareaClasses}
-                                    defaultValue={(tile.equipment.benefits ?? []).join("\n")}
-                                    onChange={(e) => onTileChange?.({ benefits: parseMultilineList(e.target.value) })}
-                                    placeholder={"One exercise per line\nExample:\nLat pulldown\nCable row"}
-                                />
+                                <div className="space-y-3">
+                                    <div className="flex flex-col sm:flex-row gap-2">
+                                        <label htmlFor="machine-exercise-select" className="sr-only">Exercise selector</label>
+                                        <select
+                                            id="machine-exercise-select"
+                                            className={`${inputClasses} pr-8`}
+                                            value={exerciseToAddId}
+                                            onChange={(event) => setExerciseToAddId(event.target.value)}
+                                            disabled={selectableExerciseOptions.length === 0}
+                                        >
+                                            {selectableExerciseOptions.length === 0 ? (
+                                                <option value="">No additional exercises available</option>
+                                            ) : (
+                                                selectableExerciseOptions.map((exercise) => (
+                                                    <option key={exercise.id} value={String(exercise.id)}>
+                                                        {exercise.name}
+                                                    </option>
+                                                ))
+                                            )}
+                                        </select>
+                                        <button
+                                            type="button"
+                                            className="px-4 py-2 rounded-md bg-accent-primary text-white font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+                                            onClick={handleAddExercise}
+                                            disabled={!exerciseToAddId || selectableExerciseOptions.length === 0}
+                                        >
+                                            Add Exercise
+                                        </button>
+                                    </div>
+
+                                    {selectedExercises.length === 0 ? (
+                                        <p className="text-white/70 text-sm">No exercises selected.</p>
+                                    ) : (
+                                        <ul className="list-disc list-outside pl-5 space-y-2">
+                                            {selectedExercises.map((exercise) => (
+                                                <li key={exercise.id}>{exercise.name}</li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
                             ) : (
                                 <ul className="list-disc list-outside pl-5 space-y-2">
                                     {tile.equipment.benefits?.map((benefit: string, idx: number) => (

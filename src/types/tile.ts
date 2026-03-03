@@ -1,4 +1,10 @@
 import { EquipmentProps } from "./equipment";
+
+export interface ExerciseOption {
+    id: number;
+    name: string;
+}
+
 export interface TileData {
      // Unique identifier for this tile.
      // Used for tracking state updates and rendering.
@@ -8,6 +14,8 @@ export interface TileData {
     equipmentTypeId?: number;
     // Exercise ids from relational definitions used for editing exercise overrides.
     exerciseIds?: number[];
+    // Full set of selectable exercises for this equipment type.
+    exerciseOptions?: ExerciseOption[];
     // Equipment maintenance status for component update payloads.
     outOfOrder?: boolean;
 
