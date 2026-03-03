@@ -80,20 +80,27 @@ describe("MachineModal", () => {
         expect(saveButton).toBeDisabled();
     });
 
-    it("calls onCreateExercise with typed name", () => {
+    it("calls onCreateExercise with typed name", async () => {
         const onCreateExercise = vi.fn();
         renderModal({ onCreateExercise });
 
-        fireEvent.change(screen.getByLabelText("Create exercise name"), {
+        fireEvent.click(screen.getByRole("button", { name: "Create Exercise" }));
+        expect(screen.getByRole("heading", { name: "Create Exercise" })).toBeInTheDocument();
+
+        fireEvent.change(screen.getByLabelText("Exercise name"), {
             target: { value: "Incline Cable Fly" },
         });
-        fireEvent.click(screen.getByRole("button", { name: "Create Exercise" }));
+        fireEvent.click(screen.getByRole("button", { name: "Create" }));
 
-        expect(onCreateExercise).toHaveBeenCalledWith("Incline Cable Fly");
+        await waitFor(() => {
+            expect(onCreateExercise).toHaveBeenCalledWith(
+                expect.objectContaining({ name: "Incline Cable Fly" })
+            );
+        });
     });
 
-    it("shows creating state on create button", () => {
+    it("disables create modal opener while creating", () => {
         renderModal({ creatingExercise: true });
-        expect(screen.getByRole("button", { name: "Creating..." })).toBeDisabled();
+        expect(screen.getByRole("button", { name: "Create Exercise" })).toBeDisabled();
     });
 });

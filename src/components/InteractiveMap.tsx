@@ -1,7 +1,7 @@
 import Tile from "./Tile";
 import { TileData, TileHistoryEntry } from "../types/tile";
 import { useState, useRef, useEffect, useCallback } from "react";
-import MachineModal from '../components/MachineModal';
+import MachineModal, { type CreateExerciseDraft } from '../components/MachineModal';
 import ZoomControls from "./ZoomControls";
 import { useTheme } from "../context/ThemeContext";
 import type { DragTileData } from "./DragAndDropMenu";
@@ -443,7 +443,7 @@ function InteractiveMap({
         }
     };
 
-    const handleCreateExercise = async (exerciseName: string) => {
+    const handleCreateExercise = async (exercise: CreateExerciseDraft) => {
         if (!selectedMachine) return;
         if (!selectedMachine.equipmentTypeId) {
             throw new Error("This machine is not linked to a relational equipment type.");
@@ -456,10 +456,10 @@ function InteractiveMap({
         try {
             const created = await createExercise({
                 equipmentTypeId: selectedMachine.equipmentTypeId,
-                name: exerciseName,
-                description: "",
-                videoUrl: "",
-                difficulty: "",
+                name: exercise.name,
+                description: exercise.description ?? "",
+                videoUrl: exercise.videoUrl ?? "",
+                difficulty: exercise.difficulty ?? "",
                 muscleIds: [],
             });
 

@@ -3,6 +3,13 @@ import { RxCross2 } from "react-icons/rx";
 import type { TileData } from "../types/tile";
 import type { EquipmentProps } from "../types/equipment";
 
+export interface CreateExerciseDraft {
+    name: string;
+    description?: string;
+    videoUrl?: string;
+    difficulty?: string;
+}
+
 interface MachineModalProps {
     tile: TileData;
     onClose: () => void;
@@ -10,7 +17,7 @@ interface MachineModalProps {
     editMode?: boolean;
     onTileChange?: (equipmentUpdates: Partial<EquipmentProps>) => void;
     onExerciseIdsChange?: (exerciseIds: number[]) => void;
-    onCreateExercise?: (name: string) => Promise<void> | void;
+    onCreateExercise?: (exercise: CreateExerciseDraft) => Promise<void> | void;
     creatingExercise?: boolean;
     onOutOfOrderChange?: (outOfOrder: boolean) => void;
     onSave?: () => Promise<void> | void;
@@ -24,6 +31,11 @@ const parseMultilineList = (value: string): string[] => {
         .split("\n")
         .map(item => item.trim())
         .filter(Boolean);
+};
+
+const normalizeOptionalString = (value: string): string | undefined => {
+    const trimmed = value.trim();
+    return trimmed ? trimmed : undefined;
 };
 
 function MachineModal({
@@ -43,7 +55,11 @@ function MachineModal({
 }: MachineModalProps) {
     const [previewMode, setPreviewMode] = useState(false);
     const [exerciseToAddId, setExerciseToAddId] = useState("");
+    const [showCreateExerciseModal, setShowCreateExerciseModal] = useState(false);
     const [newExerciseName, setNewExerciseName] = useState("");
+    const [newExerciseDescription, setNewExerciseDescription] = useState("");
+    const [newExerciseDifficulty, setNewExerciseDifficulty] = useState("");
+    const [newExerciseVideoUrl, setNewExerciseVideoUrl] = useState("");
     const [createExerciseError, setCreateExerciseError] = useState<string | null>(null);
     const showEditableFields = editMode && !previewMode;
     const inputClasses = "w-full rounded-md border border-white/30 bg-black/30 px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-accent-primary";
@@ -86,6 +102,21 @@ function MachineModal({
         onExerciseIdsChange?.([...selectedExerciseIds, nextExerciseId]);
     };
 
+    const openCreateExerciseModal = () => {
+        setCreateExerciseError(null);
+        setShowCreateExerciseModal(true);
+    };
+
+    const closeCreateExerciseModal = () => {
+        if (creatingExercise) return;
+        setShowCreateExerciseModal(false);
+        setCreateExerciseError(null);
+        setNewExerciseName("");
+        setNewExerciseDescription("");
+        setNewExerciseDifficulty("");
+        setNewExerciseVideoUrl("");
+    };
+
     const handleCreateExercise = async () => {
         const normalizedName = newExerciseName.trim();
         if (!normalizedName) {
@@ -96,8 +127,13 @@ function MachineModal({
         setCreateExerciseError(null);
 
         try {
-            await onCreateExercise?.(normalizedName);
-            setNewExerciseName("");
+            await onCreateExercise?.({
+                name: normalizedName,
+                description: normalizeOptionalString(newExerciseDescription),
+                difficulty: normalizeOptionalString(newExerciseDifficulty),
+                videoUrl: normalizeOptionalString(newExerciseVideoUrl),
+            });
+            closeCreateExerciseModal();
         } catch (error) {
             const message = error instanceof Error ? error.message : "Failed to create exercise.";
             setCreateExerciseError(message);
@@ -189,27 +225,16 @@ function MachineModal({
                                             Add Exercise
                                         </button>
                                     </div>
-                                    <div className="flex flex-col sm:flex-row gap-2">
-                                        <label htmlFor="machine-create-exercise-input" className="sr-only">Create exercise name</label>
-                                        <input
-                                            id="machine-create-exercise-input"
-                                            className={inputClasses}
-                                            value={newExerciseName}
-                                            onChange={(event) => setNewExerciseName(event.target.value)}
-                                            placeholder="New exercise name"
-                                        />
+                                    <div className="flex justify-end">
                                         <button
                                             type="button"
                                             className="px-4 py-2 rounded-md border border-white/40 text-white font-semibold hover:bg-white/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                                            onClick={() => { void handleCreateExercise(); }}
+                                            onClick={openCreateExerciseModal}
                                             disabled={creatingExercise}
                                         >
-                                            {creatingExercise ? "Creating..." : "Create Exercise"}
+                                            Create Exercise
                                         </button>
                                     </div>
-                                    {createExerciseError && (
-                                        <p className="text-red-300 text-sm">{createExerciseError}</p>
-                                    )}
 
                                     {selectedExercises.length === 0 ? (
                                         <p className="text-white/70 text-sm">No exercises selected.</p>
@@ -321,6 +346,108 @@ function MachineModal({
                 )}
 
             </div>
+
+            {showCreateExerciseModal && (
+                <div
+                    className="fixed inset-0 z-[60] flex items-center justify-center cursor-pointer"
+                    onClick={(event) => {
+                        event.stopPropagation();
+                        closeCreateExerciseModal();
+                    }}
+                >
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+                    <div
+                        className="relative z-10 backdrop-blur-2xl border-2 border-white/30 p-3 sm:p-4 md:p-6 rounded-2xl shadow-lg w-[95%] sm:w-11/12 md:w-4/5 h-[88%] sm:h-4/5 cursor-auto overflow-hidden flex flex-col"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <button
+                            className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white hover:text-red-500 transition-all duration-200 z-10 disabled:opacity-50"
+                            onClick={closeCreateExerciseModal}
+                            disabled={creatingExercise}
+                        >
+                            <RxCross2 className="w-8 h-8 sm:w-12 sm:h-12" />
+                        </button>
+
+                        <h2 className="text-xl sm:text-2xl md:text-3xl text-white flex-shrink-0 pr-10">Create Exercise</h2>
+                        <p className="mt-2 text-sm text-white/80">
+                            This will create a manager-owned exercise linked to <strong>{tile.equipment.name}</strong>.
+                        </p>
+
+                        <div className="grid grid-cols-1 gap-4 sm:gap-6 mt-4 sm:mt-6 md:grid-cols-2 flex-1 min-h-0 overflow-y-auto">
+                            
+
+                            <div className="rounded-lg p-4 text-white bg-black/20 min-h-0 overflow-y-auto scrollbar-thumb-only">
+                                <div className="space-y-3">
+                                    <div>
+                                        <label htmlFor="create-exercise-name" className="block text-sm font-medium mb-1">Exercise name</label>
+                                        <input
+                                            id="create-exercise-name"
+                                            className={inputClasses}
+                                            value={newExerciseName}
+                                            onChange={(event) => setNewExerciseName(event.target.value)}
+                                            placeholder="e.g. Incline Cable Fly"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="create-exercise-description" className="block text-sm font-medium mb-1">Description (optional)</label>
+                                        <textarea
+                                            id="create-exercise-description"
+                                            className={textareaClasses}
+                                            value={newExerciseDescription}
+                                            onChange={(event) => setNewExerciseDescription(event.target.value)}
+                                            placeholder="Exercise description..."
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="create-exercise-difficulty" className="block text-sm font-medium mb-1">Difficulty (optional)</label>
+                                        <input
+                                            id="create-exercise-difficulty"
+                                            className={inputClasses}
+                                            value={newExerciseDifficulty}
+                                            onChange={(event) => setNewExerciseDifficulty(event.target.value)}
+                                            placeholder="e.g. Beginner"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="create-exercise-video" className="block text-sm font-medium mb-1">Video URL (optional)</label>
+                                        <input
+                                            id="create-exercise-video"
+                                            className={inputClasses}
+                                            value={newExerciseVideoUrl}
+                                            onChange={(event) => setNewExerciseVideoUrl(event.target.value)}
+                                            placeholder="https://..."
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-3 flex flex-col sm:flex-row gap-3 sm:items-center">
+                            <div className="min-h-5 text-sm text-red-300 flex-1">
+                                {createExerciseError}
+                            </div>
+                            <div className="flex items-center gap-2 sm:justify-end">
+                                <button
+                                    type="button"
+                                    className="px-4 py-2 rounded-md border border-white/40 text-white font-semibold hover:bg-white/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                    onClick={closeCreateExerciseModal}
+                                    disabled={creatingExercise}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    className="px-4 py-2 rounded-md bg-accent-primary text-white font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+                                    onClick={() => { void handleCreateExercise(); }}
+                                    disabled={creatingExercise}
+                                >
+                                    {creatingExercise ? "Creating..." : "Create"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
