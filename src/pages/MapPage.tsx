@@ -73,7 +73,7 @@ function MapPage() {
                     return {
                         id: component.id,
                         name: `${def?.name || component.name || "Unknown Equipment"}`,
-                        description: def?.description || component.description || component.additionalInfo || "No description provided.",
+                        description: def?.description || component.description || "No description provided.",
                         floorName: data.floors.find(f => f.id === component.floorId)?.name || "Unknown Floor",
                     };
                 });

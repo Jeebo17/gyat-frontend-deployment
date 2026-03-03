@@ -1,12 +1,17 @@
 import Tile from "./Tile";
 import { TileData, TileHistoryEntry } from "../types/tile";
 import { useState, useRef, useEffect, useCallback } from "react";
-import MachineModal from '../components/MachineModal';
+import MachineModal, { type CreateExerciseDraft } from '../components/MachineModal';
 import ZoomControls from "./ZoomControls";
 import { useTheme } from "../context/ThemeContext";
 import type { DragTileData } from "./DragAndDropMenu";
 import ShinyText from "./effects/ShinyText";
 import { updateComponent } from "../services/componentService";
+import { upsertEquipmentTypeOverride } from "../services/equipmentTypeService";
+import { createExercise, getExerciseById, updateCustomExercise, upsertExerciseOverride } from "../services/exerciseService";
+import { getMuscles } from "../services/muscleService";
+import type { ExerciseOption } from "../types/tile";
+import type { ExerciseDTO, MuscleDTO } from "../types/api";
 
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
@@ -55,35 +60,54 @@ const normalizeArray = (items?: string[]): string[] | undefined => {
     return items.map((item) => item.trim()).filter(Boolean);
 };
 
-const extractLegacyNotes = (additionalInfo?: string): string | undefined => {
-    if (!additionalInfo || !additionalInfo.trim()) return undefined;
-
-    try {
-        const parsed = JSON.parse(additionalInfo) as { notes?: unknown };
-        if (parsed && typeof parsed === "object" && typeof parsed.notes === "string") {
-            const notes = parsed.notes.trim();
-            return notes.length > 0 ? notes : undefined;
-        }
-        return undefined;
-    } catch {
-        return additionalInfo.trim();
-    }
+const normalizeOptionalString = (value?: string): string | undefined => {
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : undefined;
 };
 
-const buildModalAdditionalInfo = (tile: TileData): string => {
-    const notes = extractLegacyNotes(tile.additionalInfo);
-    const payload = {
-        ...(notes ? { notes } : {}),
-        modalOverrides: {
-            name: tile.equipment.name?.trim() || undefined,
-            description: tile.equipment.description?.trim() || undefined,
-            benefits: normalizeArray(tile.equipment.benefits),
-            musclesTargeted: normalizeArray(tile.equipment.musclesTargeted),
-            videoUrl: tile.equipment.videoUrl?.trim() || undefined,
+const resolveExerciseNames = (tile: TileData, exerciseIds: number[]): string[] => {
+    const optionNameById = new Map((tile.exerciseOptions ?? []).map((exercise) => [exercise.id, exercise.name]));
+    return exerciseIds.map((exerciseId, index) =>
+        optionNameById.get(exerciseId) ?? tile.equipment.benefits?.[index] ?? `Exercise #${exerciseId}`
+    );
+};
+
+const addExerciseOptionIfMissing = (options: ExerciseOption[] | undefined, nextOption: ExerciseOption): ExerciseOption[] => {
+    const current = options ?? [];
+    return current.some((option) => option.id === nextOption.id)
+        ? current
+        : [...current, nextOption];
+};
+
+const addExerciseIdIfMissing = (exerciseIds: number[] | undefined, nextExerciseId: number): number[] => {
+    const current = exerciseIds ?? [];
+    return current.includes(nextExerciseId) ? current : [...current, nextExerciseId];
+};
+
+const mergeUniqueStrings = (first: string[] | undefined, second: string[] | undefined): string[] | undefined => {
+    const merged = Array.from(new Set([...(first ?? []), ...(second ?? [])].filter(Boolean)));
+    return merged.length > 0 ? merged : undefined;
+};
+
+const applyExerciseResultToTile = (tile: TileData, exercise: ExerciseDTO): TileData => {
+    const nextOptions = (tile.exerciseOptions ?? []).map((option) =>
+        option.id === exercise.id
+            ? { ...option, name: exercise.name }
+            : option
+    );
+    const exerciseIds = tile.exerciseIds ?? [];
+    const updatedTile = { ...tile, exerciseOptions: nextOptions };
+
+    return {
+        ...updatedTile,
+        equipment: {
+            ...updatedTile.equipment,
+            benefits: resolveExerciseNames(updatedTile, exerciseIds),
+            videoUrl: exerciseIds.includes(exercise.id)
+                ? (exercise.videoUrl ?? updatedTile.equipment.videoUrl)
+                : updatedTile.equipment.videoUrl,
         },
     };
-
-    return JSON.stringify(payload);
 };
 
 interface InteractiveMapProps {
@@ -109,6 +133,10 @@ function InteractiveMap({
 }: InteractiveMapProps) {
     const [selectedMachine, setSelectedMachine] = useState<TileData | null>(null);
     const [isSavingMachine, setIsSavingMachine] = useState(false);
+    const [isCreatingExercise, setIsCreatingExercise] = useState(false);
+    const [isLoadingMuscles, setIsLoadingMuscles] = useState(false);
+    const [availableMuscles, setAvailableMuscles] = useState<MuscleDTO[]>([]);
+    const [muscleLoadError, setMuscleLoadError] = useState<string | null>(null);
     const [machineSaveError, setMachineSaveError] = useState<string | null>(null);
     const [machineSaveSuccess, setMachineSaveSuccess] = useState<string | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -234,6 +262,7 @@ function InteractiveMap({
             width: template.width,
             height: template.height,
             rotation: 0,
+            outOfOrder: false,
             colour: template.colour,
             equipment: {
                 name: template.equipmentName,
@@ -344,38 +373,272 @@ function InteractiveMap({
         setMachineSaveSuccess(null);
     };
 
+    useEffect(() => {
+        if (!editMode || !selectedMachine) return;
+
+        let active = true;
+        const loadMuscles = async () => {
+            try {
+                setMuscleLoadError(null);
+                setIsLoadingMuscles(true);
+                const muscles = await getMuscles();
+                if (!active) return;
+                setAvailableMuscles(muscles);
+                if (muscles.length === 0) {
+                    setMuscleLoadError("No muscles were returned by the backend.");
+                }
+            } catch (error) {
+                if (!active) return;
+                setAvailableMuscles([]);
+                const message = error instanceof Error ? error.message : "Failed to load muscles.";
+                setMuscleLoadError(message);
+            } finally {
+                if (active) {
+                    setIsLoadingMuscles(false);
+                }
+            }
+        };
+
+        void loadMuscles();
+        return () => { active = false; };
+    }, [editMode, selectedMachine]);
+
     const handleMachineSave = async () => {
         if (!selectedMachine) return;
+        if (!selectedMachine.equipmentTypeId) {
+            setMachineSaveError("This machine is not linked to a relational equipment type.");
+            return;
+        }
 
         setIsSavingMachine(true);
         setMachineSaveError(null);
         setMachineSaveSuccess(null);
 
-        const serializedAdditionalInfo = buildModalAdditionalInfo(selectedMachine);
-
         try {
+            const equipmentTypeId = selectedMachine.equipmentTypeId;
+            const normalizedName = normalizeOptionalString(selectedMachine.equipment.name);
+            const normalizedDescription = normalizeOptionalString(selectedMachine.equipment.description);
+            const normalizedBenefits = normalizeArray(
+                resolveExerciseNames(selectedMachine, selectedMachine.exerciseIds ?? [])
+            ) ?? [];
+            const normalizedVideoUrl = normalizeOptionalString(selectedMachine.equipment.videoUrl);
+            const normalizedMuscles = normalizeArray(selectedMachine.equipment.musclesTargeted);
+            const selectedExerciseIds = selectedMachine.exerciseIds ?? [];
+
+            if (!normalizedName) {
+                throw new Error("Equipment name cannot be empty.");
+            }
+
             await updateComponent(selectedMachine.id, {
                 xCoord: selectedMachine.xCoord,
                 yCoord: selectedMachine.yCoord,
                 width: selectedMachine.width,
                 height: selectedMachine.height,
                 rotation: selectedMachine.rotation,
-                additionalInfo: serializedAdditionalInfo,
+                outOfOrder: selectedMachine.outOfOrder ?? false,
+                additionalInfo: selectedMachine.additionalInfo,
             });
 
-            updateTile(selectedMachine.id, {
-                additionalInfo: serializedAdditionalInfo,
-                equipment: selectedMachine.equipment,
+            await upsertEquipmentTypeOverride(equipmentTypeId, {
+                name: normalizedName,
+                description: normalizedDescription,
             });
 
-            setSelectedMachine(prev => prev ? { ...prev, additionalInfo: serializedAdditionalInfo } : prev);
-            setMachineSaveSuccess("Saved");
+            const overrideSaves = selectedExerciseIds.map((exerciseId, index) => {
+                const payload = {
+                    videoUrl: index === 0 ? normalizedVideoUrl : undefined,
+                };
+                const hasData = Object.values(payload).some((value) => value !== undefined);
+                if (!hasData) return Promise.resolve(null);
+
+                return upsertExerciseOverride(exerciseId, payload);
+            });
+
+            await Promise.all(overrideSaves);
+
+            const nextExerciseIds = selectedExerciseIds;
+            const updatedEquipment = {
+                ...selectedMachine.equipment,
+                name: normalizedName,
+                description: normalizedDescription,
+                benefits: normalizedBenefits,
+                videoUrl: normalizedVideoUrl,
+                musclesTargeted: normalizedMuscles,
+            };
+
+            setTiles((prev) => prev.map((tile) => {
+                if (tile.equipmentTypeId !== equipmentTypeId) return tile;
+
+                return {
+                    ...tile,
+                    outOfOrder: tile.id === selectedMachine.id ? (selectedMachine.outOfOrder ?? false) : tile.outOfOrder,
+                    exerciseIds: nextExerciseIds,
+                    equipment: {
+                        ...tile.equipment,
+                        ...updatedEquipment,
+                    },
+                };
+            }));
+
+            setSelectedMachine((prev) => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    outOfOrder: selectedMachine.outOfOrder ?? false,
+                    exerciseIds: nextExerciseIds,
+                    equipment: updatedEquipment,
+                };
+            });
+
+            const savedMuscles = normalizedMuscles?.length ?? 0;
+            setMachineSaveSuccess(
+                savedMuscles > 0
+                    ? "Saved relational data. Muscle edits require backend muscle-id mapping support."
+                    : "Saved relational data."
+            );
         } catch (error) {
             const message = error instanceof Error ? error.message : "Failed to save machine details.";
             setMachineSaveError(message);
         } finally {
             setIsSavingMachine(false);
         }
+    };
+
+    const handleCreateExercise = async (exercise: CreateExerciseDraft) => {
+        if (!selectedMachine) return;
+        if (!selectedMachine.equipmentTypeId) {
+            throw new Error("This machine is not linked to a relational equipment type.");
+        }
+
+        setIsCreatingExercise(true);
+        setMachineSaveError(null);
+        setMachineSaveSuccess(null);
+
+        try {
+            const created = await createExercise({
+                equipmentTypeId: selectedMachine.equipmentTypeId,
+                name: exercise.name,
+                description: exercise.description ?? "",
+                videoUrl: exercise.videoUrl ?? "",
+                difficulty: exercise.difficulty ?? "",
+                muscleIds: exercise.muscleIds,
+            });
+
+            const nextOption: ExerciseOption = { id: created.id, name: created.name };
+            const nextExerciseIds = addExerciseIdIfMissing(selectedMachine.exerciseIds, created.id);
+            const selectedMuscleNames = availableMuscles
+                .filter((muscle) => exercise.muscleIds.includes(muscle.id))
+                .map((muscle) => muscle.name);
+
+            setTiles((prev) => prev.map((tile) => {
+                if (tile.equipmentTypeId !== selectedMachine.equipmentTypeId) return tile;
+
+                const nextOptions = addExerciseOptionIfMissing(tile.exerciseOptions, nextOption);
+                const mergedMuscles = mergeUniqueStrings(tile.equipment.musclesTargeted, selectedMuscleNames);
+                if (tile.id !== selectedMachine.id) {
+                    return {
+                        ...tile,
+                        exerciseOptions: nextOptions,
+                        equipment: {
+                            ...tile.equipment,
+                            musclesTargeted: mergedMuscles,
+                        },
+                    };
+                }
+
+                return {
+                    ...tile,
+                    exerciseOptions: nextOptions,
+                    exerciseIds: nextExerciseIds,
+                    equipment: {
+                        ...tile.equipment,
+                        benefits: resolveExerciseNames(
+                            { ...tile, exerciseOptions: nextOptions, exerciseIds: nextExerciseIds },
+                            nextExerciseIds
+                        ),
+                        musclesTargeted: mergedMuscles,
+                    },
+                };
+            }));
+
+            setSelectedMachine((prev) => {
+                if (!prev) return prev;
+
+                const nextOptions = addExerciseOptionIfMissing(prev.exerciseOptions, nextOption);
+                const updatedExerciseIds = addExerciseIdIfMissing(prev.exerciseIds, created.id);
+                return {
+                    ...prev,
+                    exerciseOptions: nextOptions,
+                    exerciseIds: updatedExerciseIds,
+                    equipment: {
+                        ...prev.equipment,
+                        benefits: resolveExerciseNames(
+                            { ...prev, exerciseOptions: nextOptions, exerciseIds: updatedExerciseIds },
+                            updatedExerciseIds
+                        ),
+                        musclesTargeted: mergeUniqueStrings(prev.equipment.musclesTargeted, selectedMuscleNames),
+                    },
+                };
+            });
+
+            setMachineSaveSuccess("Exercise created and added to this machine.");
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to create exercise.";
+            setMachineSaveError(message);
+            throw error;
+        } finally {
+            setIsCreatingExercise(false);
+        }
+    };
+
+    const handleLoadExercise = async (exerciseId: number): Promise<ExerciseDTO> => {
+        return getExerciseById(exerciseId);
+    };
+
+    const handleSaveExercise = async (
+        exerciseId: number,
+        exercise: {
+            name: string;
+            description?: string;
+            videoUrl?: string;
+            difficulty?: string;
+        },
+        useOverride: boolean
+    ) => {
+        if (!selectedMachine?.equipmentTypeId) {
+            throw new Error("This machine is not linked to a relational equipment type.");
+        }
+
+        setMachineSaveError(null);
+        setMachineSaveSuccess(null);
+
+        const saved = useOverride
+            ? await upsertExerciseOverride(exerciseId, {
+                name: exercise.name,
+                description: exercise.description,
+                videoUrl: exercise.videoUrl,
+                difficulty: exercise.difficulty,
+            })
+            : await updateCustomExercise(exerciseId, {
+                name: exercise.name,
+                description: exercise.description,
+                videoUrl: exercise.videoUrl,
+                difficulty: exercise.difficulty,
+            });
+
+        const equipmentTypeId = selectedMachine.equipmentTypeId;
+
+        setTiles((prev) => prev.map((tile) => {
+            if (tile.equipmentTypeId !== equipmentTypeId) return tile;
+            return applyExerciseResultToTile(tile, saved);
+        }));
+
+        setSelectedMachine((prev) => {
+            if (!prev || prev.equipmentTypeId !== equipmentTypeId) return prev;
+            return applyExerciseResultToTile(prev, saved);
+        });
+
+        setMachineSaveSuccess(useOverride ? "Exercise override saved." : "Exercise updated.");
     };
 
     return (
@@ -527,7 +790,32 @@ function InteractiveMap({
                         setMachineSaveError(null);
                         setMachineSaveSuccess(null);
                     } : undefined}
+                    onExerciseIdsChange={editMode ? (exerciseIds) => {
+                        const exerciseNames = resolveExerciseNames(selectedMachine, exerciseIds);
+                        setSelectedMachine({
+                            ...selectedMachine,
+                            exerciseIds,
+                            equipment: {
+                                ...selectedMachine.equipment,
+                                benefits: exerciseNames,
+                            },
+                        });
+                        setMachineSaveError(null);
+                        setMachineSaveSuccess(null);
+                    } : undefined}
+                    onCreateExercise={editMode ? handleCreateExercise : undefined}
+                    onLoadExercise={handleLoadExercise}
+                    onSaveExercise={editMode ? handleSaveExercise : undefined}
+                    creatingExercise={isCreatingExercise}
+                    muscleOptions={availableMuscles}
+                    musclesLoading={isLoadingMuscles}
+                    muscleLoadError={muscleLoadError}
                     onSave={editMode ? handleMachineSave : undefined}
+                    onOutOfOrderChange={editMode ? (outOfOrder) => {
+                        setSelectedMachine({ ...selectedMachine, outOfOrder });
+                        setMachineSaveError(null);
+                        setMachineSaveSuccess(null);
+                    } : undefined}
                     saving={isSavingMachine}
                     saveError={machineSaveError}
                     saveSuccess={machineSaveSuccess}
