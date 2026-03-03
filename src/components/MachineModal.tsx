@@ -8,6 +8,12 @@ export interface CreateExerciseDraft {
     description?: string;
     videoUrl?: string;
     difficulty?: string;
+    muscleIds: number[];
+}
+
+interface MuscleOption {
+    id: number;
+    name: string;
 }
 
 interface MachineModalProps {
@@ -19,6 +25,9 @@ interface MachineModalProps {
     onExerciseIdsChange?: (exerciseIds: number[]) => void;
     onCreateExercise?: (exercise: CreateExerciseDraft) => Promise<void> | void;
     creatingExercise?: boolean;
+    muscleOptions?: MuscleOption[];
+    musclesLoading?: boolean;
+    muscleLoadError?: string | null;
     onOutOfOrderChange?: (outOfOrder: boolean) => void;
     onSave?: () => Promise<void> | void;
     saving?: boolean;
@@ -47,6 +56,9 @@ function MachineModal({
     onExerciseIdsChange,
     onCreateExercise,
     creatingExercise = false,
+    muscleOptions = [],
+    musclesLoading = false,
+    muscleLoadError = null,
     onOutOfOrderChange,
     onSave,
     saving = false,
@@ -60,6 +72,8 @@ function MachineModal({
     const [newExerciseDescription, setNewExerciseDescription] = useState("");
     const [newExerciseDifficulty, setNewExerciseDifficulty] = useState("");
     const [newExerciseVideoUrl, setNewExerciseVideoUrl] = useState("");
+    const [muscleToAddId, setMuscleToAddId] = useState("");
+    const [selectedMuscleIds, setSelectedMuscleIds] = useState<number[]>([]);
     const [createExerciseError, setCreateExerciseError] = useState<string | null>(null);
     const showEditableFields = editMode && !previewMode;
     const inputClasses = "w-full rounded-md border border-white/30 bg-black/30 px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-accent-primary";
@@ -77,6 +91,11 @@ function MachineModal({
     }));
     const selectableExerciseOptions = (tile.exerciseOptions ?? [])
         .filter((exercise) => !selectedExerciseIdSet.has(exercise.id));
+    const selectedMuscleIdSet = useMemo(() => new Set(selectedMuscleIds), [selectedMuscleIds]);
+    const selectedMuscles = selectedMuscleIds
+        .map((muscleId) => muscleOptions.find((muscle) => muscle.id === muscleId))
+        .filter((muscle): muscle is MuscleOption => Boolean(muscle));
+    const selectableMuscleOptions = muscleOptions.filter((muscle) => !selectedMuscleIdSet.has(muscle.id));
 
     useEffect(() => {
         if (selectableExerciseOptions.length === 0) {
@@ -94,6 +113,22 @@ function MachineModal({
         }
     }, [exerciseToAddId, selectableExerciseOptions]);
 
+    useEffect(() => {
+        if (selectableMuscleOptions.length === 0) {
+            if (muscleToAddId) {
+                setMuscleToAddId("");
+            }
+            return;
+        }
+
+        const currentSelectedStillAvailable = selectableMuscleOptions
+            .some((muscle) => String(muscle.id) === muscleToAddId);
+
+        if (!currentSelectedStillAvailable) {
+            setMuscleToAddId(String(selectableMuscleOptions[0].id));
+        }
+    }, [muscleToAddId, selectableMuscleOptions]);
+
     const handleAddExercise = () => {
         const nextExerciseId = Number(exerciseToAddId);
         if (!Number.isFinite(nextExerciseId)) return;
@@ -104,6 +139,7 @@ function MachineModal({
 
     const openCreateExerciseModal = () => {
         setCreateExerciseError(null);
+        setSelectedMuscleIds([]);
         setShowCreateExerciseModal(true);
     };
 
@@ -115,6 +151,20 @@ function MachineModal({
         setNewExerciseDescription("");
         setNewExerciseDifficulty("");
         setNewExerciseVideoUrl("");
+        setSelectedMuscleIds([]);
+        setMuscleToAddId("");
+    };
+
+    const handleAddMuscle = () => {
+        const nextMuscleId = Number(muscleToAddId);
+        if (!Number.isFinite(nextMuscleId)) return;
+        if (selectedMuscleIdSet.has(nextMuscleId)) return;
+
+        setSelectedMuscleIds((prev) => [...prev, nextMuscleId]);
+    };
+
+    const handleRemoveMuscle = (muscleId: number) => {
+        setSelectedMuscleIds((prev) => prev.filter((id) => id !== muscleId));
     };
 
     const handleCreateExercise = async () => {
@@ -132,6 +182,7 @@ function MachineModal({
                 description: normalizeOptionalString(newExerciseDescription),
                 difficulty: normalizeOptionalString(newExerciseDifficulty),
                 videoUrl: normalizeOptionalString(newExerciseVideoUrl),
+                muscleIds: selectedMuscleIds,
             });
             closeCreateExerciseModal();
         } catch (error) {
@@ -374,7 +425,15 @@ function MachineModal({
                         </p>
 
                         <div className="grid grid-cols-1 gap-4 sm:gap-6 mt-4 sm:mt-6 md:grid-cols-2 flex-1 min-h-0 overflow-y-auto">
-                            
+                            <div className="rounded-lg p-4 text-white bg-black/20 min-h-0 overflow-y-auto scrollbar-thumb-only">
+                                <h3 className="text-xl mb-2 font-semibold">Linked Machine</h3>
+                                <ul className="list-disc list-outside pl-5 space-y-2 text-sm">
+                                    <li>Machine: {tile.equipment.name}</li>
+                                    <li>Equipment type ID: {tile.equipmentTypeId ?? "Unknown"}</li>
+                                    <li>Exercise will be created for your signed-in manager account.</li>
+                                    <li>Selected muscles: {selectedMuscleIds.length}</li>
+                                </ul>
+                            </div>
 
                             <div className="rounded-lg p-4 text-white bg-black/20 min-h-0 overflow-y-auto scrollbar-thumb-only">
                                 <div className="space-y-3">
@@ -417,6 +476,75 @@ function MachineModal({
                                             onChange={(event) => setNewExerciseVideoUrl(event.target.value)}
                                             placeholder="https://..."
                                         />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm font-medium mb-1">Muscles Trained</h4>
+                                        <div className="flex flex-col sm:flex-row gap-2">
+                                            <label htmlFor="create-exercise-muscle-select" className="sr-only">Muscle selector</label>
+                                            <select
+                                                id="create-exercise-muscle-select"
+                                                className={`${inputClasses} pr-8`}
+                                                value={muscleToAddId}
+                                                onChange={(event) => setMuscleToAddId(event.target.value)}
+                                                disabled={musclesLoading || Boolean(muscleLoadError) || selectableMuscleOptions.length === 0}
+                                            >
+                                                {musclesLoading ? (
+                                                    <option value="">Loading muscles...</option>
+                                                ) : muscleLoadError ? (
+                                                    <option value="">Unable to load muscles</option>
+                                                ) : selectableMuscleOptions.length === 0 ? (
+                                                    <option value="">
+                                                        {muscleOptions.length === 0
+                                                            ? "No muscles available from backend"
+                                                            : "No additional muscles available"}
+                                                    </option>
+                                                ) : (
+                                                    selectableMuscleOptions.map((muscle) => (
+                                                        <option key={muscle.id} value={String(muscle.id)}>
+                                                            {muscle.name}
+                                                        </option>
+                                                    ))
+                                                )}
+                                            </select>
+                                            <button
+                                                type="button"
+                                                className="px-4 py-2 rounded-md border border-white/40 text-white font-semibold hover:bg-white/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                                onClick={handleAddMuscle}
+                                                disabled={musclesLoading || Boolean(muscleLoadError) || !muscleToAddId || selectableMuscleOptions.length === 0}
+                                            >
+                                                Add Muscle
+                                            </button>
+                                        </div>
+                                        {musclesLoading && (
+                                            <p className="mt-2 text-sm text-white/70">
+                                                Loading muscle options...
+                                            </p>
+                                        )}
+                                        {muscleLoadError && (
+                                            <p className="mt-2 text-sm text-red-300">
+                                                Could not load muscles: {muscleLoadError}
+                                            </p>
+                                        )}
+                                        <div className="mt-2">
+                                            {selectedMuscles.length === 0 ? (
+                                                <p className="text-sm text-white/70">No muscles selected.</p>
+                                            ) : (
+                                                <ul className="list-disc list-outside pl-5 space-y-1">
+                                                    {selectedMuscles.map((muscle) => (
+                                                        <li key={muscle.id} className="flex items-center justify-between gap-2">
+                                                            <span>{muscle.name}</span>
+                                                            <button
+                                                                type="button"
+                                                                className="rounded-md border border-white/30 px-2 py-0.5 text-xs hover:bg-white/10 transition-colors"
+                                                                onClick={() => handleRemoveMuscle(muscle.id)}
+                                                            >
+                                                                Remove
+                                                            </button>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

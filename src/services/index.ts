@@ -5,3 +5,4 @@ export * from "./componentService";
 export * from "./authService";
 export * from "./equipmentTypeService";
 export * from "./exerciseService";
+export * from "./muscleService";

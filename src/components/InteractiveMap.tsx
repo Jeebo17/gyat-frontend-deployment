@@ -9,7 +9,9 @@ import ShinyText from "./effects/ShinyText";
 import { updateComponent } from "../services/componentService";
 import { upsertEquipmentTypeOverride } from "../services/equipmentTypeService";
 import { createExercise, upsertExerciseOverride } from "../services/exerciseService";
+import { getMuscles } from "../services/muscleService";
 import type { ExerciseOption } from "../types/tile";
+import type { MuscleDTO } from "../types/api";
 
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
@@ -82,6 +84,11 @@ const addExerciseIdIfMissing = (exerciseIds: number[] | undefined, nextExerciseI
     return current.includes(nextExerciseId) ? current : [...current, nextExerciseId];
 };
 
+const mergeUniqueStrings = (first: string[] | undefined, second: string[] | undefined): string[] | undefined => {
+    const merged = Array.from(new Set([...(first ?? []), ...(second ?? [])].filter(Boolean)));
+    return merged.length > 0 ? merged : undefined;
+};
+
 interface InteractiveMapProps {
     editMode?: boolean;
     snapToGrid?: boolean;
@@ -106,6 +113,9 @@ function InteractiveMap({
     const [selectedMachine, setSelectedMachine] = useState<TileData | null>(null);
     const [isSavingMachine, setIsSavingMachine] = useState(false);
     const [isCreatingExercise, setIsCreatingExercise] = useState(false);
+    const [isLoadingMuscles, setIsLoadingMuscles] = useState(false);
+    const [availableMuscles, setAvailableMuscles] = useState<MuscleDTO[]>([]);
+    const [muscleLoadError, setMuscleLoadError] = useState<string | null>(null);
     const [machineSaveError, setMachineSaveError] = useState<string | null>(null);
     const [machineSaveSuccess, setMachineSaveSuccess] = useState<string | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -342,6 +352,36 @@ function InteractiveMap({
         setMachineSaveSuccess(null);
     };
 
+    useEffect(() => {
+        if (!editMode || !selectedMachine) return;
+
+        let active = true;
+        const loadMuscles = async () => {
+            try {
+                setMuscleLoadError(null);
+                setIsLoadingMuscles(true);
+                const muscles = await getMuscles();
+                if (!active) return;
+                setAvailableMuscles(muscles);
+                if (muscles.length === 0) {
+                    setMuscleLoadError("No muscles were returned by the backend.");
+                }
+            } catch (error) {
+                if (!active) return;
+                setAvailableMuscles([]);
+                const message = error instanceof Error ? error.message : "Failed to load muscles.";
+                setMuscleLoadError(message);
+            } finally {
+                if (active) {
+                    setIsLoadingMuscles(false);
+                }
+            }
+        };
+
+        void loadMuscles();
+        return () => { active = false; };
+    }, [editMode, selectedMachine]);
+
     const handleMachineSave = async () => {
         if (!selectedMachine) return;
         if (!selectedMachine.equipmentTypeId) {
@@ -460,20 +500,28 @@ function InteractiveMap({
                 description: exercise.description ?? "",
                 videoUrl: exercise.videoUrl ?? "",
                 difficulty: exercise.difficulty ?? "",
-                muscleIds: [],
+                muscleIds: exercise.muscleIds,
             });
 
             const nextOption: ExerciseOption = { id: created.id, name: created.name };
             const nextExerciseIds = addExerciseIdIfMissing(selectedMachine.exerciseIds, created.id);
+            const selectedMuscleNames = availableMuscles
+                .filter((muscle) => exercise.muscleIds.includes(muscle.id))
+                .map((muscle) => muscle.name);
 
             setTiles((prev) => prev.map((tile) => {
                 if (tile.equipmentTypeId !== selectedMachine.equipmentTypeId) return tile;
 
                 const nextOptions = addExerciseOptionIfMissing(tile.exerciseOptions, nextOption);
+                const mergedMuscles = mergeUniqueStrings(tile.equipment.musclesTargeted, selectedMuscleNames);
                 if (tile.id !== selectedMachine.id) {
                     return {
                         ...tile,
                         exerciseOptions: nextOptions,
+                        equipment: {
+                            ...tile.equipment,
+                            musclesTargeted: mergedMuscles,
+                        },
                     };
                 }
 
@@ -487,6 +535,7 @@ function InteractiveMap({
                             { ...tile, exerciseOptions: nextOptions, exerciseIds: nextExerciseIds },
                             nextExerciseIds
                         ),
+                        musclesTargeted: mergedMuscles,
                     },
                 };
             }));
@@ -506,6 +555,7 @@ function InteractiveMap({
                             { ...prev, exerciseOptions: nextOptions, exerciseIds: updatedExerciseIds },
                             updatedExerciseIds
                         ),
+                        musclesTargeted: mergeUniqueStrings(prev.equipment.musclesTargeted, selectedMuscleNames),
                     },
                 };
             });
@@ -684,6 +734,9 @@ function InteractiveMap({
                     } : undefined}
                     onCreateExercise={editMode ? handleCreateExercise : undefined}
                     creatingExercise={isCreatingExercise}
+                    muscleOptions={availableMuscles}
+                    musclesLoading={isLoadingMuscles}
+                    muscleLoadError={muscleLoadError}
                     onSave={editMode ? handleMachineSave : undefined}
                     onOutOfOrderChange={editMode ? (outOfOrder) => {
                         setSelectedMachine({ ...selectedMachine, outOfOrder });

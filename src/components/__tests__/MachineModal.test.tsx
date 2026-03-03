@@ -82,7 +82,10 @@ describe("MachineModal", () => {
 
     it("calls onCreateExercise with typed name", async () => {
         const onCreateExercise = vi.fn();
-        renderModal({ onCreateExercise });
+        renderModal({
+            onCreateExercise,
+            muscleOptions: [{ id: 1, name: "Back" }],
+        });
 
         fireEvent.click(screen.getByRole("button", { name: "Create Exercise" }));
         expect(screen.getByRole("heading", { name: "Create Exercise" })).toBeInTheDocument();
@@ -97,6 +100,42 @@ describe("MachineModal", () => {
                 expect.objectContaining({ name: "Incline Cable Fly" })
             );
         });
+    });
+
+    it("includes selected muscle ids in create payload", async () => {
+        const onCreateExercise = vi.fn();
+        renderModal({
+            onCreateExercise,
+            muscleOptions: [
+                { id: 1, name: "Back" },
+                { id: 2, name: "Biceps" },
+            ],
+        });
+
+        fireEvent.click(screen.getByRole("button", { name: "Create Exercise" }));
+        fireEvent.change(screen.getByLabelText("Exercise name"), {
+            target: { value: "Single Arm Row" },
+        });
+        fireEvent.click(screen.getByRole("button", { name: "Add Muscle" }));
+        fireEvent.click(screen.getByRole("button", { name: "Create" }));
+
+        await waitFor(() => {
+            expect(onCreateExercise).toHaveBeenCalledWith(
+                expect.objectContaining({ name: "Single Arm Row", muscleIds: [1] })
+            );
+        });
+    });
+
+    it("shows loading state while muscle options are being fetched", () => {
+        renderModal({
+            muscleOptions: [{ id: 1, name: "Back" }],
+            musclesLoading: true,
+        });
+
+        fireEvent.click(screen.getByRole("button", { name: "Create Exercise" }));
+
+        expect(screen.getByText("Loading muscle options...")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Add Muscle" })).toBeDisabled();
     });
 
     it("disables create modal opener while creating", () => {

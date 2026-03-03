@@ -12,6 +12,11 @@ export interface ExerciseDTO {
     global?: boolean;
 }
 
+export interface MuscleDTO {
+    id: number;
+    name: string;
+}
+
 export interface EquipmentTypeDTO {
     id: number;
     name: string;
