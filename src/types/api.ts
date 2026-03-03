@@ -133,6 +133,14 @@ export interface UpdateExerciseOverrideRequest {
     difficulty?: string;
 }
 
+export interface UpdateExerciseRequest {
+    name?: string;
+    description?: string;
+    videoUrl?: string;
+    difficulty?: string;
+    muscleIds?: number[];
+}
+
 export interface CreateLayoutRequest {
     name: string;
 }

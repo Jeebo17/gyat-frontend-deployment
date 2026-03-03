@@ -64,14 +64,15 @@ describe("MachineModal", () => {
         expect(screen.getByText("Lat Pulldown")).toBeInTheDocument();
     });
 
-    it("opens read-only exercise details when a listed exercise is clicked in edit mode", () => {
+    it("opens editable exercise details when a listed exercise is clicked in edit mode", () => {
         renderModal();
 
         fireEvent.click(screen.getByRole("button", { name: "Lat Pulldown" }));
 
         expect(screen.getByRole("heading", { name: "Exercise Details" })).toBeInTheDocument();
-        expect(screen.getByText("Exercise: Lat Pulldown")).toBeInTheDocument();
-        expect(screen.getByText("Linked machine: Cable Station")).toBeInTheDocument();
+        expect(screen.getByText("Edit exercise details.")).toBeInTheDocument();
+        expect(screen.getByLabelText("Exercise name")).toHaveValue("Lat Pulldown");
+        expect(screen.getByRole("button", { name: "Save Exercise" })).toBeInTheDocument();
     });
 
     it("opens read-only exercise details when a listed exercise is clicked in non-edit mode", () => {
@@ -80,7 +81,79 @@ describe("MachineModal", () => {
         fireEvent.click(screen.getByRole("button", { name: "Lat Pulldown" }));
 
         expect(screen.getByRole("heading", { name: "Exercise Details" })).toBeInTheDocument();
-        expect(screen.getByText("Exercise: Lat Pulldown")).toBeInTheDocument();
+        expect(screen.getByText("Read-only exercise view.")).toBeInTheDocument();
+        expect(screen.getAllByText("Lat Pulldown").length).toBeGreaterThan(0);
+        expect(screen.queryByRole("button", { name: "Save Exercise" })).not.toBeInTheDocument();
+    });
+
+    it("saves exercise edits as override for preset exercises", async () => {
+        const onLoadExercise = vi.fn().mockResolvedValue({
+            id: 101,
+            name: "Lat Pulldown",
+            description: "Base description",
+            videoUrl: "https://example.com/base",
+            difficulty: "Intermediate",
+            equipmentTypeId: 7,
+            equipmentTypeName: "Cable Station",
+            muscles: ["Back"],
+            global: true,
+        });
+        const onSaveExercise = vi.fn().mockResolvedValue(undefined);
+        renderModal({ onLoadExercise, onSaveExercise });
+
+        fireEvent.click(screen.getByRole("button", { name: "Lat Pulldown" }));
+
+        await waitFor(() => {
+            expect(onLoadExercise).toHaveBeenCalledWith(101);
+        });
+
+        fireEvent.change(screen.getByLabelText("Exercise name"), {
+            target: { value: "Lat Pulldown (Override)" },
+        });
+        fireEvent.click(screen.getByRole("button", { name: "Save Exercise" }));
+
+        await waitFor(() => {
+            expect(onSaveExercise).toHaveBeenCalledWith(
+                101,
+                expect.objectContaining({ name: "Lat Pulldown (Override)" }),
+                true
+            );
+        });
+    });
+
+    it("updates custom exercises directly when owned by manager", async () => {
+        const onLoadExercise = vi.fn().mockResolvedValue({
+            id: 101,
+            name: "My Cable Row",
+            description: "Custom description",
+            videoUrl: "https://example.com/custom",
+            difficulty: "Beginner",
+            equipmentTypeId: 7,
+            equipmentTypeName: "Cable Station",
+            muscles: ["Back"],
+            global: false,
+        });
+        const onSaveExercise = vi.fn().mockResolvedValue(undefined);
+        renderModal({ onLoadExercise, onSaveExercise });
+
+        fireEvent.click(screen.getByRole("button", { name: "Lat Pulldown" }));
+
+        await waitFor(() => {
+            expect(onLoadExercise).toHaveBeenCalledWith(101);
+        });
+
+        fireEvent.change(screen.getByLabelText("Exercise name"), {
+            target: { value: "My Cable Row Updated" },
+        });
+        fireEvent.click(screen.getByRole("button", { name: "Save Exercise" }));
+
+        await waitFor(() => {
+            expect(onSaveExercise).toHaveBeenCalledWith(
+                101,
+                expect.objectContaining({ name: "My Cable Row Updated" }),
+                false
+            );
+        });
     });
 
     it("toggles to preview mode in edit flow", () => {

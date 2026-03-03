@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { RxCross2 } from "react-icons/rx";
 import type { TileData } from "../types/tile";
 import type { EquipmentProps } from "../types/equipment";
+import type { ExerciseDTO } from "../types/api";
 
 export interface CreateExerciseDraft {
     name: string;
@@ -9,6 +10,13 @@ export interface CreateExerciseDraft {
     videoUrl?: string;
     difficulty?: string;
     muscleIds: number[];
+}
+
+export interface ExerciseEditDraft {
+    name: string;
+    description?: string;
+    videoUrl?: string;
+    difficulty?: string;
 }
 
 interface MuscleOption {
@@ -24,6 +32,8 @@ interface MachineModalProps {
     onTileChange?: (equipmentUpdates: Partial<EquipmentProps>) => void;
     onExerciseIdsChange?: (exerciseIds: number[]) => void;
     onCreateExercise?: (exercise: CreateExerciseDraft) => Promise<void> | void;
+    onLoadExercise?: (exerciseId: number) => Promise<ExerciseDTO>;
+    onSaveExercise?: (exerciseId: number, exercise: ExerciseEditDraft, useOverride: boolean) => Promise<void> | void;
     creatingExercise?: boolean;
     muscleOptions?: MuscleOption[];
     musclesLoading?: boolean;
@@ -48,6 +58,8 @@ function MachineModal({
     onTileChange,
     onExerciseIdsChange,
     onCreateExercise,
+    onLoadExercise,
+    onSaveExercise,
     creatingExercise = false,
     muscleOptions = [],
     musclesLoading = false,
@@ -69,6 +81,15 @@ function MachineModal({
     const [muscleToAddId, setMuscleToAddId] = useState("");
     const [selectedMuscleIds, setSelectedMuscleIds] = useState<number[]>([]);
     const [createExerciseError, setCreateExerciseError] = useState<string | null>(null);
+    const [exerciseDetails, setExerciseDetails] = useState<ExerciseDTO | null>(null);
+    const [exerciseDetailsLoading, setExerciseDetailsLoading] = useState(false);
+    const [exerciseDetailsError, setExerciseDetailsError] = useState<string | null>(null);
+    const [exerciseSaveError, setExerciseSaveError] = useState<string | null>(null);
+    const [exerciseSaving, setExerciseSaving] = useState(false);
+    const [editExerciseName, setEditExerciseName] = useState("");
+    const [editExerciseDescription, setEditExerciseDescription] = useState("");
+    const [editExerciseDifficulty, setEditExerciseDifficulty] = useState("");
+    const [editExerciseVideoUrl, setEditExerciseVideoUrl] = useState("");
     const showEditableFields = editMode && !previewMode;
     const inputClasses = "w-full rounded-md border border-white/30 bg-black/30 px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-accent-primary";
     const textareaClasses = "w-full rounded-md border border-white/30 bg-black/30 px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-accent-primary resize-y min-h-[120px]";
@@ -134,6 +155,48 @@ function MachineModal({
         }
     }, [muscleToAddId, selectableMuscleOptions]);
 
+    useEffect(() => {
+        if (!selectedExerciseForModal) return;
+
+        setExerciseDetails(null);
+        setExerciseDetailsError(null);
+        setExerciseSaveError(null);
+        setEditExerciseName(selectedExerciseForModal.name);
+        setEditExerciseDescription("");
+        setEditExerciseDifficulty("");
+        setEditExerciseVideoUrl("");
+
+        if (typeof selectedExerciseForModal.id !== "number" || !onLoadExercise) return;
+
+        let active = true;
+        const loadExercise = async () => {
+            try {
+                setExerciseDetailsLoading(true);
+                const details = await onLoadExercise(selectedExerciseForModal.id as number);
+                if (!active) return;
+
+                setExerciseDetails(details);
+                setEditExerciseName(details.name ?? selectedExerciseForModal.name);
+                setEditExerciseDescription(details.description ?? "");
+                setEditExerciseDifficulty(details.difficulty ?? "");
+                setEditExerciseVideoUrl(details.videoUrl ?? "");
+            } catch (error) {
+                if (!active) return;
+                const message = error instanceof Error ? error.message : "Failed to load exercise details.";
+                setExerciseDetailsError(message);
+            } finally {
+                if (active) {
+                    setExerciseDetailsLoading(false);
+                }
+            }
+        };
+
+        void loadExercise();
+        return () => {
+            active = false;
+        };
+    }, [onLoadExercise, selectedExerciseForModal]);
+
     const handleAddExercise = () => {
         const nextExerciseId = Number(exerciseToAddId);
         if (!Number.isFinite(nextExerciseId)) return;
@@ -196,7 +259,47 @@ function MachineModal({
         }
     };
 
+    const handleSaveExercise = async () => {
+        if (typeof selectedExerciseForModal?.id !== "number") {
+            setExerciseSaveError("This exercise cannot be edited.");
+            return;
+        }
+
+        const normalizedName = editExerciseName.trim();
+        if (!normalizedName) {
+            setExerciseSaveError("Exercise name cannot be empty.");
+            return;
+        }
+
+        const managerOwnsExercise = exerciseDetails?.global === false;
+        const useOverride = !managerOwnsExercise;
+
+        setExerciseSaveError(null);
+        setExerciseSaving(true);
+
+        try {
+            await onSaveExercise?.(
+                selectedExerciseForModal.id,
+                {
+                    name: normalizedName,
+                    description: normalizeOptionalString(editExerciseDescription),
+                    difficulty: normalizeOptionalString(editExerciseDifficulty),
+                    videoUrl: normalizeOptionalString(editExerciseVideoUrl),
+                },
+                useOverride
+            );
+            closeExerciseModal();
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to save exercise.";
+            setExerciseSaveError(message);
+        } finally {
+            setExerciseSaving(false);
+        }
+    };
+
     const openExerciseModal = (exercise: { id?: number; name: string }) => {
+        setExerciseSaveError(null);
+        setExerciseDetailsError(null);
         setSelectedExerciseForModal({
             id: exercise.id,
             name: exercise.name,
@@ -204,7 +307,11 @@ function MachineModal({
     };
 
     const closeExerciseModal = () => {
+        if (exerciseSaving) return;
         setSelectedExerciseForModal(null);
+        setExerciseDetails(null);
+        setExerciseDetailsError(null);
+        setExerciseSaveError(null);
     };
 
     return (
@@ -406,51 +513,108 @@ function MachineModal({
                     >
                         <button
                             aria-label="Close exercise details"
-                            className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white hover:text-red-500 transition-all duration-200 z-10"
+                            className="absolute top-2 right-2 sm:top-4 sm:right-4 text-white hover:text-red-500 transition-all duration-200 z-10 disabled:opacity-50"
                             onClick={closeExerciseModal}
+                            disabled={exerciseSaving}
                         >
                             <RxCross2 className="w-8 h-8 sm:w-12 sm:h-12" />
                         </button>
 
                         <h2 className="text-xl sm:text-2xl md:text-3xl text-white flex-shrink-0 pr-10">Exercise Details</h2>
                         <p className="mt-2 text-sm text-white/80">
-                            Read-only exercise view.
+                            {showEditableFields ? "Edit exercise details." : "Read-only exercise view."}
                         </p>
 
                         <div className="grid grid-cols-1 gap-4 sm:gap-6 mt-4 sm:mt-6 md:grid-cols-2 flex-1 min-h-0 overflow-y-auto">
                             <div className="rounded-lg p-4 text-white bg-black/20 min-h-0 overflow-y-auto scrollbar-thumb-only">
                                 <h3 className="text-xl mb-2 font-semibold">Overview</h3>
-                                <ul className="list-disc list-outside pl-5 space-y-2 text-sm">
-                                    <li>Exercise: {selectedExerciseForModal.name}</li>
-                                    {typeof selectedExerciseForModal.id === "number" && (
-                                        <li>Exercise ID: {selectedExerciseForModal.id}</li>
-                                    )}
-                                    <li>Linked machine: {tile.equipment.name}</li>
-                                </ul>
-                                <p className="mt-3 text-sm text-white/80">
-                                    Exercise-specific description and difficulty are not available in this view yet.
-                                </p>
+                                {exerciseDetailsLoading ? (
+                                    <p className="text-sm text-white/70">Loading exercise details...</p>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label htmlFor="edit-exercise-name" className="block text-sm font-medium mb-1">Exercise name</label>
+                                            {showEditableFields ? (
+                                                <input
+                                                    id="edit-exercise-name"
+                                                    className={inputClasses}
+                                                    value={editExerciseName}
+                                                    onChange={(event) => setEditExerciseName(event.target.value)}
+                                                />
+                                            ) : (
+                                                <p className="text-sm">{exerciseDetails?.name ?? selectedExerciseForModal.name}</p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label htmlFor="edit-exercise-description" className="block text-sm font-medium mb-1">Description</label>
+                                            {showEditableFields ? (
+                                                <textarea
+                                                    id="edit-exercise-description"
+                                                    className={textareaClasses}
+                                                    value={editExerciseDescription}
+                                                    onChange={(event) => setEditExerciseDescription(event.target.value)}
+                                                    placeholder="Exercise description..."
+                                                />
+                                            ) : (
+                                                <p className="text-sm text-white/80">{exerciseDetails?.description ?? "No description."}</p>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <label htmlFor="edit-exercise-difficulty" className="block text-sm font-medium mb-1">Difficulty</label>
+                                            {showEditableFields ? (
+                                                <input
+                                                    id="edit-exercise-difficulty"
+                                                    className={inputClasses}
+                                                    value={editExerciseDifficulty}
+                                                    onChange={(event) => setEditExerciseDifficulty(event.target.value)}
+                                                    placeholder="e.g. Beginner"
+                                                />
+                                            ) : (
+                                                <p className="text-sm text-white/80">{exerciseDetails?.difficulty ?? "Not specified."}</p>
+                                            )}
+                                        </div>
+                                        {exerciseDetails && (
+                                            <p className="text-xs text-white/70">
+                                                {exerciseDetails.global
+                                                    ? "Not manager-owned exercise: saving uses exercise override."
+                                                    : "Manager-owned exercise: saving updates it directly."}
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {exerciseDetailsError && (
+                                    <p className="mt-3 text-sm text-red-300">
+                                        Could not load exercise details: {exerciseDetailsError}
+                                    </p>
+                                )}
+                                {exerciseSaveError && (
+                                    <p className="mt-3 text-sm text-red-300">
+                                        {exerciseSaveError}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="rounded-lg p-4 text-white bg-black/20 min-h-0 overflow-y-auto scrollbar-thumb-only">
-                                <h3 className="text-xl mb-2 font-semibold">Muscles</h3>
-                                {(tile.equipment.musclesTargeted ?? []).length === 0 ? (
-                                    <p className="text-sm text-white/70">No muscle data available.</p>
-                                ) : (
-                                    <ul className="list-disc list-outside pl-5 space-y-2 text-sm">
-                                        {tile.equipment.musclesTargeted?.map((muscle, idx) => (
-                                            <li key={`${muscle}-${idx}`}>{muscle}</li>
-                                        ))}
-                                    </ul>
+                                <h3 className="text-xl mb-2 font-semibold">Video</h3>
+                                {showEditableFields && (
+                                    <div className="mb-3">
+                                        <label htmlFor="edit-exercise-video-url" className="block text-sm font-medium mb-1">Video URL</label>
+                                        <input
+                                            id="edit-exercise-video-url"
+                                            className={inputClasses}
+                                            value={editExerciseVideoUrl}
+                                            onChange={(event) => setEditExerciseVideoUrl(event.target.value)}
+                                            placeholder="https://..."
+                                        />
+                                    </div>
                                 )}
-
-                                <h3 className="text-xl mt-4 mb-2 font-semibold">Video</h3>
                                 <div className="w-full bg-gray-100 rounded-sm text-black aspect-video text-center justify-center flex items-center">
-                                    {tile.equipment.videoUrl ? (
+                                    {(showEditableFields ? editExerciseVideoUrl : (exerciseDetails?.videoUrl ?? "")) ? (
                                         <iframe
                                             width="100%"
                                             height="100%"
-                                            src={tile.equipment.videoUrl}
+                                            src={showEditableFields ? editExerciseVideoUrl : (exerciseDetails?.videoUrl ?? "")}
                                             title={`Exercise video for ${selectedExerciseForModal.name}`}
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                             allowFullScreen
@@ -460,17 +624,39 @@ function MachineModal({
                                         <span className="text-xs">No video available</span>
                                     )}
                                 </div>
+
+                                <h3 className="text-xl mt-4 mb-2 font-semibold">Muscles</h3>
+                                {(exerciseDetails?.muscles ?? []).length === 0 ? (
+                                    <p className="text-sm text-white/70">No muscle data available.</p>
+                                ) : (
+                                    <ul className="list-disc list-outside pl-5 space-y-2 text-sm">
+                                        {exerciseDetails?.muscles.map((muscle, idx) => (
+                                            <li key={`${muscle}-${idx}`}>{muscle}</li>
+                                        ))}
+                                    </ul>
+                                )}
                             </div>
                         </div>
 
-                        <div className="mt-3 flex justify-end">
+                        <div className="mt-3 flex items-center justify-end gap-2">
                             <button
                                 type="button"
                                 className="px-4 py-2 rounded-md border border-white/40 text-white font-semibold hover:bg-white/10 transition-colors"
                                 onClick={closeExerciseModal}
+                                disabled={exerciseSaving}
                             >
-                                Close
+                                {showEditableFields ? "Cancel" : "Close"}
                             </button>
+                            {showEditableFields && (
+                                <button
+                                    type="button"
+                                    className="px-4 py-2 rounded-md bg-accent-primary text-white font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+                                    onClick={() => { void handleSaveExercise(); }}
+                                    disabled={!onSaveExercise || exerciseSaving || exerciseDetailsLoading || typeof selectedExerciseForModal.id !== "number"}
+                                >
+                                    {exerciseSaving ? "Saving..." : "Save Exercise"}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

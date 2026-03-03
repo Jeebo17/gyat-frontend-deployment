@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createExercise, upsertExerciseOverride } from "../exerciseService";
+import { createExercise, getExerciseById, updateCustomExercise, upsertExerciseOverride } from "../exerciseService";
 import { upsertEquipmentTypeOverride } from "../equipmentTypeService";
 
 const mockJsonResponse = <T,>(data: T): Response =>
@@ -111,6 +111,61 @@ describe("relational services", () => {
             videoUrl: "",
             difficulty: "",
             muscleIds: [],
+        }));
+    });
+
+    it("getExerciseById sends GET /api/exercises/:id", async () => {
+        fetchMock.mockResolvedValueOnce(
+            mockJsonResponse({
+                id: 14,
+                name: "Lat Pulldown",
+                description: null,
+                videoUrl: null,
+                difficulty: null,
+                equipmentTypeId: 3,
+                equipmentTypeName: "Cable Machine",
+                muscles: ["Back"],
+                global: true,
+            })
+        );
+
+        await getExerciseById(14);
+
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        const [url, options] = fetchMock.mock.calls[0];
+        expect(String(url)).toContain("/api/exercises/14");
+        expect(options?.method).toBeUndefined();
+        expect(options?.credentials).toBe("include");
+    });
+
+    it("updateCustomExercise sends PUT /api/exercises/:id", async () => {
+        fetchMock.mockResolvedValueOnce(
+            mockJsonResponse({
+                id: 99,
+                name: "Incline Press Updated",
+                description: null,
+                videoUrl: null,
+                difficulty: null,
+                equipmentTypeId: 4,
+                equipmentTypeName: "Chest Press",
+                muscles: [],
+                global: false,
+            })
+        );
+
+        await updateCustomExercise(99, {
+            name: "Incline Press Updated",
+            description: "Updated",
+        });
+
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        const [url, options] = fetchMock.mock.calls[0];
+        expect(String(url)).toContain("/api/exercises/99");
+        expect(options?.method).toBe("PUT");
+        expect(options?.credentials).toBe("include");
+        expect(options?.body).toBe(JSON.stringify({
+            name: "Incline Press Updated",
+            description: "Updated",
         }));
     });
 });

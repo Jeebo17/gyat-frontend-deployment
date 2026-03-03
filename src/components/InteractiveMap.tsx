@@ -8,10 +8,10 @@ import type { DragTileData } from "./DragAndDropMenu";
 import ShinyText from "./effects/ShinyText";
 import { updateComponent } from "../services/componentService";
 import { upsertEquipmentTypeOverride } from "../services/equipmentTypeService";
-import { createExercise, upsertExerciseOverride } from "../services/exerciseService";
+import { createExercise, getExerciseById, updateCustomExercise, upsertExerciseOverride } from "../services/exerciseService";
 import { getMuscles } from "../services/muscleService";
 import type { ExerciseOption } from "../types/tile";
-import type { MuscleDTO } from "../types/api";
+import type { ExerciseDTO, MuscleDTO } from "../types/api";
 
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
@@ -87,6 +87,27 @@ const addExerciseIdIfMissing = (exerciseIds: number[] | undefined, nextExerciseI
 const mergeUniqueStrings = (first: string[] | undefined, second: string[] | undefined): string[] | undefined => {
     const merged = Array.from(new Set([...(first ?? []), ...(second ?? [])].filter(Boolean)));
     return merged.length > 0 ? merged : undefined;
+};
+
+const applyExerciseResultToTile = (tile: TileData, exercise: ExerciseDTO): TileData => {
+    const nextOptions = (tile.exerciseOptions ?? []).map((option) =>
+        option.id === exercise.id
+            ? { ...option, name: exercise.name }
+            : option
+    );
+    const exerciseIds = tile.exerciseIds ?? [];
+    const updatedTile = { ...tile, exerciseOptions: nextOptions };
+
+    return {
+        ...updatedTile,
+        equipment: {
+            ...updatedTile.equipment,
+            benefits: resolveExerciseNames(updatedTile, exerciseIds),
+            videoUrl: exerciseIds.includes(exercise.id)
+                ? (exercise.videoUrl ?? updatedTile.equipment.videoUrl)
+                : updatedTile.equipment.videoUrl,
+        },
+    };
 };
 
 interface InteractiveMapProps {
@@ -570,6 +591,56 @@ function InteractiveMap({
         }
     };
 
+    const handleLoadExercise = async (exerciseId: number): Promise<ExerciseDTO> => {
+        return getExerciseById(exerciseId);
+    };
+
+    const handleSaveExercise = async (
+        exerciseId: number,
+        exercise: {
+            name: string;
+            description?: string;
+            videoUrl?: string;
+            difficulty?: string;
+        },
+        useOverride: boolean
+    ) => {
+        if (!selectedMachine?.equipmentTypeId) {
+            throw new Error("This machine is not linked to a relational equipment type.");
+        }
+
+        setMachineSaveError(null);
+        setMachineSaveSuccess(null);
+
+        const saved = useOverride
+            ? await upsertExerciseOverride(exerciseId, {
+                name: exercise.name,
+                description: exercise.description,
+                videoUrl: exercise.videoUrl,
+                difficulty: exercise.difficulty,
+            })
+            : await updateCustomExercise(exerciseId, {
+                name: exercise.name,
+                description: exercise.description,
+                videoUrl: exercise.videoUrl,
+                difficulty: exercise.difficulty,
+            });
+
+        const equipmentTypeId = selectedMachine.equipmentTypeId;
+
+        setTiles((prev) => prev.map((tile) => {
+            if (tile.equipmentTypeId !== equipmentTypeId) return tile;
+            return applyExerciseResultToTile(tile, saved);
+        }));
+
+        setSelectedMachine((prev) => {
+            if (!prev || prev.equipmentTypeId !== equipmentTypeId) return prev;
+            return applyExerciseResultToTile(prev, saved);
+        });
+
+        setMachineSaveSuccess(useOverride ? "Exercise override saved." : "Exercise updated.");
+    };
+
     return (
         <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-1 sm:pt-2">
             <div
@@ -733,6 +804,8 @@ function InteractiveMap({
                         setMachineSaveSuccess(null);
                     } : undefined}
                     onCreateExercise={editMode ? handleCreateExercise : undefined}
+                    onLoadExercise={handleLoadExercise}
+                    onSaveExercise={editMode ? handleSaveExercise : undefined}
                     creatingExercise={isCreatingExercise}
                     muscleOptions={availableMuscles}
                     musclesLoading={isLoadingMuscles}
