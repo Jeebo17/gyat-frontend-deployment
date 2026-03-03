@@ -9,6 +9,7 @@ interface MachineModalProps {
     containerMode?: boolean;
     editMode?: boolean;
     onTileChange?: (equipmentUpdates: Partial<EquipmentProps>) => void;
+    onOutOfOrderChange?: (outOfOrder: boolean) => void;
     onSave?: () => Promise<void> | void;
     saving?: boolean;
     saveError?: string | null;
@@ -28,6 +29,7 @@ function MachineModal({
     containerMode = false,
     editMode = false,
     onTileChange,
+    onOutOfOrderChange,
     onSave,
     saving = false,
     saveError = null,
@@ -167,6 +169,16 @@ function MachineModal({
                 {editMode && (
                     <div className="mt-3 flex items-center gap-3">
                         <div className="min-h-5 text-sm flex-1">
+                            <label htmlFor="machine-out-of-order" className="mb-2 inline-flex items-center gap-2 text-white">
+                                <input
+                                    id="machine-out-of-order"
+                                    type="checkbox"
+                                    className="h-4 w-4 accent-accent-primary"
+                                    checked={Boolean(tile.outOfOrder)}
+                                    onChange={(e) => onOutOfOrderChange?.(e.target.checked)}
+                                />
+                                Mark as out of order
+                            </label>
                             {saveError && <p className="text-red-300">{saveError}</p>}
                             {!saveError && saveSuccess && <p className="text-green-300">{saveSuccess}</p>}
                         </div>

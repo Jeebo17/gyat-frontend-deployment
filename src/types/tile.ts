@@ -6,6 +6,10 @@ export interface TileData {
 
     // Equipment definition id used by backend dictionaries.
     equipmentTypeId?: number;
+    // Exercise ids from relational definitions used for editing exercise overrides.
+    exerciseIds?: number[];
+    // Equipment maintenance status for component update payloads.
+    outOfOrder?: boolean;
 
     //Data describing the equipment assigned to this tile.
     equipment: EquipmentProps;

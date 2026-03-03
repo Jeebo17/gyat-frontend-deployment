@@ -7,6 +7,8 @@ import { useTheme } from "../context/ThemeContext";
 import type { DragTileData } from "./DragAndDropMenu";
 import ShinyText from "./effects/ShinyText";
 import { updateComponent } from "../services/componentService";
+import { upsertEquipmentTypeOverride } from "../services/equipmentTypeService";
+import { createExercise, upsertExerciseOverride } from "../services/exerciseService";
 
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
@@ -55,35 +57,9 @@ const normalizeArray = (items?: string[]): string[] | undefined => {
     return items.map((item) => item.trim()).filter(Boolean);
 };
 
-const extractLegacyNotes = (additionalInfo?: string): string | undefined => {
-    if (!additionalInfo || !additionalInfo.trim()) return undefined;
-
-    try {
-        const parsed = JSON.parse(additionalInfo) as { notes?: unknown };
-        if (parsed && typeof parsed === "object" && typeof parsed.notes === "string") {
-            const notes = parsed.notes.trim();
-            return notes.length > 0 ? notes : undefined;
-        }
-        return undefined;
-    } catch {
-        return additionalInfo.trim();
-    }
-};
-
-const buildModalAdditionalInfo = (tile: TileData): string => {
-    const notes = extractLegacyNotes(tile.additionalInfo);
-    const payload = {
-        ...(notes ? { notes } : {}),
-        modalOverrides: {
-            name: tile.equipment.name?.trim() || undefined,
-            description: tile.equipment.description?.trim() || undefined,
-            benefits: normalizeArray(tile.equipment.benefits),
-            musclesTargeted: normalizeArray(tile.equipment.musclesTargeted),
-            videoUrl: tile.equipment.videoUrl?.trim() || undefined,
-        },
-    };
-
-    return JSON.stringify(payload);
+const normalizeOptionalString = (value?: string): string | undefined => {
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : undefined;
 };
 
 interface InteractiveMapProps {
@@ -234,6 +210,7 @@ function InteractiveMap({
             width: template.width,
             height: template.height,
             rotation: 0,
+            outOfOrder: false,
             colour: template.colour,
             equipment: {
                 name: template.equipmentName,
@@ -346,30 +323,109 @@ function InteractiveMap({
 
     const handleMachineSave = async () => {
         if (!selectedMachine) return;
+        if (!selectedMachine.equipmentTypeId) {
+            setMachineSaveError("This machine is not linked to a relational equipment type.");
+            return;
+        }
 
         setIsSavingMachine(true);
         setMachineSaveError(null);
         setMachineSaveSuccess(null);
 
-        const serializedAdditionalInfo = buildModalAdditionalInfo(selectedMachine);
-
         try {
+            const equipmentTypeId = selectedMachine.equipmentTypeId;
+            const normalizedName = normalizeOptionalString(selectedMachine.equipment.name);
+            const normalizedDescription = normalizeOptionalString(selectedMachine.equipment.description);
+            const normalizedBenefits = normalizeArray(selectedMachine.equipment.benefits) ?? [];
+            const normalizedVideoUrl = normalizeOptionalString(selectedMachine.equipment.videoUrl);
+            const normalizedMuscles = normalizeArray(selectedMachine.equipment.musclesTargeted);
+            const existingExerciseIds = selectedMachine.exerciseIds ?? [];
+
+            if (!normalizedName) {
+                throw new Error("Equipment name cannot be empty.");
+            }
+
             await updateComponent(selectedMachine.id, {
                 xCoord: selectedMachine.xCoord,
                 yCoord: selectedMachine.yCoord,
                 width: selectedMachine.width,
                 height: selectedMachine.height,
                 rotation: selectedMachine.rotation,
-                additionalInfo: serializedAdditionalInfo,
+                outOfOrder: selectedMachine.outOfOrder ?? false,
+                additionalInfo: selectedMachine.additionalInfo,
             });
 
-            updateTile(selectedMachine.id, {
-                additionalInfo: serializedAdditionalInfo,
-                equipment: selectedMachine.equipment,
+            await upsertEquipmentTypeOverride(equipmentTypeId, {
+                name: normalizedName,
+                description: normalizedDescription,
             });
 
-            setSelectedMachine(prev => prev ? { ...prev, additionalInfo: serializedAdditionalInfo } : prev);
-            setMachineSaveSuccess("Saved");
+            const overrideSaves = existingExerciseIds.map((exerciseId, index) => {
+                const payload = {
+                    name: normalizedBenefits[index],
+                    videoUrl: index === 0 ? normalizedVideoUrl : undefined,
+                };
+                const hasData = Object.values(payload).some((value) => value !== undefined);
+                if (!hasData) return Promise.resolve(null);
+
+                return upsertExerciseOverride(exerciseId, payload);
+            });
+
+            const createdExerciseIds: number[] = [];
+            for (let index = existingExerciseIds.length; index < normalizedBenefits.length; index++) {
+                const created = await createExercise({
+                    equipmentTypeId,
+                    name: normalizedBenefits[index],
+                    description: "",
+                    videoUrl: index === 0 ? (normalizedVideoUrl ?? "") : "",
+                    difficulty: "",
+                    muscleIds: [],
+                });
+                createdExerciseIds.push(created.id);
+            }
+
+            await Promise.all(overrideSaves);
+
+            const nextExerciseIds = [...existingExerciseIds, ...createdExerciseIds];
+            const updatedEquipment = {
+                ...selectedMachine.equipment,
+                name: normalizedName,
+                description: normalizedDescription,
+                benefits: normalizedBenefits,
+                videoUrl: normalizedVideoUrl,
+                musclesTargeted: normalizedMuscles,
+            };
+
+            setTiles((prev) => prev.map((tile) => {
+                if (tile.equipmentTypeId !== equipmentTypeId) return tile;
+
+                return {
+                    ...tile,
+                    outOfOrder: tile.id === selectedMachine.id ? (selectedMachine.outOfOrder ?? false) : tile.outOfOrder,
+                    exerciseIds: nextExerciseIds,
+                    equipment: {
+                        ...tile.equipment,
+                        ...updatedEquipment,
+                    },
+                };
+            }));
+
+            setSelectedMachine((prev) => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    outOfOrder: selectedMachine.outOfOrder ?? false,
+                    exerciseIds: nextExerciseIds,
+                    equipment: updatedEquipment,
+                };
+            });
+
+            const savedMuscles = normalizedMuscles?.length ?? 0;
+            setMachineSaveSuccess(
+                savedMuscles > 0
+                    ? "Saved relational data. Muscle edits require backend muscle-id mapping support."
+                    : "Saved relational data."
+            );
         } catch (error) {
             const message = error instanceof Error ? error.message : "Failed to save machine details.";
             setMachineSaveError(message);
@@ -528,6 +584,11 @@ function InteractiveMap({
                         setMachineSaveSuccess(null);
                     } : undefined}
                     onSave={editMode ? handleMachineSave : undefined}
+                    onOutOfOrderChange={editMode ? (outOfOrder) => {
+                        setSelectedMachine({ ...selectedMachine, outOfOrder });
+                        setMachineSaveError(null);
+                        setMachineSaveSuccess(null);
+                    } : undefined}
                     saving={isSavingMachine}
                     saveError={machineSaveError}
                     saveSuccess={machineSaveSuccess}

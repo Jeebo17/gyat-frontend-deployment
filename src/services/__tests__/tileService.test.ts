@@ -14,6 +14,7 @@ describe("mapComponentToTile", () => {
             height: 120,
             rotation: 0,
             equipmentTypeId: 5,
+            outOfOrder: true,
             name: "Legacy Component Name",
             description: "Legacy component description",
             additionalInfo: JSON.stringify({
@@ -68,6 +69,8 @@ describe("mapComponentToTile", () => {
         expect(tile.equipment.benefits).toEqual(["Seated Leg Press", "Single-Leg Press"]);
         expect(tile.equipment.musclesTargeted).toEqual(["Quads", "Glutes", "Hamstrings"]);
         expect(tile.equipment.videoUrl).toBe("https://example.com/leg-press");
+        expect(tile.exerciseIds).toEqual([301, 302]);
+        expect(tile.outOfOrder).toBe(true);
     });
 
     it("falls back to component fields when no definition exists", () => {
@@ -98,5 +101,7 @@ describe("mapComponentToTile", () => {
         expect(tile.equipment.benefits).toEqual([]);
         expect(tile.equipment.musclesTargeted).toBeUndefined();
         expect(tile.equipment.videoUrl).toBeUndefined();
+        expect(tile.exerciseIds).toEqual([]);
+        expect(tile.outOfOrder).toBe(false);
     });
 });

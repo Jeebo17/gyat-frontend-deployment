@@ -9,6 +9,17 @@ export interface ExerciseDTO {
     equipmentTypeId: number;
     equipmentTypeName: string;
     muscles: string[];
+    global?: boolean;
+}
+
+export interface EquipmentTypeDTO {
+    id: number;
+    name: string;
+    brand: string | null;
+    imageUrl: string | null;
+    description: string | null;
+    safetyInfo: string | null;
+    global: boolean;
 }
 
 export interface EquipmentDefinitionDTO {
@@ -31,6 +42,7 @@ export interface GymComponentDTO {
     height: number;
     rotation: number;
     additionalInfo?: string | null;
+    outOfOrder?: boolean;
 
     // Current backend key
     equipmentTypeId?: number;
@@ -84,11 +96,36 @@ export interface UpdateComponentRequest {
     width: number;
     height: number;
     rotation: number;
+    outOfOrder: boolean;
     additionalInfo?: string;
 
     // ── Fields the frontend needs to send but the backend does NOT yet accept ──
     // TODO: Ask dan to implement
     // colour: string;
+}
+
+export interface UpdateEquipmentTypeRequest {
+    name?: string;
+    brand?: string;
+    imageUrl?: string;
+    description?: string;
+    safetyInfo?: string;
+}
+
+export interface CreateExerciseRequest {
+    name: string;
+    description?: string | null;
+    videoUrl?: string | null;
+    difficulty?: string | null;
+    muscleIds: number[];
+    equipmentTypeId: number;
+}
+
+export interface UpdateExerciseOverrideRequest {
+    name?: string;
+    description?: string;
+    videoUrl?: string;
+    difficulty?: string;
 }
 
 export interface CreateLayoutRequest {
