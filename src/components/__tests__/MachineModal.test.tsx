@@ -37,6 +37,7 @@ const renderModal = (overrides: Partial<ComponentProps<typeof MachineModal>> = {
             onSave={vi.fn()}
             onOutOfOrderChange={vi.fn()}
             onExerciseIdsChange={vi.fn()}
+            onCreateExercise={vi.fn()}
             {...overrides}
         />
     );
@@ -77,5 +78,22 @@ describe("MachineModal", () => {
 
         const saveButton = screen.getByRole("button", { name: "Saving..." });
         expect(saveButton).toBeDisabled();
+    });
+
+    it("calls onCreateExercise with typed name", () => {
+        const onCreateExercise = vi.fn();
+        renderModal({ onCreateExercise });
+
+        fireEvent.change(screen.getByLabelText("Create exercise name"), {
+            target: { value: "Incline Cable Fly" },
+        });
+        fireEvent.click(screen.getByRole("button", { name: "Create Exercise" }));
+
+        expect(onCreateExercise).toHaveBeenCalledWith("Incline Cable Fly");
+    });
+
+    it("shows creating state on create button", () => {
+        renderModal({ creatingExercise: true });
+        expect(screen.getByRole("button", { name: "Creating..." })).toBeDisabled();
     });
 });

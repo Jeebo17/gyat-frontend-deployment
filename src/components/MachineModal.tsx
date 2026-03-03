@@ -10,6 +10,8 @@ interface MachineModalProps {
     editMode?: boolean;
     onTileChange?: (equipmentUpdates: Partial<EquipmentProps>) => void;
     onExerciseIdsChange?: (exerciseIds: number[]) => void;
+    onCreateExercise?: (name: string) => Promise<void> | void;
+    creatingExercise?: boolean;
     onOutOfOrderChange?: (outOfOrder: boolean) => void;
     onSave?: () => Promise<void> | void;
     saving?: boolean;
@@ -31,6 +33,8 @@ function MachineModal({
     editMode = false,
     onTileChange,
     onExerciseIdsChange,
+    onCreateExercise,
+    creatingExercise = false,
     onOutOfOrderChange,
     onSave,
     saving = false,
@@ -39,6 +43,8 @@ function MachineModal({
 }: MachineModalProps) {
     const [previewMode, setPreviewMode] = useState(false);
     const [exerciseToAddId, setExerciseToAddId] = useState("");
+    const [newExerciseName, setNewExerciseName] = useState("");
+    const [createExerciseError, setCreateExerciseError] = useState<string | null>(null);
     const showEditableFields = editMode && !previewMode;
     const inputClasses = "w-full rounded-md border border-white/30 bg-black/30 px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-accent-primary";
     const textareaClasses = "w-full rounded-md border border-white/30 bg-black/30 px-3 py-2 text-white placeholder:text-white/60 focus:outline-none focus:ring-2 focus:ring-accent-primary resize-y min-h-[120px]";
@@ -78,6 +84,24 @@ function MachineModal({
         if (selectedExerciseIdSet.has(nextExerciseId)) return;
 
         onExerciseIdsChange?.([...selectedExerciseIds, nextExerciseId]);
+    };
+
+    const handleCreateExercise = async () => {
+        const normalizedName = newExerciseName.trim();
+        if (!normalizedName) {
+            setCreateExerciseError("Exercise name cannot be empty.");
+            return;
+        }
+
+        setCreateExerciseError(null);
+
+        try {
+            await onCreateExercise?.(normalizedName);
+            setNewExerciseName("");
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to create exercise.";
+            setCreateExerciseError(message);
+        }
     };
 
     return (
@@ -165,6 +189,27 @@ function MachineModal({
                                             Add Exercise
                                         </button>
                                     </div>
+                                    <div className="flex flex-col sm:flex-row gap-2">
+                                        <label htmlFor="machine-create-exercise-input" className="sr-only">Create exercise name</label>
+                                        <input
+                                            id="machine-create-exercise-input"
+                                            className={inputClasses}
+                                            value={newExerciseName}
+                                            onChange={(event) => setNewExerciseName(event.target.value)}
+                                            placeholder="New exercise name"
+                                        />
+                                        <button
+                                            type="button"
+                                            className="px-4 py-2 rounded-md border border-white/40 text-white font-semibold hover:bg-white/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                                            onClick={() => { void handleCreateExercise(); }}
+                                            disabled={creatingExercise}
+                                        >
+                                            {creatingExercise ? "Creating..." : "Create Exercise"}
+                                        </button>
+                                    </div>
+                                    {createExerciseError && (
+                                        <p className="text-red-300 text-sm">{createExerciseError}</p>
+                                    )}
 
                                     {selectedExercises.length === 0 ? (
                                         <p className="text-white/70 text-sm">No exercises selected.</p>

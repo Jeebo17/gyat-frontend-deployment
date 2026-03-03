@@ -8,7 +8,8 @@ import type { DragTileData } from "./DragAndDropMenu";
 import ShinyText from "./effects/ShinyText";
 import { updateComponent } from "../services/componentService";
 import { upsertEquipmentTypeOverride } from "../services/equipmentTypeService";
-import { upsertExerciseOverride } from "../services/exerciseService";
+import { createExercise, upsertExerciseOverride } from "../services/exerciseService";
+import type { ExerciseOption } from "../types/tile";
 
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
@@ -69,6 +70,18 @@ const resolveExerciseNames = (tile: TileData, exerciseIds: number[]): string[] =
     );
 };
 
+const addExerciseOptionIfMissing = (options: ExerciseOption[] | undefined, nextOption: ExerciseOption): ExerciseOption[] => {
+    const current = options ?? [];
+    return current.some((option) => option.id === nextOption.id)
+        ? current
+        : [...current, nextOption];
+};
+
+const addExerciseIdIfMissing = (exerciseIds: number[] | undefined, nextExerciseId: number): number[] => {
+    const current = exerciseIds ?? [];
+    return current.includes(nextExerciseId) ? current : [...current, nextExerciseId];
+};
+
 interface InteractiveMapProps {
     editMode?: boolean;
     snapToGrid?: boolean;
@@ -92,6 +105,7 @@ function InteractiveMap({
 }: InteractiveMapProps) {
     const [selectedMachine, setSelectedMachine] = useState<TileData | null>(null);
     const [isSavingMachine, setIsSavingMachine] = useState(false);
+    const [isCreatingExercise, setIsCreatingExercise] = useState(false);
     const [machineSaveError, setMachineSaveError] = useState<string | null>(null);
     const [machineSaveSuccess, setMachineSaveSuccess] = useState<string | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -429,6 +443,83 @@ function InteractiveMap({
         }
     };
 
+    const handleCreateExercise = async (exerciseName: string) => {
+        if (!selectedMachine) return;
+        if (!selectedMachine.equipmentTypeId) {
+            throw new Error("This machine is not linked to a relational equipment type.");
+        }
+
+        setIsCreatingExercise(true);
+        setMachineSaveError(null);
+        setMachineSaveSuccess(null);
+
+        try {
+            const created = await createExercise({
+                equipmentTypeId: selectedMachine.equipmentTypeId,
+                name: exerciseName,
+                description: "",
+                videoUrl: "",
+                difficulty: "",
+                muscleIds: [],
+            });
+
+            const nextOption: ExerciseOption = { id: created.id, name: created.name };
+            const nextExerciseIds = addExerciseIdIfMissing(selectedMachine.exerciseIds, created.id);
+
+            setTiles((prev) => prev.map((tile) => {
+                if (tile.equipmentTypeId !== selectedMachine.equipmentTypeId) return tile;
+
+                const nextOptions = addExerciseOptionIfMissing(tile.exerciseOptions, nextOption);
+                if (tile.id !== selectedMachine.id) {
+                    return {
+                        ...tile,
+                        exerciseOptions: nextOptions,
+                    };
+                }
+
+                return {
+                    ...tile,
+                    exerciseOptions: nextOptions,
+                    exerciseIds: nextExerciseIds,
+                    equipment: {
+                        ...tile.equipment,
+                        benefits: resolveExerciseNames(
+                            { ...tile, exerciseOptions: nextOptions, exerciseIds: nextExerciseIds },
+                            nextExerciseIds
+                        ),
+                    },
+                };
+            }));
+
+            setSelectedMachine((prev) => {
+                if (!prev) return prev;
+
+                const nextOptions = addExerciseOptionIfMissing(prev.exerciseOptions, nextOption);
+                const updatedExerciseIds = addExerciseIdIfMissing(prev.exerciseIds, created.id);
+                return {
+                    ...prev,
+                    exerciseOptions: nextOptions,
+                    exerciseIds: updatedExerciseIds,
+                    equipment: {
+                        ...prev.equipment,
+                        benefits: resolveExerciseNames(
+                            { ...prev, exerciseOptions: nextOptions, exerciseIds: updatedExerciseIds },
+                            updatedExerciseIds
+                        ),
+                    },
+                };
+            });
+
+            setMachineSaveSuccess("Exercise created and added to this machine.");
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to create exercise.";
+            setMachineSaveError(message);
+            throw error;
+        } finally {
+            setIsCreatingExercise(false);
+        }
+    };
+
     return (
         <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-1 sm:pt-2">
             <div
@@ -591,6 +682,8 @@ function InteractiveMap({
                         setMachineSaveError(null);
                         setMachineSaveSuccess(null);
                     } : undefined}
+                    onCreateExercise={editMode ? handleCreateExercise : undefined}
+                    creatingExercise={isCreatingExercise}
                     onSave={editMode ? handleMachineSave : undefined}
                     onOutOfOrderChange={editMode ? (outOfOrder) => {
                         setSelectedMachine({ ...selectedMachine, outOfOrder });
