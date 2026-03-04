@@ -1,4 +1,10 @@
 import { EquipmentProps } from "./equipment";
+
+export interface ExerciseOption {
+    id: number;
+    name: string;
+}
+
 export interface TileData {
      // Unique identifier for this tile.
      // Used for tracking state updates and rendering.
@@ -6,6 +12,12 @@ export interface TileData {
 
     // Equipment definition id used by backend dictionaries.
     equipmentTypeId?: number;
+    // Exercise ids from relational definitions used for editing exercise overrides.
+    exerciseIds?: number[];
+    // Full set of selectable exercises for this equipment type.
+    exerciseOptions?: ExerciseOption[];
+    // Equipment maintenance status for component update payloads.
+    outOfOrder?: boolean;
 
     //Data describing the equipment assigned to this tile.
     equipment: EquipmentProps;
@@ -23,6 +35,9 @@ export interface TileData {
 
     // Display colour (e.g. CSS hex or rgb).
     colour: string;
+
+    // Raw persisted metadata from backend component.additionalInfo.
+    additionalInfo?: string;
 
     // Callback fired when this tile wants to update itself.
     // Receives only the fields that have changed.

@@ -42,6 +42,7 @@ function Tile({
     const [isResizing, setIsResizing] = useState<ResizeHandle | null>(null);
     const dragStartRef = useRef({ x: 0, y: 0, tileX: 0, tileY: 0 });
     const resizeStartRef = useRef({ x: 0, y: 0, width: 0, height: 0, tileX: 0, tileY: 0 });
+    const dragMovedRef = useRef(false);
     
     // Track live position/size during drag for smooth visual feedback without parent updates
     const [liveX, setLiveX] = useState(xCoord);
@@ -69,6 +70,7 @@ function Tile({
     const handleMouseDown = (e: React.MouseEvent) => {
         if ((!editMode && !previewMode) || !onUpdate) return;
         e.stopPropagation();
+        dragMovedRef.current = false;
 
         setIsDragging(true);
         dragStartRef.current = {
@@ -101,6 +103,9 @@ function Tile({
             if (isDragging) {
                 const deltaX = (e.clientX - dragStartRef.current.x) / scale;
                 const deltaY = (e.clientY - dragStartRef.current.y) / scale;
+                if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
+                    dragMovedRef.current = true;
+                }
 
                 const newX = snap(dragStartRef.current.tileX + deltaX);
                 const newY = snap(dragStartRef.current.tileY + deltaY);
@@ -180,14 +185,20 @@ function Tile({
             // Batch the update to parent only on mouse release
             if (onUpdate) {
                 if (isDragging) {
-                    onUpdate({ xCoord: liveX, yCoord: liveY });
+                    const moved = liveX !== xCoord || liveY !== yCoord;
+                    if (moved) {
+                        onUpdate({ xCoord: liveX, yCoord: liveY });
+                    }
                 } else if (isResizing) {
-                    onUpdate({
-                        xCoord: liveX,
-                        yCoord: liveY,
-                        width: liveWidth,
-                        height: liveHeight
-                    });
+                    const resized = liveX !== xCoord || liveY !== yCoord || liveWidth !== width || liveHeight !== height;
+                    if (resized) {
+                        onUpdate({
+                            xCoord: liveX,
+                            yCoord: liveY,
+                            width: liveWidth,
+                            height: liveHeight
+                        });
+                    }
                 }
             }
             setIsDragging(false);
@@ -201,7 +212,7 @@ function Tile({
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("mouseup", handleMouseUp);
         };
-    }, [isDragging, isResizing, scale, snap, onUpdate, gridSize, liveX, liveY, liveWidth, liveHeight]);
+    }, [isDragging, isResizing, scale, snap, onUpdate, gridSize, liveX, liveY, liveWidth, liveHeight, xCoord, yCoord, width, height]);
 
     const resizeHandles: { handle: ResizeHandle; cursor: string; className: string }[] = [
         { handle: 'n', cursor: 'ns-resize', className: 'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-1' },
@@ -239,10 +250,14 @@ function Tile({
                 transform: `rotate(${rotation}deg)`,
             }}
             onMouseDown={handleMouseDown}
-            onClick={!editMode ? (e) => {
+            onClick={onClick ? (e) => {
                 if (isDragging || isResizing) return;
+                if (dragMovedRef.current) {
+                    dragMovedRef.current = false;
+                    return;
+                }
                 e.stopPropagation();
-                onClick?.();
+                onClick();
             } : undefined}
             aria-label={equipment.name}
         >

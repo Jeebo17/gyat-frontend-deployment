@@ -23,11 +23,6 @@ export const mapComponentToTile = (
     const definition = definitions[equipmentTypeId];
     const exercises = definition?.exercises ?? [];
 
-    const descriptionParts = [
-        definition?.description?.trim() || component.description?.trim(),
-        component.additionalInfo?.trim(),
-    ].filter((part): part is string => Boolean(part));
-
     const musclesTargeted = Array.from(
         new Set(
             exercises.flatMap((exercise) => exercise.muscles ?? [])
@@ -39,6 +34,13 @@ export const mapComponentToTile = (
     return {
         id: component.id,
         equipmentTypeId,
+        exerciseIds: exercises.map((exercise) => exercise.id),
+        exerciseOptions: exercises.map((exercise) => ({
+            id: exercise.id,
+            name: exercise.name,
+        })),
+        outOfOrder: component.outOfOrder ?? false,
+        additionalInfo: component.additionalInfo ?? undefined,
         xCoord: component.xCoord,
         yCoord: component.yCoord,
         width: component.width,
@@ -47,7 +49,7 @@ export const mapComponentToTile = (
         colour: getColourForEquipment(equipmentTypeId),
         equipment: {
             name: definition?.name || component.name || `Equipment #${equipmentTypeId}`,
-            description: descriptionParts.join("\n\n") || "No description provided.",
+            description: definition?.description?.trim() || component.description?.trim() || "No description provided.",
             benefits: exercises.map((exercise) => exercise.name),
             musclesTargeted: musclesTargeted.length > 0 ? musclesTargeted : undefined,
             videoUrl,
