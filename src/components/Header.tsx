@@ -30,8 +30,8 @@ export default function Header({ className = '' }: HeaderProps) {
         {
             icon: selectedPage.endsWith("/map") ? <IoMap data-testid="io5-map" /> : <IoMapOutline data-testid="io5-map-outline" />,
             label: 'Map',
-            path: '/map',
-            onClick: () => navigate("/map")
+            path: '/map/search',
+            onClick: () => navigate("/map/search")
         },
         {
             icon: selectedPage.endsWith("/settings") ? <IoSettings data-testid="io5-settings" /> : <IoSettingsOutline data-testid="io5-settings-outline" />,

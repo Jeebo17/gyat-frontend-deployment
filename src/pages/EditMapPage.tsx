@@ -30,11 +30,8 @@ function EditMapPage() {
     const [tileOverrides, setTileOverrides] = useState<TileData[] | null>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    //TEMP
-    const layoutId = 69;
-    const parsedLayoutId = Number(import.meta.env.VITE_LAYOUT_ID ?? "69");
-    const DEFAULT_LAYOUT_ID = Number.isFinite(parsedLayoutId) && parsedLayoutId > 0 ? parsedLayoutId : 69;
-    const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : DEFAULT_LAYOUT_ID;
+    const layoutId = Number(window.location.pathname.split("/").pop());
+    const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : 69;
 
     // Derive floors from the cached layout
     const floors = useMemo<GymFloorDTO[]>(() => {
@@ -101,7 +98,7 @@ function EditMapPage() {
         const checkAdmin = async () => {
             const isAdmin = await isAdminTEST("test");
             if (!isAdmin) {
-                navigate("/map", { replace: true });
+                navigate("/map/", { replace: true });
             }
             setLoading(false);
         };
@@ -155,7 +152,7 @@ function EditMapPage() {
                             </p>
                             <button
                                 className="text-xs sm:text-sm select-none underline hover:text-accent-primary transition-colors"
-                                onClick={() => navigate("/map")}
+                                onClick={() => navigate(`/map/${resolvedLayoutId}`)}
                             >
                                 Back to View
                             </button>

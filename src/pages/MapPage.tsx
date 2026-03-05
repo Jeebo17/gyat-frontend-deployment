@@ -169,7 +169,7 @@ function MapPage() {
                 {/* Admin-only edit button */}
                 {isAdmin && isLoggedIn && (
                     <button
-                        onClick={() => navigate("/map/edit")}
+                        onClick={() => navigate(`/map/edit/${resolvedLayoutId}`)}
                         className="sm:ml-auto px-3 sm:px-4 py-2 rounded-lg bg-accent-primary text-white text-xs sm:text-sm font-medium shadow hover:opacity-90 transition-opacity flex-shrink-0"
                     >
                         Edit Map

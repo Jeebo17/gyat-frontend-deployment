@@ -28,7 +28,7 @@ function App() {
       <Route path="/signup" element={<SignUpPage />} />
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="/profile" element={<ProfilePage />} />
-      <Route path="/map/edit" element={<EditMapPage />} />
+      <Route path="/map/edit/:id" element={<EditMapPage />} />
       <Route path="/map/search" element={<SearchMapPage />} />
       <Route path="/map/:id" element={<Map />} />
       <Route path="*" element={<NotFoundPage />} />
