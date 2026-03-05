@@ -104,9 +104,7 @@ const applyExerciseResultToTile = (tile: TileData, exercise: ExerciseDTO): TileD
         equipment: {
             ...updatedTile.equipment,
             benefits: resolveExerciseNames(updatedTile, exerciseIds),
-            videoUrl: exerciseIds.includes(exercise.id)
-                ? (exercise.videoUrl ?? updatedTile.equipment.videoUrl)
-                : updatedTile.equipment.videoUrl,
+            // imageUrl should not be set from exercise.videoUrl
         },
     };
 };
@@ -467,7 +465,7 @@ function InteractiveMap({
             const normalizedBenefits = normalizeArray(
                 resolveExerciseNames(selectedMachine, selectedMachine.exerciseIds ?? [])
             ) ?? [];
-            const normalizedVideoUrl = normalizeOptionalString(selectedMachine.equipment.videoUrl);
+            const normalizedVideoUrl = undefined; // Don't use videoUrl for equipment
             const normalizedMuscles = normalizeArray(selectedMachine.equipment.musclesTargeted);
             const selectedExerciseIds = selectedMachine.exerciseIds ?? [];
 
@@ -480,11 +478,12 @@ function InteractiveMap({
             await upsertEquipmentTypeOverride(equipmentTypeId, {
                 name: normalizedName,
                 description: normalizedDescription,
+                imageUrl: normalizedVideoUrl,
             });
 
             const overrideSaves = selectedExerciseIds.map((exerciseId, index) => {
                 const payload = {
-                    videoUrl: index === 0 ? normalizedVideoUrl : undefined,
+                    videoUrl: undefined,
                 };
                 const hasData = Object.values(payload).some((value) => value !== undefined);
                 if (!hasData) return Promise.resolve(null);
@@ -500,7 +499,7 @@ function InteractiveMap({
                 name: normalizedName,
                 description: normalizedDescription,
                 benefits: normalizedBenefits,
-                videoUrl: normalizedVideoUrl,
+                imageUrl: normalizedVideoUrl,
                 musclesTargeted: normalizedMuscles,
             };
 
@@ -595,6 +594,7 @@ function InteractiveMap({
                             nextExerciseIds
                         ),
                         musclesTargeted: mergedMuscles,
+                        // Don't set imageUrl from exercise
                     },
                 };
             }));
@@ -646,7 +646,6 @@ function InteractiveMap({
         setMachineSaveError(null);
         setMachineSaveSuccess(null);
 
-        // If videoUrl is an empty string, save as undefined to remove it
         const normalizedVideoUrl = exercise.videoUrl?.trim() === "" ? undefined : exercise.videoUrl;
         const saved = useOverride
             ? await upsertExerciseOverride(exerciseId, {

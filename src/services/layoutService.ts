@@ -26,6 +26,16 @@ export async function getLayoutPublic(id: number): Promise<GymLayoutDTO> {
     return request<GymLayoutDTO>(`/api/public/layouts/${id}`);
 }
 
+// Fetch all public layouts
+export async function getAllPublicLayouts(): Promise<GymLayoutDTO[]> {
+    return request<GymLayoutDTO[]>(`/api/public/layouts`);
+}
+
+// Fetch all layouts (admin-only)
+export async function getAllLayouts(): Promise<GymLayoutDTO[]> {
+    return request<GymLayoutDTO[]>(`/api/layouts`);
+}
+
 // Create a new layout.
 export async function createLayout(
     data: CreateLayoutRequest

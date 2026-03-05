@@ -16,7 +16,6 @@ function defaultRenderItem<T extends { id: number | string; name: string }>(item
     return (
         <span>
             <span className="font-medium">{item.name}</span>
-            <span className="font-light ml-1 text-xs">#{item.id}</span>
         </span>
     );
 }
@@ -36,7 +35,6 @@ export default function SearchBar<T extends { id: number | string; name: string 
         ? searchData.filter(item => filterFn(item, query))
         : [];
 
-    // Close dropdown when clicking outside
     useEffect(() => {
         const handleClick = (e: MouseEvent) => {
             if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
