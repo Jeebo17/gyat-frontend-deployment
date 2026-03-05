@@ -152,6 +152,7 @@ interface InteractiveMapProps {
 function InteractiveMap({
     editMode = false,
     snapToGrid = true,
+    floorId,
     floorTiles = [],
     floorLoading = false,
     floorLoadError = null,
@@ -178,6 +179,11 @@ function InteractiveMap({
     // Sync tiles from parent when floor data changes
     useEffect(() => {
         setTilesRaw(floorTiles);
+        // Immediately rebuild the spatial index so drag-and-drop collision
+        // checks don't see phantom tiles from a previous floor.
+        spatialIndexRef.current = buildSpatialIndex(floorTiles);
+        const maxId = floorTiles.reduce((max, tile) => Math.max(max, tile.id), 0);
+        nextIdRef.current = maxId + 1;
     }, [floorTiles]);
 
     // Notify parent of user-driven tile changes
@@ -295,10 +301,17 @@ function InteractiveMap({
     const snap = (value: number) => Math.round(value / gridSize) * gridSize;
 
     const addTile = useCallback(async (template: TileTemplate, xCoord: number, yCoord: number) => {
+        if (!layoutId || !floorId) {
+            console.error("Cannot add tile: layoutId or floorId is missing.");
+            return;
+        }
+
+        const tempId = nextIdRef.current;
         const candidate: TileData = {
-            id: nextIdRef.current,
-            xCoord: snap(xCoord),
-            yCoord: snap(yCoord),
+            id: tempId,
+            equipmentTypeId: template.equipmentTypeId,
+            xCoord: Math.max(0, Math.min(snap(xCoord), mapWidth - template.width)),
+            yCoord: Math.max(0, Math.min(snap(yCoord), mapHeight - template.height)),
             width: template.width,
             height: template.height,
             rotation: 0,
@@ -306,34 +319,56 @@ function InteractiveMap({
             colour: template.colour,
             equipment: {
                 name: template.equipment.name,
+                brand: template.equipment.brand,
                 icon: template.equipment.icon,
             },
         };
 
+        // Check for collision BEFORE modifying state
+        if (hasCollision(candidate, spatialIndexRef.current)) {
+            console.warn("Cannot place tile — collides with existing tile:", candidate);
+            return;
+        }
+
+        // Place the tile locally (optimistic update)
+        nextIdRef.current += 1;
         setTiles(prev => {
-            if (hasCollision(candidate, spatialIndexRef.current)) return prev;
-            nextIdRef.current += 1;
             const next = [...prev, candidate];
             spatialIndexRef.current = buildSpatialIndex(next);
             return next;
         });
 
-        console.log("Creating component with data:", { ...candidate, layoutId: layoutId ?? 0 });
+        // Persist to backend
+        try {
+            const created = await createComponent({
+                layoutId,
+                equipmentTypeId: template.equipmentTypeId ?? 0,
+                floorId,
+                xCoord: candidate.xCoord,
+                yCoord: candidate.yCoord,
+                width: candidate.width,
+                height: candidate.height,
+                rotation: candidate.rotation,
+                additionalInfo: "",
+            });
 
-        await createComponent({
-            layoutId: layoutId ?? 0,
-            equipmentTypeId: template.equipmentTypeId ?? 0,
-            floorId: 0,
-            xCoord: candidate.xCoord,
-            yCoord: candidate.yCoord,
-            width: candidate.width,
-            height: candidate.height,
-            rotation: candidate.rotation,
-            additionalInfo: "",
-        });
-
-        console.log("Component created successfully");
-    }, [snap]);
+            // Sync the local tile ID with the backend-assigned ID
+            setTiles(prev => {
+                const next = prev.map(t => t.id === tempId ? { ...t, id: created.id } : t);
+                spatialIndexRef.current = buildSpatialIndex(next);
+                return next;
+            });
+            console.log("Component created successfully with ID:", created.id);
+        } catch (error) {
+            console.error("Failed to save tile to backend, removing local tile:", error);
+            // Roll back the optimistic local placement
+            setTiles(prev => {
+                const next = prev.filter(t => t.id !== tempId);
+                spatialIndexRef.current = buildSpatialIndex(next);
+                return next;
+            });
+        }
+    }, [snap, layoutId, floorId]);
 
     const canPlace = useCallback((id: number, updates: Partial<TileData>) => {
         const current = tiles.find(t => t.id === id);

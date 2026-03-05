@@ -16,8 +16,8 @@ import type {
 
 // Place a new component on the layout.
 export async function createComponent(
-    data: 
-): Promise<GymComponentDTO> {CreateComponentRequest
+    data: CreateComponentRequest
+): Promise<GymComponentDTO> {
     return request<GymComponentDTO>("/api/components", {
         method: "POST",
         body: JSON.stringify(data),
