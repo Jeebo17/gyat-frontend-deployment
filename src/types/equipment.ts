@@ -7,8 +7,8 @@ export interface EquipmentProps {
     // Detailed description of the equipment. 
     description?: string;
 
-    // URL to a video demonstrating the equipment.
-    videoUrl?: string;
+    // URL to an image of the equipment.
+    imageUrl?: string;
 
     // List of targeted muscles.
     musclesTargeted?: string[];
@@ -18,4 +18,6 @@ export interface EquipmentProps {
 
     // Brand
     brand?: string;
+
+    safetyInfo?: string
 }

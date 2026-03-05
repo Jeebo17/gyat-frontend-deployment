@@ -1,7 +1,8 @@
 import Tile from "./Tile";
 import { TileData, TileHistoryEntry } from "../types/tile";
 import { useState, useRef, useEffect, useCallback } from "react";
-import MachineModal, { type CreateExerciseDraft } from '../components/MachineModal';
+import { MachineModal } from '../components/index';
+import { type CreateExerciseDraft }  from "../components/MachineModal";
 import ZoomControls from "./ZoomControls";
 import { useTheme } from "../context/ThemeContext";
 import type { TileTemplate } from "../types/tile";

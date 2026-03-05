@@ -2,8 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { IoHomeOutline, IoHome, IoMapOutline, IoMap, IoSettingsOutline, IoSettings, IoMenuOutline, IoCloseOutline } from 'react-icons/io5';
 import { useNavigate } from 'react-router';
-import { ThemeToggle } from './ThemeToggle';
-import { ProfileButton } from './ProfileButton';
+import { ThemeToggle, ProfileButton } from './index';
 import { useAppSound } from '../hooks/useAppSound';
 import popSound from '../assets/sounds/pop.mp3';
 import { useAuth } from '../context/AuthContext';
@@ -31,8 +30,8 @@ export default function Header({ className = '' }: HeaderProps) {
         {
             icon: selectedPage.endsWith("/map") ? <IoMap data-testid="io5-map" /> : <IoMapOutline data-testid="io5-map-outline" />,
             label: 'Map',
-            path: '/map',
-            onClick: () => navigate("/map")
+            path: '/map/search',
+            onClick: () => navigate("/map/search")
         },
         {
             icon: selectedPage.endsWith("/settings") ? <IoSettings data-testid="io5-settings" /> : <IoSettingsOutline data-testid="io5-settings-outline" />,

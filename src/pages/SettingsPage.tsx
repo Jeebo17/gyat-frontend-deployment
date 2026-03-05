@@ -1,6 +1,6 @@
 import { useSettings } from "../context/SettingsContext";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
+import { Header } from "../components/index";
 import { motion } from "framer-motion";
 
 

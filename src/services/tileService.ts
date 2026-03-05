@@ -15,6 +15,28 @@ const resolveEquipmentTypeId = (component: GymComponentDTO): number => {
     return 0;
 };
 
+interface ModalOverrides {
+    name?: string;
+    description?: string;
+    benefits?: string[];
+    musclesTargeted?: string[];
+    videoUrl?: string;
+}
+
+interface AdditionalInfoParsed {
+    notes?: string;
+    modalOverrides?: ModalOverrides;
+}
+
+function parseAdditionalInfo(raw: string | null | undefined): AdditionalInfoParsed | null {
+    if (!raw) return null;
+    try {
+        return JSON.parse(raw) as AdditionalInfoParsed;
+    } catch {
+        return null;
+    }
+}
+
 export const mapComponentToTile = (
     component: GymComponentDTO,
     definitions: Partial<Record<number, EquipmentDefinitionDTO>>
@@ -22,14 +44,15 @@ export const mapComponentToTile = (
     const equipmentTypeId = resolveEquipmentTypeId(component);
     const definition = definitions[equipmentTypeId];
     const exercises = definition?.exercises ?? [];
+    const parsed = parseAdditionalInfo(component.additionalInfo);
+    const overrides = parsed?.modalOverrides;
 
-    const musclesTargeted = Array.from(
+    const musclesFromExercises = Array.from(
         new Set(
             exercises.flatMap((exercise) => exercise.muscles ?? [])
         )
     );
-
-    const videoUrl = exercises.find((exercise) => exercise.videoUrl)?.videoUrl ?? undefined;
+    const musclesTargeted = overrides?.musclesTargeted ?? (musclesFromExercises.length > 0 ? musclesFromExercises : undefined);
 
     return {
         id: component.id,
@@ -48,11 +71,13 @@ export const mapComponentToTile = (
         rotation: component.rotation,
         colour: getColourForEquipment(equipmentTypeId),
         equipment: {
-            name: definition?.name || component.name || `Equipment #${equipmentTypeId}`,
-            description: definition?.description?.trim() || component.description?.trim() || "No description provided.",
-            benefits: exercises.map((exercise) => exercise.name),
-            musclesTargeted: musclesTargeted.length > 0 ? musclesTargeted : undefined,
-            videoUrl,
+            name: overrides?.name || definition?.name || `Equipment #${equipmentTypeId}`,
+            description: overrides?.description?.trim() || definition?.description?.trim() || "No description provided.",
+            benefits: overrides?.benefits ?? exercises.map((exercise) => exercise.name),
+            musclesTargeted,
+            safetyInfo: definition?.safetyInfo ?? undefined,
+            imageUrl: definition?.imageUrl ?? undefined,
+            brand: definition?.brand ?? undefined,
         },
     };
 };

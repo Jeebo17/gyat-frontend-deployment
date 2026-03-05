@@ -40,6 +40,7 @@ export interface EquipmentDefinitionDTO {
 export interface GymComponentDTO {
     id: number;
     layoutId: number;
+    equipmentTypeId: number;
     floorId: number;
     xCoord: number;
     yCoord: number;
@@ -49,17 +50,8 @@ export interface GymComponentDTO {
     additionalInfo?: string | null;
     outOfOrder?: boolean;
 
-    // Current backend key
-    equipmentTypeId?: number;
     // Compatibility alias if backend exposes this key name
     equipmentId?: number;
-
-    // Legacy fields (older payload shape)
-    name?: string;
-    brand?: string;
-    imageUrl?: string;
-    description?: string;
-    safetyInfo?: string;
 }
 
 export interface GymFloorDTO {
@@ -76,6 +68,13 @@ export interface GymLayoutDTO {
     components: GymComponentDTO[];
     definitions?: Partial<Record<number, EquipmentDefinitionDTO>>;
 }
+
+export interface GymLayoutSearchProps {
+    id: number;
+    name: string;
+}
+
+
 
 // ─── Request DTOs ────────────────────────────────────────────────────────────
 

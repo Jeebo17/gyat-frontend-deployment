@@ -7,6 +7,7 @@ import LoginPage from "./LoginPage";
 import SignUpPage from "./SignUpPage";
 import ProfilePage from "./ProfilePage";
 import EditMapPage from "./EditMapPage";
+import SearchMapPage from "./SearchMapPage";
 
 export {
     HomePage,
@@ -17,5 +18,6 @@ export {
     LoginPage,
     SignUpPage,
     ProfilePage,
-    EditMapPage
+    EditMapPage,
+    SearchMapPage
 }

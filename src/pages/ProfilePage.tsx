@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogoutButton } from '../components/LogOutButton';
-import Header from '../components/Header';
+import { LogoutButton, Header } from '../components/index';
 import { useAuth } from "../context/AuthContext";
 
 function ProfilePage() {

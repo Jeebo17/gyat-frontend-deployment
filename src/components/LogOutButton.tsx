@@ -11,7 +11,7 @@ interface LogoutButtonProps {
     header?: boolean;
 }
 
-export function LogoutButton({ header = false }: LogoutButtonProps) {
+export default function LogoutButton({ header = false }: LogoutButtonProps) {
     const navigate = useNavigate();
     const { isLoggedIn, isLoading, logout } = useAuth();
     const [isClicking, setIsClicking] = useState(false);

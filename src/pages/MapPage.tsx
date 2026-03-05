@@ -1,20 +1,15 @@
 import '../styles/App.scss';
 import { LoadingPage } from '.';
-import InteractiveMap from '../components/InteractiveMap';
+import { InteractiveMap, SearchBar, Header } from '../components/index';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
 import { isAdminTEST } from '../services/isAdmin';
 import type { GymFloorDTO, GymLayoutDTO } from '../types/api';
 import { FaRegCaretSquareUp, FaRegCaretSquareDown } from 'react-icons/fa';
-import { SearchBar } from '../components/SearchBar';
 import { getLayoutPublic } from "../services/layoutService";
 import { mapComponentToTile } from "../services/tileService";
 import type { TileSearchProps } from '../types/tile';
 import { useAuth } from '../context/AuthContext';
-
-const parsedLayoutId = Number(import.meta.env.VITE_LAYOUT_ID ?? "69");
-const DEFAULT_LAYOUT_ID = Number.isFinite(parsedLayoutId) && parsedLayoutId > 0 ? parsedLayoutId : 69;
 
 function MapPage() {
     const [loading, setLoading] = useState(true);
@@ -26,9 +21,9 @@ function MapPage() {
     const [highlightedTileId, setHighlightedTileId] = useState<number | null>(null);
     const [isLayoutLoading, setIsLayoutLoading] = useState(true);
     const [layoutLoadError, setLayoutLoadError] = useState<string | null>(null);
-    const layoutId = null;
-    const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : DEFAULT_LAYOUT_ID;
     const { isLoggedIn } = useAuth();
+    const layoutId = Number(window.location.pathname.split("/").pop());
+    const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : 69;
 
     // Derive floors and tiles from the cached layout
     const floors = useMemo<GymFloorDTO[]>(() => {
@@ -72,8 +67,8 @@ function MapPage() {
                     const def = definitions[eqId];
                     return {
                         id: component.id,
-                        name: `${def?.name || component.name || "Unknown Equipment"}`,
-                        description: def?.description || component.description || "No description provided.",
+                        name: def?.name || `Equipment #${eqId}`,
+                        description: def?.description || "No description provided.",
                         floorName: data.floors.find(f => f.id === component.floorId)?.name || "Unknown Floor",
                     };
                 });
@@ -125,7 +120,25 @@ function MapPage() {
 
             <div className="mt-14 relative flex flex-col sm:flex-row items-center w-full py-2 sm:py-3 px-3 sm:px-4 flex-shrink-0 select-none gap-2 sm:gap-0">
                 <div className="w-full sm:w-auto">
-                    <SearchBar searchData={searchData} onSelect={handleSearchSelect} />
+                    <SearchBar<TileSearchProps>
+                        searchData={searchData}
+                        onSelect={handleSearchSelect}
+                        placeholder="Search for equipment..."
+                        filterFn={(item, q) => {
+                            const lower = q.toLowerCase();
+                            return item.name.toLowerCase().includes(lower) || item.description.toLowerCase().includes(lower);
+                        }}
+                        renderItem={(item) => (
+                            <>
+                                <span>
+                                    <span className="font-medium">{item.name}</span>
+                                    <span className="font-light ml-1 text-xs">#{item.id}</span>
+                                </span>
+                                <span className="ml-2 text-xs opacity-60">Floor: {item.floorName}</span>
+                                <span className="ml-2 text-xs opacity-60">{item.description}</span>
+                            </>
+                        )}
+                    />
                 </div>
 
                 {/* Floor buttons - centered on desktop, inline on mobile */}
@@ -156,7 +169,7 @@ function MapPage() {
                 {/* Admin-only edit button */}
                 {isAdmin && isLoggedIn && (
                     <button
-                        onClick={() => navigate("/map/edit")}
+                        onClick={() => navigate(`/map/edit/${resolvedLayoutId}`)}
                         className="sm:ml-auto px-3 sm:px-4 py-2 rounded-lg bg-accent-primary text-white text-xs sm:text-sm font-medium shadow hover:opacity-90 transition-opacity flex-shrink-0"
                     >
                         Edit Map
