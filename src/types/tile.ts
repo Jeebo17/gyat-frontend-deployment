@@ -81,6 +81,7 @@ export interface TileTemplate {
     width: number;
     height: number;
     colour: string;
+    brand?: string;
 }
 
 export interface TileHistoryEntry {

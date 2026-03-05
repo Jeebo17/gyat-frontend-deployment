@@ -10,7 +10,7 @@ export function DragAndDropMenu() {
             try {
                 const types = await getAllEquipmentTypes();
                 const templatesFromApi = types.map(type => ({
-                    equipment: { name: type.name }, 
+                    equipment: { name: type.name, brand: type.brand },
                     width: 200,
                     height: 100,
                     colour: "red",
@@ -35,12 +35,13 @@ export function DragAndDropMenu() {
             <h2 className="text-text-primary text-xs md:text-sm font-semibold select-none mb-2">Drag and drop</h2>
             {equipmentTypes.map((template) => (
                 <div
-                    key={template.equipment.name}
+                    key={template.equipmentTypeId}
                     draggable
                     onDragStart={(e) => handleDragStart(e, template)}
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg bg-bg-primary cursor-grab active:cursor-grabbing hover:brightness-110 transition select-none"
+                    className="flex gap-1 px-3 py-2 rounded-lg bg-bg-primary cursor-grab active:cursor-grabbing hover:brightness-110 transition select-none flex-col"
                 >
                     <span className="text-sm text-text-primary truncate">{template.equipment.name}</span>
+                    <span className="text-xs text-text-secondary truncate">{template.equipment.brand}</span>
                 </div>
             ))}
         </div>

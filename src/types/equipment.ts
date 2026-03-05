@@ -15,4 +15,7 @@ export interface EquipmentProps {
 
     // List of benefits of using the equipment.
     benefits?: string[];
+
+    // Brand
+    brand?: string;
 }
