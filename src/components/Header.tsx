@@ -28,13 +28,13 @@ export default function Header({ className = '' }: HeaderProps) {
             onClick: () => navigate("/")
         },
         {
-            icon: selectedPage.endsWith("/map") ? <IoMap data-testid="io5-map" /> : <IoMapOutline data-testid="io5-map-outline" />,
+            icon: selectedPage.startsWith("/map/") ? <IoMap data-testid="io5-map" /> : <IoMapOutline data-testid="io5-map-outline" />,
             label: 'Map',
             path: '/map/search',
             onClick: () => navigate("/map/search")
         },
         {
-            icon: selectedPage.endsWith("/settings") ? <IoSettings data-testid="io5-settings" /> : <IoSettingsOutline data-testid="io5-settings-outline" />,
+            icon: selectedPage === "/settings" ? <IoSettings data-testid="io5-settings" /> : <IoSettingsOutline data-testid="io5-settings-outline" />,
             label: 'Settings',
             path: '/settings',
             onClick: () => navigate("/settings")
@@ -72,7 +72,7 @@ export default function Header({ className = '' }: HeaderProps) {
                                     }
                                     item.onClick();
                                 }}
-                                selected={selectedPage === item.path}
+                                selected={selectedPage === item.path || (item.path === '/map/search' && selectedPage.startsWith('/map/'))}
                             />
                         ))}
                     </div>
