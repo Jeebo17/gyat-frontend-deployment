@@ -53,7 +53,7 @@ function HomePage() {
                         className="mt-8 sm:mt-10"
                     >
                         <button
-                            onClick={() => navigate('/map')}
+                            onClick={() => navigate('/map/search')}
                             className="px-6 sm:px-8 py-3 sm:py-4 bg-accent-primary text-white font-semibold rounded-xl hover:bg-accent-hover transition-colors duration-200 shadow-lg hover:shadow-xl text-sm sm:text-base"
                         >
                             Open Gym Map

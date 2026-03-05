@@ -204,7 +204,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 11, xCoord: 450, yCoord: 300, width: 250, height: 130, rotation: 0, colour: "yellow",
+            id: 11, xCoord: 450, yCoord: 300, width: 250, height: 150, rotation: 0, colour: "yellow",
             equipment: {
                 name: "Resistance Machine",
                 description: "Cable or pin-loaded machine for targeted resistance exercises.",
