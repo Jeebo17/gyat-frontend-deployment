@@ -67,8 +67,8 @@ function MapPage() {
                     const def = definitions[eqId];
                     return {
                         id: component.id,
-                        name: `${def?.name || component.name || "Unknown Equipment"}`,
-                        description: def?.description || component.description || "No description provided.",
+                        name: def?.name || `Equipment #${eqId}`,
+                        description: def?.description || "No description provided.",
                         floorName: data.floors.find(f => f.id === component.floorId)?.name || "Unknown Floor",
                     };
                 });
@@ -120,7 +120,25 @@ function MapPage() {
 
             <div className="mt-14 relative flex flex-col sm:flex-row items-center w-full py-2 sm:py-3 px-3 sm:px-4 flex-shrink-0 select-none gap-2 sm:gap-0">
                 <div className="w-full sm:w-auto">
-                    <SearchBar searchData={searchData} onSelect={handleSearchSelect} />
+                    <SearchBar<TileSearchProps>
+                        searchData={searchData}
+                        onSelect={handleSearchSelect}
+                        placeholder="Search for equipment..."
+                        filterFn={(item, q) => {
+                            const lower = q.toLowerCase();
+                            return item.name.toLowerCase().includes(lower) || item.description.toLowerCase().includes(lower);
+                        }}
+                        renderItem={(item) => (
+                            <>
+                                <span>
+                                    <span className="font-medium">{item.name}</span>
+                                    <span className="font-light ml-1 text-xs">#{item.id}</span>
+                                </span>
+                                <span className="ml-2 text-xs opacity-60">Floor: {item.floorName}</span>
+                                <span className="ml-2 text-xs opacity-60">{item.description}</span>
+                            </>
+                        )}
+                    />
                 </div>
 
                 {/* Floor buttons - centered on desktop, inline on mobile */}

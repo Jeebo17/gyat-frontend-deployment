@@ -1,19 +1,23 @@
 import ShinyText from '../components/effects/ShinyText';
-import { Header } from '../components/index';
+import { Header, SearchBar } from '../components/index';
+import { GymLayoutSearchProps } from '../types/api';
 
+
+const mockLayoutList: GymLayoutSearchProps[] = [
+    { id: 69, name: "Main Bath Gym" },
+    { id: 78, name: "Bob Test Layout" },
+];
 
 
 function SearchMapPage() {
+
+
     return (
         <div className="min-h-screen bg-bg-primary text-text-primary flex items-center justify-center">
             <Header />
 
-            <ShinyText 
-                text="Loading..." 
-                disabled={false} 
-                speed={2}
-                className='custom-class text-4xl font-light select-none' 
-            />
+            <SearchBar searchData={mockLayoutList} onSelect={() => {}} />
+
         </div>
     );
 }

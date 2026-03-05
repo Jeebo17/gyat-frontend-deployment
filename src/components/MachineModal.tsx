@@ -8,17 +8,16 @@ import type { ExerciseDTO } from "../types/api";
 
 export type { CreateExerciseDraft, ExerciseEditDraft };
 
-/** Reusable video preview (iframe or placeholder). */
-const VideoPreview = ({ url, name }: { url?: string; name: string }) => (
+const ImagePreview = ({ url, name }: { url?: string; name: string }) => (
     <div className="w-full bg-black/30 rounded-xl text-white aspect-video flex items-center justify-center overflow-hidden border border-white/10">
         {url ? (
-            <iframe width="100%" height="100%" src={url} title={`Video for ${name}`} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="rounded-xl" />
+            <img src={url} alt={`Image for ${name}`} className="w-full h-full object-cover" />
         ) : (
             <div className="flex flex-col items-center gap-2 text-white/40">
                 <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
                 </svg>
-                <span className="text-sm">Video preview</span>
+                <span className="text-sm">Image preview</span>
             </div>
         )}
     </div>
@@ -126,6 +125,11 @@ function MachineModal({
     };
 
     const IconComponent = tile.equipment.icon;
+
+    // show equipment info from db
+    useEffect(() => {
+        console.log("Tile data changed, updating modal state:", tile);
+    }, [tile]);
 
     return (
         <div
@@ -311,21 +315,42 @@ function MachineModal({
                             </div>
                         </div>
 
-                        {/* Stacked Video Card */}
+                        <div className="rounded-xl p-4 text-white bg-white/5 border border-white/10">
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-2">Safety Info</h3>
+                            {showEditableFields ? (
+                                <>
+                                    <label htmlFor="machine-safety-info-input" className="sr-only">Safety Info</label>
+                                    <textarea
+                                        id="machine-safety-info-input"
+                                        className={textareaClasses}
+                                        value={tile.equipment.safetyInfo ?? ""}
+                                        onChange={(e) => onTileChange?.({ safetyInfo: e.target.value || undefined })}
+                                        placeholder="Describe this equipment..."
+                                    />
+                                </>
+                            ) : (
+                                <p className="text-sm text-white/80 leading-relaxed">
+                                    {tile.equipment.safetyInfo || "No safety information available."}
+                                </p>
+                            )}
+                        </div>
+
+
+                        {/* Stacked Image Card */}
                         {showEditableFields && (
                             <div className="rounded-xl p-4 text-white bg-white/5 border border-white/10 flex flex-col">
-                                <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3 flex-shrink-0">Video</h3>
+                                <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3 flex-shrink-0">Image</h3>
                                 <div className="mb-3">
-                                    <label htmlFor="machine-video-url" className="sr-only">Video URL</label>
+                                    <label htmlFor="machine-video-url" className="sr-only">Image URL</label>
                                     <input
                                         id="machine-video-url"
                                         className={inputClasses}
-                                        value={tile.equipment.videoUrl ?? ""}
-                                        onChange={(e) => onTileChange?.({ videoUrl: e.target.value || undefined })}
-                                        placeholder="https://youtube.com/embed/..."
+                                        value={tile.equipment.imageUrl ?? ""}
+                                        onChange={(e) => onTileChange?.({ imageUrl: e.target.value || undefined })}
+                                        placeholder="https://example.com/image.jpg"
                                     />
                                 </div>
-                                <VideoPreview url={tile.equipment.videoUrl} name={tile.equipment.name} />
+                                <ImagePreview url={tile.equipment.imageUrl} name={tile.equipment.name} />
                             </div>
                         )}
                     </div>
@@ -333,8 +358,8 @@ function MachineModal({
                     {/* Video Card */}
                     {!showEditableFields && (
                         <div className="md:col-span-2 rounded-xl p-4 text-white bg-white/5 border border-white/10 flex flex-col">
-                            <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3 flex-shrink-0">Video</h3>
-                            <VideoPreview url={tile.equipment.videoUrl} name={tile.equipment.name} />
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3 flex-shrink-0">Image</h3>
+                            <ImagePreview url={tile.equipment.imageUrl} name={tile.equipment.name} />
                         </div>
                     )}
                 </div>

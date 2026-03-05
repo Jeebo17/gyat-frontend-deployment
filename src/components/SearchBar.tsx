@@ -1,21 +1,39 @@
-import { useState, useRef, useEffect } from "react";
-import { TileSearchProps } from "../types/tile";
+import { useState, useRef, useEffect, ReactNode } from "react";
 
-interface SearchBarProps {
-    searchData: TileSearchProps[];
-    onSelect?: (item: TileSearchProps) => void;
+interface SearchBarProps<T extends { id: number | string; name: string }> {
+    searchData: T[];
+    onSelect?: (item: T) => void;
+    placeholder?: string;
+    filterFn?: (item: T, query: string) => boolean;
+    renderItem?: (item: T) => ReactNode;
 }
 
-export default function SearchBar({ searchData, onSelect }: SearchBarProps) {
+function defaultFilter<T extends { id: number | string; name: string }>(item: T, query: string): boolean {
+    return item.name.toLowerCase().includes(query.toLowerCase());
+}
+
+function defaultRenderItem<T extends { id: number | string; name: string }>(item: T): ReactNode {
+    return (
+        <span>
+            <span className="font-medium">{item.name}</span>
+            <span className="font-light ml-1 text-xs">#{item.id}</span>
+        </span>
+    );
+}
+
+export default function SearchBar<T extends { id: number | string; name: string }>({
+    searchData,
+    onSelect,
+    placeholder = "Search...",
+    filterFn = defaultFilter,
+    renderItem = defaultRenderItem,
+}: SearchBarProps<T>) {
     const [query, setQuery] = useState("");
     const [open, setOpen] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
 
     const filtered = query.trim().length > 0
-        ? searchData.filter(item =>
-            item.name.toLowerCase().includes(query.toLowerCase()) ||
-            item.description.toLowerCase().includes(query.toLowerCase())
-        )
+        ? searchData.filter(item => filterFn(item, query))
         : [];
 
     // Close dropdown when clicking outside
@@ -33,7 +51,7 @@ export default function SearchBar({ searchData, onSelect }: SearchBarProps) {
         <div ref={wrapperRef} className="relative w-full sm:w-64">
             <input
                 type="text"
-                placeholder="Search for equipment..."
+                placeholder={placeholder}
                 value={query}
                 onChange={e => { setQuery(e.target.value); setOpen(true); }}
                 onFocus={() => setOpen(true)}
@@ -51,12 +69,7 @@ export default function SearchBar({ searchData, onSelect }: SearchBarProps) {
                                 setOpen(false);
                             }}
                         >
-                            <span>
-                                <span className="font-medium">{item.name}</span>
-                                <span className="font-light ml-1 text-xs">#{item.id}</span>
-                            </span>
-                            <span className="ml-2 text-xs opacity-60">Floor: {item.floorName}</span>
-                            <span className="ml-2 text-xs opacity-60">{item.description}</span>
+                            {renderItem(item)}
                         </li>
                     ))}
                 </ul>

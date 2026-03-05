@@ -90,9 +90,21 @@ describe('tileService', () => {
             expect(tile.equipment.musclesTargeted).toEqual(['Quadriceps', 'Calves', 'Glutes']);
         });
 
-        it('uses video URL from first exercise that has one', () => {
-            const tile = mapComponentToTile(baseComponent, definitions);
-            expect(tile.equipment.videoUrl).toBe('https://example.com/video');
+        it('passes safetyInfo from definition', () => {
+            const defs: Partial<Record<number, EquipmentDefinitionDTO>> = {
+                3: { ...definitions[3]!, safetyInfo: 'Use a spotter' },
+            };
+            const tile = mapComponentToTile(baseComponent, defs);
+            expect(tile.equipment.safetyInfo).toBe('Use a spotter');
+        });
+
+        it('passes imageUrl and brand from definition', () => {
+            const defs: Partial<Record<number, EquipmentDefinitionDTO>> = {
+                3: { ...definitions[3]!, imageUrl: 'https://example.com/img.png', brand: 'Rogue' },
+            };
+            const tile = mapComponentToTile(baseComponent, defs);
+            expect(tile.equipment.imageUrl).toBe('https://example.com/img.png');
+            expect(tile.equipment.brand).toBe('Rogue');
         });
 
         it('assigns colour based on equipment type id', () => {
@@ -120,22 +132,37 @@ describe('tileService', () => {
             expect(tile.equipment.name).toBe('Equipment #0');
         });
 
-        it('falls back to component name when no definition exists', () => {
-            const namedComponent = { ...baseComponent, equipmentTypeId: 999, name: 'Custom Machine' };
-            const tile = mapComponentToTile(namedComponent, {});
-            expect(tile.equipment.name).toBe('Custom Machine');
+        it('applies modalOverrides from additionalInfo JSON', () => {
+            const comp = {
+                ...baseComponent,
+                additionalInfo: JSON.stringify({
+                    notes: 'Near entrance',
+                    modalOverrides: {
+                        name: 'Override Name',
+                        description: 'Override Desc',
+                        benefits: ['Benefit A'],
+                        musclesTargeted: ['Biceps', 'Triceps'],
+                    },
+                }),
+            };
+            const tile = mapComponentToTile(comp, definitions);
+            expect(tile.equipment.name).toBe('Override Name');
+            expect(tile.equipment.description).toBe('Override Desc');
+            expect(tile.equipment.benefits).toEqual(['Benefit A']);
+            expect(tile.equipment.musclesTargeted).toEqual(['Biceps', 'Triceps']);
         });
 
-        it('uses component description when definition has none', () => {
-            const componentWithDesc = {
-                ...baseComponent,
-                equipmentTypeId: 999,
-                description: 'Component desc',
-                additionalInfo: 'Additional info',
-            };
-            const tile = mapComponentToTile(componentWithDesc, {});
-            expect(tile.equipment.description).toContain('Component desc');
-            expect(tile.equipment.description).toContain('Additional info');
+        it('ignores invalid additionalInfo JSON gracefully', () => {
+            const comp = { ...baseComponent, additionalInfo: 'not-json' };
+            const tile = mapComponentToTile(comp, definitions);
+            expect(tile.equipment.name).toBe('Treadmill');
+        });
+
+        it('falls back to Equipment #id when no definition and no overrides', () => {
+            const unknownComp = { ...baseComponent, equipmentTypeId: 999 };
+            const tile = mapComponentToTile(unknownComp, {});
+            expect(tile.equipment.name).toBe('Equipment #999');
+            expect(tile.equipment.description).toBe('No description provided.');
         });
 
         it('handles empty exercises array', () => {

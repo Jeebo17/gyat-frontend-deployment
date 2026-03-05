@@ -13,7 +13,6 @@ import {
 } from './pages';
 import startSound from './assets/sounds/start.mp3';
 import { useAppSound } from './hooks/useAppSound';
-import { Navigate } from 'react-router-dom';
 
 function App() {
   const [play] = useAppSound(startSound, { volume: 0.3 });
