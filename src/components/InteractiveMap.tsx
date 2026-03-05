@@ -11,7 +11,7 @@ import { upsertEquipmentTypeOverride } from "../services/equipmentTypeService";
 import { createExercise, getExerciseById, updateCustomExercise, upsertExerciseOverride } from "../services/exerciseService";
 import { getMuscles } from "../services/muscleService";
 import type { ExerciseOption } from "../types/tile";
-import type { ExerciseDTO, MuscleDTO } from "../types/api";
+import type { ExerciseDTO, MuscleDTO, UpdateComponentRequest } from "../types/api";
 
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
@@ -113,6 +113,7 @@ const applyExerciseResultToTile = (tile: TileData, exercise: ExerciseDTO): TileD
 interface InteractiveMapProps {
     editMode?: boolean;
     snapToGrid?: boolean;
+    floorId?: number;
     floorTiles?: TileData[];
     floorLoading?: boolean;
     floorLoadError?: string | null;
@@ -124,6 +125,7 @@ interface InteractiveMapProps {
 function InteractiveMap({
     editMode = false,
     snapToGrid = true,
+    floorId = 0,
     floorTiles = [],
     floorLoading = false,
     floorLoadError = null,
@@ -612,17 +614,19 @@ function InteractiveMap({
         setMachineSaveError(null);
         setMachineSaveSuccess(null);
 
+        // If videoUrl is an empty string, save as undefined to remove it
+        const normalizedVideoUrl = exercise.videoUrl?.trim() === "" ? undefined : exercise.videoUrl;
         const saved = useOverride
             ? await upsertExerciseOverride(exerciseId, {
                 name: exercise.name,
                 description: exercise.description,
-                videoUrl: exercise.videoUrl,
+                videoUrl: normalizedVideoUrl,
                 difficulty: exercise.difficulty,
             })
             : await updateCustomExercise(exerciseId, {
                 name: exercise.name,
                 description: exercise.description,
-                videoUrl: exercise.videoUrl,
+                videoUrl: normalizedVideoUrl,
                 difficulty: exercise.difficulty,
             });
 
@@ -640,6 +644,28 @@ function InteractiveMap({
 
         setMachineSaveSuccess(useOverride ? "Exercise override saved." : "Exercise updated.");
     };
+
+    // save location when tiles moved or resized (debounced)
+    useEffect(() => {
+        if (!editMode) return;
+        const timeout = setTimeout(() => {
+            tiles.forEach(tile => {
+                updateComponent(tile.id, {
+                    xCoord: tile.xCoord,
+                    yCoord: tile.yCoord,
+                    width: tile.width,
+                    height: tile.height,
+                    rotation: tile.rotation,
+                    outOfOrder: tile.outOfOrder ?? false,
+                    additionalInfo: tile.additionalInfo,
+                }).catch(error => {
+                    console.error(`Failed to save tile ${tile.id}:`, error);
+                    setMachineSaveError(`Failed to save tile ${tile.id}.`);
+                });
+            });
+        }, 1000);
+        return () => clearTimeout(timeout);
+    })
 
     return (
         <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-1 sm:pt-2">

@@ -198,6 +198,7 @@ function EditMapPage() {
                     <InteractiveMap
                         editMode={true}
                         snapToGrid={snapToGridState}
+                        floorId={currentFloor?.id}
                         floorTiles={tiles}
                         floorLoading={isLayoutLoading}
                         floorLoadError={layoutLoadError}
