@@ -7,7 +7,7 @@ import ZoomControls from "./ZoomControls";
 import { useTheme } from "../context/ThemeContext";
 import type { TileTemplate } from "../types/tile";
 import ShinyText from "./effects/ShinyText";
-import { updateComponent, createComponent } from "../services/componentService";
+import { updateComponent, createComponent, deleteComponent } from "../services/componentService";
 import { upsertEquipmentTypeOverride } from "../services/equipmentTypeService";
 import { createExercise, getExerciseById, updateCustomExercise, upsertExerciseOverride } from "../services/exerciseService";
 import { getMuscles } from "../services/muscleService";
@@ -390,13 +390,28 @@ function InteractiveMap({
         });
     };
 
-    const deleteTile = (id: number) => {
-        setTiles(prev => {
-            const next = prev.filter(t => t.id !== id);
-            spatialIndexRef.current = buildSpatialIndex(next);
-            return next;
-        });
-    };
+    const deleteTile = useCallback(async (id: number) => {
+        const tileToDelete = tiles.find((tile) => tile.id === id);
+        if (!tileToDelete) return;
+
+        setMachineSaveError(null);
+        setMachineSaveSuccess(null);
+
+        try {
+            await deleteComponent(id);
+
+            setTiles(prev => {
+                const next = prev.filter(t => t.id !== id);
+                spatialIndexRef.current = buildSpatialIndex(next);
+                return next;
+            });
+
+            setSelectedMachine((prev) => (prev?.id === id ? null : prev));
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to delete machine.";
+            setMachineSaveError(message);
+        }
+    }, [tiles, setTiles]);
 
     const closeMachineModal = () => {
         setSelectedMachine(null);
@@ -790,7 +805,7 @@ function InteractiveMap({
                                         const newHistory = [...prev, tile];
                                         return newHistory.slice(-50);
                                     });
-                                    deleteTile(tile.id);
+                                    void deleteTile(tile.id);
                                 } : undefined}
                                 previewMode={previewMode}
                             />
