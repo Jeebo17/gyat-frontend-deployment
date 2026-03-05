@@ -1,20 +1,15 @@
 import '../styles/App.scss';
 import { LoadingPage } from '.';
-import InteractiveMap from '../components/InteractiveMap';
+import { InteractiveMap, SearchBar, Header } from '../components/index';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
 import { isAdminTEST } from '../services/isAdmin';
 import type { GymFloorDTO, GymLayoutDTO } from '../types/api';
 import { FaRegCaretSquareUp, FaRegCaretSquareDown } from 'react-icons/fa';
-import { SearchBar } from '../components/SearchBar';
 import { getLayoutPublic } from "../services/layoutService";
 import { mapComponentToTile } from "../services/tileService";
 import type { TileSearchProps } from '../types/tile';
 import { useAuth } from '../context/AuthContext';
-
-const parsedLayoutId = Number(import.meta.env.VITE_LAYOUT_ID ?? "69");
-const DEFAULT_LAYOUT_ID = Number.isFinite(parsedLayoutId) && parsedLayoutId > 0 ? parsedLayoutId : 69;
 
 function MapPage() {
     const [loading, setLoading] = useState(true);
@@ -26,9 +21,9 @@ function MapPage() {
     const [highlightedTileId, setHighlightedTileId] = useState<number | null>(null);
     const [isLayoutLoading, setIsLayoutLoading] = useState(true);
     const [layoutLoadError, setLayoutLoadError] = useState<string | null>(null);
-    const layoutId = null;
-    const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : DEFAULT_LAYOUT_ID;
     const { isLoggedIn } = useAuth();
+    const layoutId = Number(window.location.pathname.split("/").pop());
+    const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : 69;
 
     // Derive floors and tiles from the cached layout
     const floors = useMemo<GymFloorDTO[]>(() => {

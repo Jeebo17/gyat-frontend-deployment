@@ -6,7 +6,7 @@ interface SearchBarProps {
     onSelect?: (item: TileSearchProps) => void;
 }
 
-export function SearchBar({ searchData, onSelect }: SearchBarProps) {
+export default function SearchBar({ searchData, onSelect }: SearchBarProps) {
     const [query, setQuery] = useState("");
     const [open, setOpen] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);

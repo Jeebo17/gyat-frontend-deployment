@@ -11,7 +11,7 @@ interface ProfileButtonProps {
     header?: boolean;
 }
 
-export function ProfileButton({ header = false }: ProfileButtonProps) {
+export default function ProfileButton({ header = false }: ProfileButtonProps) {
     const navigate = useNavigate();
     const [isClicking, setIsClicking] = useState(false);
     const [play] = useAppSound(popSound, { volume: 0.3 });

@@ -7,7 +7,7 @@ interface TileInfoCardProps {
     onClose: () => void;
 }
 
-export function TileInfoCard({ tile, mapWidth, mapHeight, onClose }: TileInfoCardProps) {
+export default function TileInfoCard({ tile, mapWidth, mapHeight, onClose }: TileInfoCardProps) {
     const cardWidth = 280;
     const cardHeight = 200;
     const offset = 16;

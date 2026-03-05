@@ -1,11 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import InteractiveMap from "../components/InteractiveMap";
-import Header from "../components/Header";
 import { isAdminTEST } from "../services/isAdmin";
 import { LoadingPage } from "../pages";
-import { DragAndDropMenu } from "../components/DragAndDropMenu";
-import ToggleSwitch from "../components/ToggleSwitch";
+import { DragAndDropMenu, InteractiveMap, Header, ToggleSwitch } from "../components/index";
 import { FaRegCaretSquareUp, FaRegCaretSquareDown } from "react-icons/fa";
 import { IoChevronForward, IoChevronBack } from "react-icons/io5";
 import type { GymFloorDTO, GymLayoutDTO } from "../types/api";

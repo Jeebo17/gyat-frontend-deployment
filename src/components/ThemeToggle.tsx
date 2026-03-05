@@ -9,7 +9,7 @@ interface ThemeToggleProps {
     header?: boolean;
 }
 
-export function ThemeToggle({ header = false }: ThemeToggleProps) {
+export default function ThemeToggle({ header = false }: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme();
   const [isClicking, setIsClicking] = useState(false);
   const [play] = useAppSound(popSound, { volume: 0.3 });
@@ -63,8 +63,6 @@ export function ThemeToggle({ header = false }: ThemeToggleProps) {
           </motion.div>
         </button>
       )}
-
-
     </div>
   );
 }

@@ -1,11 +1,9 @@
 import { IoChevronDownOutline } from "react-icons/io5";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { ThemeToggle, ProfileButton } from "./index";
 
-import { ThemeToggle } from "./ThemeToggle";
-import { ProfileButton } from "./ProfileButton";
-
-export function DropDownMenu() {
+export default function DropDownMenu() {
     const [menuOpen, setMenuOpen] = useState(false);
 
     const menuItems = [

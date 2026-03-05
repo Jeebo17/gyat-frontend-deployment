@@ -8,10 +8,12 @@ import {
   LoginPage,
   SignUpPage,
   ProfilePage,
-  EditMapPage
+  EditMapPage,
+  SearchMapPage
 } from './pages';
 import startSound from './assets/sounds/start.mp3';
 import { useAppSound } from './hooks/useAppSound';
+import { Navigate } from 'react-router-dom';
 
 function App() {
   const [play] = useAppSound(startSound, { volume: 0.3 });
@@ -23,13 +25,14 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/map" element={<Map />} />
-      <Route path="/map/edit" element={<EditMapPage />} />
-      <Route path="/settings" element={<SettingsPage />}/> 
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignUpPage />} />
-      <Route path="*" element={<NotFoundPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
       <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/map/edit" element={<EditMapPage />} />
+      <Route path="/map/search" element={<SearchMapPage />} />
+      <Route path="/map/:id" element={<Map />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

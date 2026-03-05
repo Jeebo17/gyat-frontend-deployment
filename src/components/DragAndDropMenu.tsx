@@ -2,7 +2,7 @@ import { TileTemplate } from "../types/tile";
 import { getAllEquipmentTypes } from "../services/equipmentTypeService";
 import { useEffect, useState } from "react";
 
-export function DragAndDropMenu() {
+export default function DragAndDropMenu() {
     const [equipmentTypes, setEquipmentTypes] = useState<TileTemplate[]>([]);
     
     useEffect(() => {
