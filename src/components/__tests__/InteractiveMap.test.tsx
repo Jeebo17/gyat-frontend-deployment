@@ -2,6 +2,23 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import InteractiveMap from '../InteractiveMap';
 import type { TileData } from '../../types/tile';
+import { deleteComponent } from '../../services/componentService';
+
+vi.mock('../../services/componentService', () => ({
+    createComponent: vi.fn().mockResolvedValue({
+        id: 999,
+        layoutId: 1,
+        floorId: 1,
+        equipmentTypeId: 1,
+        xCoord: 0,
+        yCoord: 0,
+        width: 100,
+        height: 100,
+        rotation: 0,
+    }),
+    updateComponent: vi.fn().mockResolvedValue({}),
+    deleteComponent: vi.fn().mockResolvedValue(undefined),
+}));
 
 vi.mock('../Tile', () => ({
     default: (props: any) => (
@@ -271,6 +288,7 @@ describe('InteractiveMap', () => {
         await waitFor(() => {
             expect(onTilesChange).toHaveBeenCalled();
         });
+        expect(deleteComponent).toHaveBeenCalledWith(1);
         expect(screen.queryByTestId('tile-1')).toBeNull();
     });
 
