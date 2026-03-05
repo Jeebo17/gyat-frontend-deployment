@@ -20,3 +20,7 @@ export async function updateCustomEquipmentType(
         body: JSON.stringify(data),
     });
 }
+
+export async function getAllEquipmentTypes(): Promise<EquipmentTypeDTO[]> {
+    return request<EquipmentTypeDTO[]>("/api/equipment-types");
+}

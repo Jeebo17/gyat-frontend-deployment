@@ -89,10 +89,6 @@ export interface CreateComponentRequest {
     height: number;
     rotation: number;
     additionalInfo?: string;
-
-    // Fields the frontend needs to send but the backend does NOT yet accept
-    // TODO: Ask dan to implement
-    // colour: string;
 }
 
 export interface UpdateComponentRequest {

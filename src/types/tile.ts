@@ -76,6 +76,7 @@ export interface TileData {
 }
 
 export interface TileTemplate {
+    equipmentTypeId: number;
     equipment: EquipmentProps;
     width: number;
     height: number;

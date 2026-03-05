@@ -203,6 +203,7 @@ function EditMapPage() {
                         floorLoading={isLayoutLoading}
                         floorLoadError={layoutLoadError}
                         onTilesChange={handleTilesChange}
+                        layoutId={layout?.id}
                     />
                 </div>
             </div>

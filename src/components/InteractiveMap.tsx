@@ -4,9 +4,9 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import MachineModal, { type CreateExerciseDraft } from '../components/MachineModal';
 import ZoomControls from "./ZoomControls";
 import { useTheme } from "../context/ThemeContext";
-import type { DragTileData } from "./DragAndDropMenu";
+import type { TileTemplate } from "../types/tile";
 import ShinyText from "./effects/ShinyText";
-import { updateComponent } from "../services/componentService";
+import { updateComponent, createComponent } from "../services/componentService";
 import { upsertEquipmentTypeOverride } from "../services/equipmentTypeService";
 import { createExercise, getExerciseById, updateCustomExercise, upsertExerciseOverride } from "../services/exerciseService";
 import { getMuscles } from "../services/muscleService";
@@ -110,6 +110,32 @@ const applyExerciseResultToTile = (tile: TileData, exercise: ExerciseDTO): TileD
     };
 };
 
+/** Check if a candidate tile collides with any tile in the spatial index. */
+const hasCollision = (candidate: TileData, spatialIndex: Map<string, TileData[]>, excludeId?: number): boolean => {
+    const visited = new Set<number>();
+    return getCellsForTile(candidate).some(cell => {
+        const bucket = spatialIndex.get(cell);
+        if (!bucket) return false;
+        for (const tile of bucket) {
+            if (tile.id === excludeId || visited.has(tile.id)) continue;
+            visited.add(tile.id);
+            if (rectanglesOverlap(candidate, tile)) return true;
+        }
+        return false;
+    });
+};
+
+/** Build the API payload for saving a component's position/layout. */
+const buildComponentPayload = (tile: TileData): UpdateComponentRequest => ({
+    xCoord: tile.xCoord,
+    yCoord: tile.yCoord,
+    width: tile.width,
+    height: tile.height,
+    rotation: tile.rotation,
+    outOfOrder: tile.outOfOrder ?? false,
+    additionalInfo: tile.additionalInfo,
+});
+
 interface InteractiveMapProps {
     editMode?: boolean;
     snapToGrid?: boolean;
@@ -120,18 +146,19 @@ interface InteractiveMapProps {
     onTilesChange?: (tiles: TileData[]) => void;
     highlightedTileId?: number | null;
     previewMode?: boolean;
+    layoutId?: number;
 }
 
 function InteractiveMap({
     editMode = false,
     snapToGrid = true,
-    floorId = 0,
     floorTiles = [],
     floorLoading = false,
     floorLoadError = null,
     onTilesChange,
     highlightedTileId = null,
     previewMode = false,
+    layoutId = undefined,
 }: InteractiveMapProps) {
     const [selectedMachine, setSelectedMachine] = useState<TileData | null>(null);
     const [isSavingMachine, setIsSavingMachine] = useState(false);
@@ -144,6 +171,7 @@ function InteractiveMap({
     const containerRef = useRef<HTMLDivElement>(null);
     const [tiles, setTilesRaw] = useState<TileData[]>([]);
     const pendingUserEditRef = useRef(false);
+    const saveTimersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
     const onTilesChangeRef = useRef(onTilesChange);
     onTilesChangeRef.current = onTilesChange;
 
@@ -250,113 +278,78 @@ function InteractiveMap({
         setAutoScale(true);
     };
 
+    /** Save a single tile's position to the backend (debounced per tile). */
+    const saveComponentPosition = useCallback((tile: TileData) => {
+        if (!editMode) return;
+        const pending = saveTimersRef.current.get(tile.id);
+        if (pending) clearTimeout(pending);
+        const timeout = setTimeout(() => {
+            saveTimersRef.current.delete(tile.id);
+            updateComponent(tile.id, buildComponentPayload(tile)).catch((error) => {
+                console.error(`Failed to save tile ${tile.id}:`, error);
+            });
+        }, 500);
+        saveTimersRef.current.set(tile.id, timeout);
+    }, [editMode]);
+
     const snap = (value: number) => Math.round(value / gridSize) * gridSize;
 
-    /** Try to add a new tile at the given position; rejects on collision. */
-    const addTile = useCallback((template: DragTileData, xCoord: number, yCoord: number) => {
-        const snappedX = snap(xCoord);
-        const snappedY = snap(yCoord);
-
+    const addTile = useCallback(async (template: TileTemplate, xCoord: number, yCoord: number) => {
         const candidate: TileData = {
             id: nextIdRef.current,
-            xCoord: snappedX,
-            yCoord: snappedY,
+            xCoord: snap(xCoord),
+            yCoord: snap(yCoord),
             width: template.width,
             height: template.height,
             rotation: 0,
             outOfOrder: false,
             colour: template.colour,
             equipment: {
-                name: template.equipmentName,
-                icon: template.equipmentIcon,
+                name: template.equipment.name,
+                icon: template.equipment.icon,
             },
         };
 
         setTiles(prev => {
-            // Collision check against existing tiles
-            const spatialIndex = spatialIndexRef.current;
-            const visited = new Set<number>();
-            let collision = false;
-
-            getCellsForTile(candidate).some(cell => {
-                const bucket = spatialIndex.get(cell);
-                if (!bucket) return false;
-                for (const tile of bucket) {
-                    if (visited.has(tile.id)) continue;
-                    visited.add(tile.id);
-                    if (rectanglesOverlap(candidate, tile)) {
-                        collision = true;
-                        return true;
-                    }
-                }
-                return false;
-            });
-
-            if (collision) return prev;
-
+            if (hasCollision(candidate, spatialIndexRef.current)) return prev;
             nextIdRef.current += 1;
             const next = [...prev, candidate];
             spatialIndexRef.current = buildSpatialIndex(next);
             return next;
         });
+
+        console.log("Creating component with data:", { ...candidate, layoutId: layoutId ?? 0 });
+
+        await createComponent({
+            layoutId: layoutId ?? 0,
+            equipmentTypeId: template.equipmentTypeId ?? 0,
+            floorId: 0,
+            xCoord: candidate.xCoord,
+            yCoord: candidate.yCoord,
+            width: candidate.width,
+            height: candidate.height,
+            rotation: candidate.rotation,
+            additionalInfo: "",
+        });
+
+        console.log("Component created successfully");
     }, [snap]);
 
     const canPlace = useCallback((id: number, updates: Partial<TileData>) => {
         const current = tiles.find(t => t.id === id);
         if (!current) return false;
-
-        const candidate = { ...current, ...updates } as TileData;
-
-        const spatialIndex = spatialIndexRef.current;
-        const visited = new Set<number>();
-        let collision = false;
-
-        getCellsForTile(candidate).some(cell => {
-            const bucket = spatialIndex.get(cell);
-            if (!bucket) return false;
-            for (const tile of bucket) {
-                if (tile.id === id || visited.has(tile.id)) continue;
-                visited.add(tile.id);
-                if (rectanglesOverlap(candidate, tile)) {
-                    collision = true;
-                    return true;
-                }
-            }
-            return false;
-        });
-
-        return !collision;
+        return !hasCollision({ ...current, ...updates } as TileData, spatialIndexRef.current, id);
     }, [tiles]);
 
     const updateTile = (id: number, updates: Partial<TileData>) => {
         setTiles(prev => {
             const current = prev.find(t => t.id === id);
             if (!current) return prev;
-
             const candidate = { ...current, ...updates } as TileData;
-
-            const spatialIndex = spatialIndexRef.current;
-            const visited = new Set<number>();
-            let collision = false;
-
-            getCellsForTile(candidate).some(cell => {
-                const bucket = spatialIndex.get(cell);
-                if (!bucket) return false;
-                for (const tile of bucket) {
-                    if (tile.id === id || visited.has(tile.id)) continue;
-                    visited.add(tile.id);
-                    if (rectanglesOverlap(candidate, tile)) {
-                        collision = true;
-                        return true;
-                    }
-                }
-                return false;
-            });
-
-            if (collision) return prev;
-
+            if (hasCollision(candidate, spatialIndexRef.current, id)) return prev;
             const nextTiles = prev.map(t => t.id === id ? candidate : t);
             spatialIndexRef.current = buildSpatialIndex(nextTiles);
+            saveComponentPosition(candidate);
             return nextTiles;
         });
     };
@@ -431,15 +424,7 @@ function InteractiveMap({
                 throw new Error("Equipment name cannot be empty.");
             }
 
-            await updateComponent(selectedMachine.id, {
-                xCoord: selectedMachine.xCoord,
-                yCoord: selectedMachine.yCoord,
-                width: selectedMachine.width,
-                height: selectedMachine.height,
-                rotation: selectedMachine.rotation,
-                outOfOrder: selectedMachine.outOfOrder ?? false,
-                additionalInfo: selectedMachine.additionalInfo,
-            });
+            await updateComponent(selectedMachine.id, buildComponentPayload(selectedMachine));
 
             await upsertEquipmentTypeOverride(equipmentTypeId, {
                 name: normalizedName,
@@ -593,10 +578,6 @@ function InteractiveMap({
         }
     };
 
-    const handleLoadExercise = async (exerciseId: number): Promise<ExerciseDTO> => {
-        return getExerciseById(exerciseId);
-    };
-
     const handleSaveExercise = async (
         exerciseId: number,
         exercise: {
@@ -645,27 +626,6 @@ function InteractiveMap({
         setMachineSaveSuccess(useOverride ? "Exercise override saved." : "Exercise updated.");
     };
 
-    // save location when tiles moved or resized (debounced)
-    useEffect(() => {
-        if (!editMode) return;
-        const timeout = setTimeout(() => {
-            tiles.forEach(tile => {
-                updateComponent(tile.id, {
-                    xCoord: tile.xCoord,
-                    yCoord: tile.yCoord,
-                    width: tile.width,
-                    height: tile.height,
-                    rotation: tile.rotation,
-                    outOfOrder: tile.outOfOrder ?? false,
-                    additionalInfo: tile.additionalInfo,
-                }).catch(error => {
-                    console.error(`Failed to save tile ${tile.id}:`, error);
-                    setMachineSaveError(`Failed to save tile ${tile.id}.`);
-                });
-            });
-        }, 1000);
-        return () => clearTimeout(timeout);
-    })
 
     return (
         <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-1 sm:pt-2">
@@ -705,7 +665,7 @@ function InteractiveMap({
                     e.preventDefault();
                     const raw = e.dataTransfer.getData("application/tile-template");
                     if (!raw) return;
-                    const template: DragTileData = JSON.parse(raw);
+                    const template: TileTemplate = JSON.parse(raw);
                     const rect = containerRef.current!.getBoundingClientRect();
                     // Account for scroll and scale so tile lands where the cursor is
                     const x = (e.clientX - rect.left + containerRef.current!.scrollLeft) / scale - template.width / 2;
@@ -830,7 +790,7 @@ function InteractiveMap({
                         setMachineSaveSuccess(null);
                     } : undefined}
                     onCreateExercise={editMode ? handleCreateExercise : undefined}
-                    onLoadExercise={handleLoadExercise}
+                    onLoadExercise={getExerciseById}
                     onSaveExercise={editMode ? handleSaveExercise : undefined}
                     creatingExercise={isCreatingExercise}
                     muscleOptions={availableMuscles}
