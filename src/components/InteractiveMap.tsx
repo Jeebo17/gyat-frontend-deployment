@@ -469,6 +469,7 @@ function InteractiveMap({
             ) ?? [];
             const normalizedVideoUrl = undefined; // Don't use videoUrl for equipment
             const normalizedMuscles = normalizeArray(selectedMachine.equipment.musclesTargeted);
+            const normalizedColour = selectedMachine.colour ? selectedMachine.colour.replace("#", "") : undefined;
             const selectedExerciseIds = selectedMachine.exerciseIds ?? [];
 
             if (!normalizedName) {
@@ -481,6 +482,7 @@ function InteractiveMap({
                 name: normalizedName,
                 description: normalizedDescription,
                 imageUrl: normalizedVideoUrl,
+                colour: normalizedColour,
             });
 
             const overrideSaves = selectedExerciseIds.map((exerciseId, index) => {
@@ -503,6 +505,7 @@ function InteractiveMap({
                 benefits: normalizedBenefits,
                 imageUrl: normalizedVideoUrl,
                 musclesTargeted: normalizedMuscles,
+                colour: normalizedColour,
             };
 
             setTiles((prev) => prev.map((tile) => {
@@ -832,6 +835,9 @@ function InteractiveMap({
                     } : undefined}
                     onColourChange={editMode ? (colour) => {
                         setSelectedMachine({ ...selectedMachine, colour });
+                        setTiles((prev) => prev.map((t) =>
+                            t.id === selectedMachine.id ? { ...t, colour } : t
+                        ));
                         setMachineSaveError(null);
                         setMachineSaveSuccess(null);
                     } : undefined}

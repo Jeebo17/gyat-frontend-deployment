@@ -113,6 +113,7 @@ export interface UpdateEquipmentTypeRequest {
     imageUrl?: string;
     description?: string;
     safetyInfo?: string;
+    colour?: string;
 }
 
 export interface CreateExerciseRequest {

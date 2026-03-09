@@ -155,18 +155,20 @@ type HeaderItemProps = {
 };
 
 function HeaderItem({ icon, label, selected, onClick }: HeaderItemProps) {
+    const mapItem = window.location.pathname.startsWith('/map/') && !window.location.pathname.startsWith('/map/search');
+
     return (
         <motion.button
             onClick={onClick}
             className={`
                 relative flex items-center gap-2 px-4 h-14
                 transition-colors duration-150
-                ${selected 
+                ${selected && !mapItem
                     ? 'text-text-primary cursor-default' 
                     : 'text-text-primary/60 hover:text-text-primary cursor-pointer'
                 }
             `}
-            disabled={selected}
+            disabled={selected && !mapItem}
             aria-current={selected ? 'page' : undefined}
         >
             <motion.div className="text-md">
