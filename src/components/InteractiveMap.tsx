@@ -130,6 +130,7 @@ const buildComponentPayload = (tile: TileData): UpdateComponentRequest => ({
     yCoord: tile.yCoord,
     width: tile.width,
     height: tile.height,
+    colour: tile.colour,
     rotation: tile.rotation,
     outOfOrder: tile.outOfOrder ?? false,
     additionalInfo: tile.additionalInfo,
@@ -349,6 +350,7 @@ function InteractiveMap({
                 height: candidate.height,
                 rotation: candidate.rotation,
                 additionalInfo: "",
+                colour: candidate.colour,
             });
 
             // Sync the local tile ID with the backend-assigned ID
@@ -508,6 +510,7 @@ function InteractiveMap({
 
                 return {
                     ...tile,
+                    colour: selectedMachine.colour,
                     outOfOrder: tile.id === selectedMachine.id ? (selectedMachine.outOfOrder ?? false) : tile.outOfOrder,
                     exerciseIds: nextExerciseIds,
                     equipment: {
@@ -521,6 +524,7 @@ function InteractiveMap({
                 if (!prev) return prev;
                 return {
                     ...prev,
+                    colour: selectedMachine.colour,
                     outOfOrder: selectedMachine.outOfOrder ?? false,
                     exerciseIds: nextExerciseIds,
                     equipment: updatedEquipment,
@@ -823,6 +827,11 @@ function InteractiveMap({
                     onTileChange={editMode ? (equipmentUpdates) => {
                         const updatedEquipment = { ...selectedMachine.equipment, ...equipmentUpdates };
                         setSelectedMachine({ ...selectedMachine, equipment: updatedEquipment });
+                        setMachineSaveError(null);
+                        setMachineSaveSuccess(null);
+                    } : undefined}
+                    onColourChange={editMode ? (colour) => {
+                        setSelectedMachine({ ...selectedMachine, colour });
                         setMachineSaveError(null);
                         setMachineSaveSuccess(null);
                     } : undefined}

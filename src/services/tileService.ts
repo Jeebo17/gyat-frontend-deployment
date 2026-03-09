@@ -2,7 +2,7 @@ import { getLayout } from "./layoutService";
 import type { EquipmentDefinitionDTO, GymComponentDTO, GymFloorDTO } from "../types/api";
 import type { TileData } from "../types/tile";
 
-const FALLBACK_COLOURS = ["red", "blue", "green", "yellow", "purple", "orange", "gray", "zinc"];
+const FALLBACK_COLOURS = ["EF4444", "3B82F6", "22C55E", "EAB308", "A855F7", "F97316", "6B7280", "71717A"];
 
 const getColourForEquipment = (equipmentTypeId: number): string => {
     const index = Math.abs(equipmentTypeId) % FALLBACK_COLOURS.length;
@@ -17,6 +17,7 @@ const resolveEquipmentTypeId = (component: GymComponentDTO): number => {
 
 interface ModalOverrides {
     name?: string;
+    colour?: string;
     description?: string;
     benefits?: string[];
     musclesTargeted?: string[];
@@ -66,10 +67,10 @@ export const mapComponentToTile = (
         additionalInfo: component.additionalInfo ?? undefined,
         xCoord: component.xCoord,
         yCoord: component.yCoord,
+        colour: component.colour ?? getColourForEquipment(equipmentTypeId),
         width: component.width,
         height: component.height,
         rotation: component.rotation,
-        colour: getColourForEquipment(equipmentTypeId),
         equipment: {
             name: overrides?.name || definition?.name || `Equipment #${equipmentTypeId}`,
             description: overrides?.description?.trim() || definition?.description?.trim() || "No description provided.",
@@ -123,7 +124,7 @@ export async function getFloorTiles(
 export function getPreviewTiles(): TileData[] {
     return [
         {
-            id: 1, xCoord: 20, yCoord: 160, width: 240, height: 100, rotation: 0, colour: "red",
+            id: 1, xCoord: 20, yCoord: 160, width: 240, height: 100, rotation: 0, colour: "EF4444",
             equipment: {
                 name: "Treadmill",
                 description: "A motorised belt for walking or running indoors.",
@@ -132,7 +133,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 2, xCoord: 20, yCoord: 280, width: 240, height: 100, rotation: 0, colour: "red",
+            id: 2, xCoord: 20, yCoord: 280, width: 240, height: 100, rotation: 0, colour: "EF4444",
             equipment: {
                 name: "Treadmill",
                 description: "A motorised belt for walking or running indoors.",
@@ -141,7 +142,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 3, xCoord: 20, yCoord: 400, width: 240, height: 100, rotation: 0, colour: "red",
+            id: 3, xCoord: 20, yCoord: 400, width: 240, height: 100, rotation: 0, colour: "EF4444",
             equipment: {
                 name: "Treadmill",
                 description: "A motorised belt for walking or running indoors.",
@@ -150,7 +151,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 4, xCoord: 20, yCoord: 540, width: 240, height: 100, rotation: 0, colour: "blue",
+            id: 4, xCoord: 20, yCoord: 540, width: 240, height: 100, rotation: 0, colour: "3B82F6",
             equipment: {
                 name: "Rowing Machine",
                 description: "Simulates the action of watercraft rowing for a full-body workout.",
@@ -159,7 +160,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 5, xCoord: 20, yCoord: 660, width: 240, height: 100, rotation: 0, colour: "blue",
+            id: 5, xCoord: 20, yCoord: 660, width: 240, height: 100, rotation: 0, colour: "3B82F6",
             equipment: {
                 name: "Rowing Machine",
                 description: "Simulates the action of watercraft rowing for a full-body workout.",
@@ -168,7 +169,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 6, xCoord: 300, yCoord: 20, width: 240, height: 160, rotation: 0, colour: "green",
+            id: 6, xCoord: 300, yCoord: 20, width: 240, height: 160, rotation: 0, colour: "22C55E",
             equipment: {
                 name: "Racks",
                 description: "Squat / power rack for barbell exercises.",
@@ -177,7 +178,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 7, xCoord: 600, yCoord: 20, width: 240, height: 160, rotation: 0, colour: "green",
+            id: 7, xCoord: 600, yCoord: 20, width: 240, height: 160, rotation: 0, colour: "22C55E",
             equipment: {
                 name: "Racks",
                 description: "Squat / power rack for barbell exercises.",
@@ -186,7 +187,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 9, xCoord: 950, yCoord: 50, width: 240, height: 430, rotation: 0, colour: "purple",
+            id: 9, xCoord: 950, yCoord: 50, width: 240, height: 430, rotation: 0, colour: "A855F7",
             equipment: {
                 name: "Free Weights",
                 description: "Dumbbells and barbells for strength training.",
@@ -195,7 +196,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 10, xCoord: 350, yCoord: 550, width: 500, height: 230, rotation: 0, colour: "orange",
+            id: 10, xCoord: 350, yCoord: 550, width: 500, height: 230, rotation: 0, colour: "F97316",
             equipment: {
                 name: "Open Space",
                 description: "Open area for stretching, yoga, and bodyweight exercises.",
@@ -204,7 +205,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 11, xCoord: 450, yCoord: 300, width: 250, height: 150, rotation: 0, colour: "yellow",
+            id: 11, xCoord: 450, yCoord: 300, width: 250, height: 150, rotation: 0, colour: "EAB308",
             equipment: {
                 name: "Resistance Machine",
                 description: "Cable or pin-loaded machine for targeted resistance exercises.",
@@ -213,7 +214,7 @@ export function getPreviewTiles(): TileData[] {
             },
         },
         {
-            id: 14, xCoord: 1000, yCoord: 750, width: 160, height: 20, rotation: 0, colour: "gray",
+            id: 14, xCoord: 1000, yCoord: 750, width: 160, height: 20, rotation: 0, colour: "6B7280",
             equipment: { name: "Entrance" },
             canHover: false,
         },

@@ -6,17 +6,6 @@ import { useTheme } from "../context/ThemeContext";
 
 type ResizeHandle = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 
-const colourClasses: Record<string, { light: string; dark: string }> = {
-    red: { light: "bg-red-400", dark: "bg-red-500" },
-    blue: { light: "bg-blue-400", dark: "bg-blue-500" },
-    green: { light: "bg-green-400", dark: "bg-green-500" },
-    yellow: { light: "bg-yellow-300", dark: "bg-yellow-500" },
-    purple: { light: "bg-purple-400", dark: "bg-purple-500" },
-    orange: { light: "bg-orange-400", dark: "bg-orange-500" },
-    gray: { light: "bg-gray-300", dark: "bg-gray-500" },
-    zinc: { light: "bg-zinc-300", dark: "bg-zinc-500" },
-};
-
 function Tile({
     id,
     equipment,
@@ -59,13 +48,6 @@ function Tile({
     }, [xCoord, yCoord, width, height]);
     
     const theme = useTheme();
-    const colourClass = colourClasses[colour]
-    ? theme.theme === 'light'
-        ? colourClasses[colour].light
-        : colourClasses[colour].dark
-    : theme.theme === 'light'
-        ? "bg-gray-300"
-        : "bg-gray-600";
 
     const handleMouseDown = (e: React.MouseEvent) => {
         if ((!editMode && !previewMode) || !onUpdate) return;
@@ -228,7 +210,6 @@ function Tile({
     return (
         <div
             className={`
-                ${colourClass}
                 p-4
                 rounded-md
                 flex
@@ -248,6 +229,7 @@ function Tile({
                 width: isDragging || isResizing ? liveWidth : width,
                 height: isDragging || isResizing ? liveHeight : height,
                 transform: `rotate(${rotation}deg)`,
+                backgroundColor: `#${colour}`,
             }}
             onMouseDown={handleMouseDown}
             onClick={onClick ? (e) => {

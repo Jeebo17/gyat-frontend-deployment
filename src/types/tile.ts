@@ -33,7 +33,7 @@ export interface TileData {
     // Rotation angle in degrees.
     rotation: number;
 
-    // Display colour (e.g. CSS hex or rgb).
+    // Display colour (e.g. Hex).
     colour: string;
 
     // Raw persisted metadata from backend component.additionalInfo.

@@ -13,7 +13,7 @@ export default function DragAndDropMenu() {
                     equipment: { name: type.name, brand: type.brand ?? undefined },
                     width: 200,
                     height: 100,
-                    colour: "red",
+                    colour: "EF4444",
                     equipmentTypeId: type.id,
                 }));
                 setEquipmentTypes(templatesFromApi);

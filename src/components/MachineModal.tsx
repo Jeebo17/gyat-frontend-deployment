@@ -34,6 +34,7 @@ interface MachineModalProps {
     containerMode?: boolean;
     editMode?: boolean;
     onTileChange?: (equipmentUpdates: Partial<EquipmentProps>) => void;
+    onColourChange?: (colour: string) => void;
     onExerciseIdsChange?: (exerciseIds: number[]) => void;
     onCreateExercise?: (exercise: CreateExerciseDraft) => Promise<void> | void;
     onLoadExercise?: (exerciseId: number) => Promise<ExerciseDTO>;
@@ -55,6 +56,7 @@ function MachineModal({
     containerMode = false,
     editMode = false,
     onTileChange,
+    onColourChange,
     onExerciseIdsChange,
     onCreateExercise,
     onLoadExercise,
@@ -158,17 +160,34 @@ function MachineModal({
                             <IconComponent className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                         </div>
                     )}
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 flex-row">
                         {showEditableFields ? (
                             <>
-                                <label htmlFor="machine-name-input" className="sr-only">Equipment name</label>
-                                <input
-                                    id="machine-name-input"
-                                    className="w-full text-xl sm:text-2xl md:text-3xl font-bold bg-transparent border-b-2 border-white/30 focus:border-accent-primary text-white placeholder:text-white/40 outline-none pb-1 transition-colors"
-                                    value={tile.equipment.name}
-                                    onChange={(e) => onTileChange?.({ name: e.target.value })}
-                                    placeholder="Equipment name"
-                                />
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex-1 min-w-0">
+                                        <label htmlFor="machine-name-input" className="sr-only">Equipment name</label>
+                                        <input
+                                            id="machine-name-input"
+                                            className="w-full text-xl sm:text-2xl md:text-3xl font-bold bg-transparent border-b-2 border-white/30 focus:border-accent-primary text-white placeholder:text-white/40 outline-none pb-1 transition-colors"
+                                            value={tile.equipment.name}
+                                            onChange={(e) => onTileChange?.({ name: e.target.value })}
+                                            placeholder="Equipment name"
+                                        />
+                                    </div>
+
+                                    {/* Colour selector */}
+                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                        <label htmlFor="machine-colour-input" className="text-sm text-white/80">Colour:</label>
+                                        <input
+                                            id="machine-colour-input"
+                                            type="color"
+                                            className="w-10 h-10 p-0 border-none bg-transparent cursor-pointer"
+                                            value={tile.colour ? `#${tile.colour}` : "#ffffff"}
+                                            onChange={(e) => onColourChange?.(e.target.value.replace('#', ''))}
+                                            title="Choose equipment colour"
+                                        />
+                                    </div>
+                                </div>
                             </>
                         ) : (
                             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white truncate">
@@ -355,7 +374,7 @@ function MachineModal({
                         )}
                     </div>
 
-                    {/* Video Card */}
+                    
                     {!showEditableFields && (
                         <div className="md:col-span-2 rounded-xl p-4 text-white bg-white/5 border border-white/10 flex flex-col">
                             <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3 flex-shrink-0">Image</h3>
