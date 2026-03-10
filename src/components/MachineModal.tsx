@@ -8,10 +8,15 @@ import type { ExerciseDTO } from "../types/api";
 
 export type { CreateExerciseDraft, ExerciseEditDraft };
 
+const PRESET_COLOURS = [
+    "EF4444", "F97316", "EAB308", "22C55E", "3B82F6",
+    "A855F7", "EC4899", "14B8A6", "6B7280", "1E293B",
+];
+
 const ImagePreview = ({ url, name }: { url?: string; name: string }) => (
     <div className="w-full bg-black/30 rounded-xl text-white aspect-video flex items-center justify-center overflow-hidden border border-white/10">
         {url ? (
-            <img src={url} alt={`Image for ${name}`} className="w-full h-full object-cover" />
+            <img src={url} alt={`Image for ${name}`} className="w-full h-full object-contain" />
         ) : (
             <div className="flex flex-col items-center gap-2 text-white/40">
                 <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -34,6 +39,7 @@ interface MachineModalProps {
     containerMode?: boolean;
     editMode?: boolean;
     onTileChange?: (equipmentUpdates: Partial<EquipmentProps>) => void;
+    onColourChange?: (colour: string) => void;
     onExerciseIdsChange?: (exerciseIds: number[]) => void;
     onCreateExercise?: (exercise: CreateExerciseDraft) => Promise<void> | void;
     onLoadExercise?: (exerciseId: number) => Promise<ExerciseDTO>;
@@ -55,6 +61,7 @@ function MachineModal({
     containerMode = false,
     editMode = false,
     onTileChange,
+    onColourChange,
     onExerciseIdsChange,
     onCreateExercise,
     onLoadExercise,
@@ -158,17 +165,61 @@ function MachineModal({
                             <IconComponent className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                         </div>
                     )}
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 flex-row">
                         {showEditableFields ? (
                             <>
-                                <label htmlFor="machine-name-input" className="sr-only">Equipment name</label>
-                                <input
-                                    id="machine-name-input"
-                                    className="w-full text-xl sm:text-2xl md:text-3xl font-bold bg-transparent border-b-2 border-white/30 focus:border-accent-primary text-white placeholder:text-white/40 outline-none pb-1 transition-colors"
-                                    value={tile.equipment.name}
-                                    onChange={(e) => onTileChange?.({ name: e.target.value })}
-                                    placeholder="Equipment name"
-                                />
+                                <div className="flex items-center justify-between gap-4">
+                                    <div className="flex-1 min-w-0">
+                                        <label htmlFor="machine-name-input" className="sr-only">Equipment name</label>
+                                        <input
+                                            id="machine-name-input"
+                                            className="w-full text-xl sm:text-2xl md:text-3xl font-bold bg-transparent border-b-2 border-white/30 focus:border-accent-primary text-white placeholder:text-white/40 outline-none pb-1 transition-colors"
+                                            value={tile.equipment.name}
+                                            onChange={(e) => onTileChange?.({ name: e.target.value })}
+                                            placeholder="Equipment name"
+                                        />
+                                    </div>
+
+                                    {/* Colour selector */}
+                                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                                        {PRESET_COLOURS.map((c) => (
+                                            <button
+                                                key={c}
+                                                type="button"
+                                                className={`w-7 h-7 rounded-full border-2 transition-all ${
+                                                    tile.colour === c
+                                                        ? "border-white scale-110 ring-2 ring-white/40"
+                                                        : "border-white/20 hover:border-white/50"
+                                                }`}
+                                                style={{ backgroundColor: `#${c}` }}
+                                                onClick={() => onColourChange?.(c)}
+                                                title={`#${c}`}
+                                            />
+                                        ))}
+                                        <div className="relative ml-1">
+                                            <input
+                                                id="machine-colour-input"
+                                                type="color"
+                                                className="absolute inset-0 w-7 h-7 opacity-0 cursor-pointer"
+                                                value={tile.colour ? `#${tile.colour}` : "#ffffff"}
+                                                onChange={(e) => onColourChange?.(e.target.value.replace('#', ''))}
+                                                title="Custom colour"
+                                            />
+                                            <div
+                                                className={`w-7 h-7 rounded-full border-2 flex items-center justify-center pointer-events-none ${
+                                                    !PRESET_COLOURS.includes(tile.colour)
+                                                        ? "border-white ring-2 ring-white/40"
+                                                        : "border-white/20"
+                                                }`}
+                                                style={{ backgroundColor: tile.colour ? `#${tile.colour}` : "#ffffff" }}
+                                            >
+                                                <svg className="w-3.5 h-3.5 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </>
                         ) : (
                             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white truncate">
@@ -341,9 +392,9 @@ function MachineModal({
                             <div className="rounded-xl p-4 text-white bg-white/5 border border-white/10 flex flex-col">
                                 <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3 flex-shrink-0">Image</h3>
                                 <div className="mb-3">
-                                    <label htmlFor="machine-video-url" className="sr-only">Image URL</label>
+                                    <label htmlFor="machine-image-url" className="sr-only">Image URL</label>
                                     <input
-                                        id="machine-video-url"
+                                        id="machine-image-url"
                                         className={inputClasses}
                                         value={tile.equipment.imageUrl ?? ""}
                                         onChange={(e) => onTileChange?.({ imageUrl: e.target.value || undefined })}
@@ -355,7 +406,7 @@ function MachineModal({
                         )}
                     </div>
 
-                    {/* Video Card */}
+                    
                     {!showEditableFields && (
                         <div className="md:col-span-2 rounded-xl p-4 text-white bg-white/5 border border-white/10 flex flex-col">
                             <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3 flex-shrink-0">Image</h3>

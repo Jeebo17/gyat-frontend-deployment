@@ -33,7 +33,7 @@ export interface TileData {
     // Rotation angle in degrees.
     rotation: number;
 
-    // Display colour (e.g. CSS hex or rgb).
+    // Display colour (e.g. Hex).
     colour: string;
 
     // Raw persisted metadata from backend component.additionalInfo.
@@ -49,8 +49,8 @@ export interface TileData {
     // Whether hover highlighting should be enabled.
     canHover?: boolean;
 
-    // Fired when the tile is clicked.
-    onClick?: () => void;
+    // Fired when the tile is selected (clicked without dragging).
+    onSelect?: () => void;
 
     // Whether the tile is in edit mode.
     editMode?: boolean;

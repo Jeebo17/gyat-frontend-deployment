@@ -1,21 +1,21 @@
 import { useState, useEffect, useRef } from "react";
-import { FaArrowRotateRight, FaTrash } from "react-icons/fa6";
 import { TileData } from "../types/tile";
 import { useTheme } from "../context/ThemeContext";
 
+// Helper to lighten a hex color for pastel effect
+function lightenColor(hex: string, amount: number) {
+    hex = hex.replace('#', '');
+    let r = parseInt(hex.substring(0,2), 16);
+    let g = parseInt(hex.substring(2,4), 16);
+    let b = parseInt(hex.substring(4,6), 16);
+    r = Math.round(r + (255 - r) * amount);
+    g = Math.round(g + (255 - g) * amount);
+    b = Math.round(b + (255 - b) * amount);
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
 
 type ResizeHandle = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
-
-const colourClasses: Record<string, { light: string; dark: string }> = {
-    red: { light: "bg-red-400", dark: "bg-red-500" },
-    blue: { light: "bg-blue-400", dark: "bg-blue-500" },
-    green: { light: "bg-green-400", dark: "bg-green-500" },
-    yellow: { light: "bg-yellow-300", dark: "bg-yellow-500" },
-    purple: { light: "bg-purple-400", dark: "bg-purple-500" },
-    orange: { light: "bg-orange-400", dark: "bg-orange-500" },
-    gray: { light: "bg-gray-300", dark: "bg-gray-500" },
-    zinc: { light: "bg-zinc-300", dark: "bg-zinc-500" },
-};
 
 function Tile({
     id,
@@ -29,12 +29,11 @@ function Tile({
     onUpdate,
     canPlace,
     canHover = true,
-    onClick,
+    onSelect,
     editMode,
     scale = 1,
     gridSize = 20,
     snap = (v) => v,
-    onDelete,
     highlighted = false,
     previewMode = false,
 }: TileData) {
@@ -59,13 +58,6 @@ function Tile({
     }, [xCoord, yCoord, width, height]);
     
     const theme = useTheme();
-    const colourClass = colourClasses[colour]
-    ? theme.theme === 'light'
-        ? colourClasses[colour].light
-        : colourClasses[colour].dark
-    : theme.theme === 'light'
-        ? "bg-gray-300"
-        : "bg-gray-600";
 
     const handleMouseDown = (e: React.MouseEvent) => {
         if ((!editMode && !previewMode) || !onUpdate) return;
@@ -228,7 +220,6 @@ function Tile({
     return (
         <div
             className={`
-                ${colourClass}
                 p-4
                 rounded-md
                 flex
@@ -248,49 +239,27 @@ function Tile({
                 width: isDragging || isResizing ? liveWidth : width,
                 height: isDragging || isResizing ? liveHeight : height,
                 transform: `rotate(${rotation}deg)`,
+                backgroundColor: theme.theme === 'light' ? lightenColor(`#${colour}`, 0.25) : `#${colour}`,
             }}
             onMouseDown={handleMouseDown}
-            onClick={onClick ? (e) => {
+            onClick={onSelect ? (e) => {
                 if (isDragging || isResizing) return;
                 if (dragMovedRef.current) {
                     dragMovedRef.current = false;
                     return;
                 }
                 e.stopPropagation();
-                onClick();
+                onSelect();
             } : undefined}
             aria-label={equipment.name}
         >
             {/* TODO: Truncate? */}
-            <p className={`${previewMode ? "text-2xl" : "truncate"}`}>{equipment.name}</p>
+            <div className="flex flex-col">
+                <p className={`${previewMode ? "text-2xl" : "truncate"}`}>{equipment.name}</p>
+                {editMode && <p className="truncate text-sm font-light">{equipment.brand}</p>}
+            </div>
+            
             {equipment.icon && <equipment.icon className="absolute bottom-2 right-2 w-6 h-6 opacity-100" />}
-
-            {editMode && onUpdate && (
-                <div
-                    className="absolute top-2 left-2 transform w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete?.();
-                    }}
-                >
-                    <FaTrash className="w-5 h-5 text-primary" />
-                </div>
-            )}
-
-            {editMode && onUpdate && (
-                <div
-                    className="absolute top-2 right-2 transform w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
-                    onMouseDown={(e) => {
-                        e.stopPropagation();
-                        if (onUpdate) {
-                            onUpdate({ width: height, height: width, rotation: rotation });
-                            // onUpdate({ rotation: (rotation + 90) % 360 });
-                        }
-                    }}
-                    >
-                        <FaArrowRotateRight className="w-5 h-5 text-primary"/>
-                </div>
-            )}
 
             {editMode && onUpdate && resizeHandles.map(({ handle, cursor, className }) => (
                 <div

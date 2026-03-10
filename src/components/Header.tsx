@@ -28,13 +28,13 @@ export default function Header({ className = '' }: HeaderProps) {
             onClick: () => navigate("/")
         },
         {
-            icon: selectedPage.endsWith("/map") ? <IoMap data-testid="io5-map" /> : <IoMapOutline data-testid="io5-map-outline" />,
+            icon: selectedPage.startsWith("/map/") ? <IoMap data-testid="io5-map" /> : <IoMapOutline data-testid="io5-map-outline" />,
             label: 'Map',
             path: '/map/search',
             onClick: () => navigate("/map/search")
         },
         {
-            icon: selectedPage.endsWith("/settings") ? <IoSettings data-testid="io5-settings" /> : <IoSettingsOutline data-testid="io5-settings-outline" />,
+            icon: selectedPage === "/settings" ? <IoSettings data-testid="io5-settings" /> : <IoSettingsOutline data-testid="io5-settings-outline" />,
             label: 'Settings',
             path: '/settings',
             onClick: () => navigate("/settings")
@@ -72,7 +72,7 @@ export default function Header({ className = '' }: HeaderProps) {
                                     }
                                     item.onClick();
                                 }}
-                                selected={selectedPage === item.path}
+                                selected={selectedPage === item.path || (item.path === '/map/search' && selectedPage.startsWith('/map/'))}
                             />
                         ))}
                     </div>
@@ -155,18 +155,20 @@ type HeaderItemProps = {
 };
 
 function HeaderItem({ icon, label, selected, onClick }: HeaderItemProps) {
+    const mapItem = window.location.pathname.startsWith('/map/') && !window.location.pathname.startsWith('/map/search');
+
     return (
         <motion.button
             onClick={onClick}
             className={`
                 relative flex items-center gap-2 px-4 h-14
                 transition-colors duration-150
-                ${selected 
+                ${selected && !mapItem
                     ? 'text-text-primary cursor-default' 
                     : 'text-text-primary/60 hover:text-text-primary cursor-pointer'
                 }
             `}
-            disabled={selected}
+            disabled={selected && !mapItem}
             aria-current={selected ? 'page' : undefined}
         >
             <motion.div className="text-md">

@@ -49,6 +49,7 @@ export interface GymComponentDTO {
     rotation: number;
     additionalInfo?: string | null;
     outOfOrder?: boolean;
+    colour?: string | null;
 
     // Compatibility alias if backend exposes this key name
     equipmentId?: number;
@@ -84,6 +85,7 @@ export interface CreateComponentRequest {
     floorId: number;
     xCoord: number;
     yCoord: number;
+    colour: string;
     width: number;
     height: number;
     rotation: number;
@@ -93,6 +95,7 @@ export interface CreateComponentRequest {
 export interface UpdateComponentRequest {
     xCoord: number;
     yCoord: number;
+    colour: string;
     width: number;
     height: number;
     rotation: number;
@@ -110,6 +113,7 @@ export interface UpdateEquipmentTypeRequest {
     imageUrl?: string;
     description?: string;
     safetyInfo?: string;
+    colour?: string;
 }
 
 export interface CreateExerciseRequest {

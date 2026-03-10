@@ -1,4 +1,6 @@
 import Tile from "./Tile";
+import FloatingEditTray from "./FloatingEditTray.tsx";
+import WallTile from "./WallTile";
 import { TileData, TileHistoryEntry } from "../types/tile";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { MachineModal } from '../components/index';
@@ -11,6 +13,7 @@ import { updateComponent, createComponent, deleteComponent } from "../services/c
 import { upsertEquipmentTypeOverride } from "../services/equipmentTypeService";
 import { createExercise, getExerciseById, updateCustomExercise, upsertExerciseOverride } from "../services/exerciseService";
 import { getMuscles } from "../services/muscleService";
+import { getStructuralDef } from "../constants/structuralComponents";
 import type { ExerciseOption } from "../types/tile";
 import type { ExerciseDTO, MuscleDTO, UpdateComponentRequest } from "../types/api";
 
@@ -104,9 +107,7 @@ const applyExerciseResultToTile = (tile: TileData, exercise: ExerciseDTO): TileD
         equipment: {
             ...updatedTile.equipment,
             benefits: resolveExerciseNames(updatedTile, exerciseIds),
-            videoUrl: exerciseIds.includes(exercise.id)
-                ? (exercise.videoUrl ?? updatedTile.equipment.videoUrl)
-                : updatedTile.equipment.videoUrl,
+            // imageUrl should not be set from exercise.videoUrl
         },
     };
 };
@@ -132,6 +133,7 @@ const buildComponentPayload = (tile: TileData): UpdateComponentRequest => ({
     yCoord: tile.yCoord,
     width: tile.width,
     height: tile.height,
+    colour: tile.colour,
     rotation: tile.rotation,
     outOfOrder: tile.outOfOrder ?? false,
     additionalInfo: tile.additionalInfo,
@@ -163,6 +165,7 @@ function InteractiveMap({
     layoutId = undefined,
 }: InteractiveMapProps) {
     const [selectedMachine, setSelectedMachine] = useState<TileData | null>(null);
+    const [editingTileId, setEditingTileId] = useState<number | null>(null);
     const [isSavingMachine, setIsSavingMachine] = useState(false);
     const [isCreatingExercise, setIsCreatingExercise] = useState(false);
     const [isLoadingMuscles, setIsLoadingMuscles] = useState(false);
@@ -308,18 +311,22 @@ function InteractiveMap({
         }
 
         const tempId = nextIdRef.current;
+        const structDef = getStructuralDef(template.equipmentTypeId);
+        const tileWidth = structDef?.defaultWidth ?? template.width;
+        const tileHeight = structDef?.defaultHeight ?? template.height;
+        const tileColour = structDef?.colour ?? template.colour;
         const candidate: TileData = {
             id: tempId,
             equipmentTypeId: template.equipmentTypeId,
-            xCoord: Math.max(0, Math.min(snap(xCoord), mapWidth - template.width)),
-            yCoord: Math.max(0, Math.min(snap(yCoord), mapHeight - template.height)),
-            width: template.width,
-            height: template.height,
+            xCoord: Math.max(0, Math.min(snap(xCoord), mapWidth - tileWidth)),
+            yCoord: Math.max(0, Math.min(snap(yCoord), mapHeight - tileHeight)),
+            width: tileWidth,
+            height: tileHeight,
             rotation: 0,
             outOfOrder: false,
-            colour: template.colour,
+            colour: tileColour,
             equipment: {
-                name: template.equipment.name,
+                name: structDef?.name ?? template.equipment.name,
                 brand: template.equipment.brand,
                 icon: template.equipment.icon,
             },
@@ -351,6 +358,7 @@ function InteractiveMap({
                 height: candidate.height,
                 rotation: candidate.rotation,
                 additionalInfo: "",
+                colour: candidate.colour,
             });
 
             // Sync the local tile ID with the backend-assigned ID
@@ -467,8 +475,9 @@ function InteractiveMap({
             const normalizedBenefits = normalizeArray(
                 resolveExerciseNames(selectedMachine, selectedMachine.exerciseIds ?? [])
             ) ?? [];
-            const normalizedVideoUrl = normalizeOptionalString(selectedMachine.equipment.videoUrl);
+            const normalizedImageUrl = normalizeOptionalString(selectedMachine.equipment.imageUrl);
             const normalizedMuscles = normalizeArray(selectedMachine.equipment.musclesTargeted);
+            const normalizedColour = selectedMachine.colour ? selectedMachine.colour.replace("#", "") : undefined;
             const selectedExerciseIds = selectedMachine.exerciseIds ?? [];
 
             if (!normalizedName) {
@@ -480,11 +489,12 @@ function InteractiveMap({
             await upsertEquipmentTypeOverride(equipmentTypeId, {
                 name: normalizedName,
                 description: normalizedDescription,
+                imageUrl: normalizedImageUrl,
             });
 
             const overrideSaves = selectedExerciseIds.map((exerciseId, index) => {
                 const payload = {
-                    videoUrl: index === 0 ? normalizedVideoUrl : undefined,
+                    videoUrl: undefined,
                 };
                 const hasData = Object.values(payload).some((value) => value !== undefined);
                 if (!hasData) return Promise.resolve(null);
@@ -500,8 +510,9 @@ function InteractiveMap({
                 name: normalizedName,
                 description: normalizedDescription,
                 benefits: normalizedBenefits,
-                videoUrl: normalizedVideoUrl,
+                imageUrl: normalizedImageUrl,
                 musclesTargeted: normalizedMuscles,
+                colour: normalizedColour,
             };
 
             setTiles((prev) => prev.map((tile) => {
@@ -509,6 +520,7 @@ function InteractiveMap({
 
                 return {
                     ...tile,
+                    colour: tile.id === selectedMachine.id ? selectedMachine.colour : tile.colour,
                     outOfOrder: tile.id === selectedMachine.id ? (selectedMachine.outOfOrder ?? false) : tile.outOfOrder,
                     exerciseIds: nextExerciseIds,
                     equipment: {
@@ -522,6 +534,7 @@ function InteractiveMap({
                 if (!prev) return prev;
                 return {
                     ...prev,
+                    colour: selectedMachine.colour,
                     outOfOrder: selectedMachine.outOfOrder ?? false,
                     exerciseIds: nextExerciseIds,
                     equipment: updatedEquipment,
@@ -531,8 +544,8 @@ function InteractiveMap({
             const savedMuscles = normalizedMuscles?.length ?? 0;
             setMachineSaveSuccess(
                 savedMuscles > 0
-                    ? "Saved relational data. Muscle edits require backend muscle-id mapping support."
-                    : "Saved relational data."
+                    ? "Component saved successfully. Targeting " + savedMuscles + " muscle" + (savedMuscles > 1 ? "s." : ".")
+                    : "Component saved successfully."
             );
         } catch (error) {
             const message = error instanceof Error ? error.message : "Failed to save machine details.";
@@ -595,6 +608,7 @@ function InteractiveMap({
                             nextExerciseIds
                         ),
                         musclesTargeted: mergedMuscles,
+                        // Don't set imageUrl from exercise
                     },
                 };
             }));
@@ -646,7 +660,6 @@ function InteractiveMap({
         setMachineSaveError(null);
         setMachineSaveSuccess(null);
 
-        // If videoUrl is an empty string, save as undefined to remove it
         const normalizedVideoUrl = exercise.videoUrl?.trim() === "" ? undefined : exercise.videoUrl;
         const saved = useOverride
             ? await upsertExerciseOverride(exerciseId, {
@@ -678,6 +691,10 @@ function InteractiveMap({
     };
 
 
+    const editingTile = editingTileId === null
+        ? null
+        : tiles.find((tile) => tile.id === editingTileId) ?? null;
+
     return (
         <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-1 sm:pt-2">
             <div
@@ -698,6 +715,44 @@ function InteractiveMap({
                 )}
 
             </div>
+
+            {editMode && (
+                <FloatingEditTray
+                    tile={editingTile}
+                    onColourChange={(colour: string) => {
+                        if (!editingTile) return;
+                        updateTile(editingTile.id, { colour });
+                    }}
+                    onRotate={() => {
+                        if (!editingTile) return;
+                        setHistory((prev) => {
+                            const newHistory = [...prev, editingTile];
+                            return newHistory.slice(-50);
+                        });
+                        updateTile(editingTile.id, {
+                            width: editingTile.height,
+                            height: editingTile.width,
+                            rotation: editingTile.rotation,
+                        });
+                    }}
+                    onDelete={() => {
+                        if (!editingTile) return;
+                        setHistory((prev) => {
+                            const newHistory = [...prev, editingTile];
+                            return newHistory.slice(-50);
+                        });
+                        setEditingTileId(null);
+                        void deleteTile(editingTile.id);
+                    }}
+                    onDeselect={() => setEditingTileId(null)}
+                    onEdit={() => {
+                        if (!editingTile) return;
+                        setMachineSaveError(null);
+                        setMachineSaveSuccess(null);
+                        setSelectedMachine({ ...editingTile, onUpdate: () => {} });
+                    }}
+                />
+            )}
 
             {/* Map container */}
             <div
@@ -737,12 +792,16 @@ function InteractiveMap({
                             linear-gradient(to bottom, var(--grid-line-color, rgba(255,255,255,0.07)) 1px, transparent 1px)
                         `,
                         backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
+                        backgroundPosition: "4px 4px",
                         position: "absolute",
                         top: 0,
                         left: 0,
                         borderRadius: "16px",
                     }}
-                    onClick={previewMode ? () => setSelectedMachine(null) : undefined}
+                    onClick={() => {
+                        if (previewMode) setSelectedMachine(null);
+                        if (editMode) setEditingTileId(null);
+                    }}
                 >
                     {/* Border */}
                     <div style={{
@@ -776,40 +835,70 @@ function InteractiveMap({
                             </div>
                         )}
 
-                        {tiles.map(tile => (
-                            <Tile
-                                key={tile.id}
-                                {...tile}
-                                highlighted={highlightedTileId === tile.id}
-                                scale={scale}
-                                gridSize={gridSize}
-                                snap={snap}
-                                canPlace={canPlace}
-                                onUpdate={(editMode || previewMode) ? (updates) => {
-                                    setHistory(prev => {
-                                        const newHistory = [...prev, tile];
-                                        return newHistory.slice(-50); // limit history to last 50 changes
-                                    });
-                                    if (tile.id !== undefined) {
-                                        updateTile(tile.id, updates);
-                                    }
-                                } : undefined}
-                                onClick={!previewMode ? () => {
+                        {tiles.map(tile => {
+                            const isWall = tile.equipmentTypeId === 0;
+
+                            const tileUpdateHandler = (editMode || previewMode) ? (updates: Partial<TileData>) => {
+                                setHistory(prev => {
+                                    const newHistory = [...prev, tile];
+                                    return newHistory.slice(-50);
+                                });
+                                if (tile.id !== undefined) {
+                                    updateTile(tile.id, updates);
+                                }
+                            } : undefined;
+
+                            const tileDeleteHandler = editMode ? () => {
+                                setHistory(prev => {
+                                    const newHistory = [...prev, tile];
+                                    return newHistory.slice(-50);
+                                });
+                                void deleteTile(tile.id);
+                            } : undefined;
+
+                            const handleTileSelect = () => {
+                                if (editMode) {
+                                    setEditingTileId(prev => prev === tile.id ? null : tile.id);
+                                } else if (!previewMode) {
                                     setMachineSaveError(null);
                                     setMachineSaveSuccess(null);
                                     setSelectedMachine({ ...tile, onUpdate: () => {} });
-                                } : undefined}
-                                editMode={editMode}
-                                onDelete={editMode ? () => {
-                                    setHistory(prev => {
-                                        const newHistory = [...prev, tile];
-                                        return newHistory.slice(-50);
-                                    });
-                                    void deleteTile(tile.id);
-                                } : undefined}
-                                previewMode={previewMode}
-                            />
-                        ))}
+                                }
+                            };
+
+                            if (isWall) {
+                                return (
+                                    <WallTile
+                                        key={tile.id}
+                                        {...tile}
+                                        highlighted={highlightedTileId === tile.id || editingTileId === tile.id}
+                                        scale={scale}
+                                        gridSize={gridSize}
+                                        snap={snap}
+                                        canPlace={canPlace}
+                                        onUpdate={tileUpdateHandler}
+                                        editMode={editMode}
+                                        onDelete={tileDeleteHandler}
+                                    />
+                                );
+                            }
+
+                            return (
+                                <Tile
+                                    key={tile.id}
+                                    {...tile}
+                                    highlighted={highlightedTileId === tile.id || editingTileId === tile.id}
+                                    scale={scale}
+                                    gridSize={gridSize}
+                                    snap={snap}
+                                    canPlace={canPlace}
+                                    onUpdate={tileUpdateHandler}
+                                    onSelect={handleTileSelect}
+                                    editMode={editMode}
+                                    previewMode={previewMode}
+                                />
+                            );
+                        })}
 
                     </div>
                 </div>
@@ -824,6 +913,14 @@ function InteractiveMap({
                     onTileChange={editMode ? (equipmentUpdates) => {
                         const updatedEquipment = { ...selectedMachine.equipment, ...equipmentUpdates };
                         setSelectedMachine({ ...selectedMachine, equipment: updatedEquipment });
+                        setMachineSaveError(null);
+                        setMachineSaveSuccess(null);
+                    } : undefined}
+                    onColourChange={editMode ? (colour) => {
+                        setSelectedMachine({ ...selectedMachine, colour });
+                        setTiles((prev) => prev.map((t) =>
+                            t.id === selectedMachine.id ? { ...t, colour } : t
+                        ));
                         setMachineSaveError(null);
                         setMachineSaveSuccess(null);
                     } : undefined}
