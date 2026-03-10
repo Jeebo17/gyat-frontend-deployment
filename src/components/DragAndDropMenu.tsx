@@ -1,6 +1,7 @@
 import { TileTemplate } from "../types/tile";
 import { getAllEquipmentTypes } from "../services/equipmentTypeService";
 import { useEffect, useState } from "react";
+import { getStructuralConfig } from "../constants/structuralTiles";
 
 export default function DragAndDropMenu() {
     const [equipmentTypes, setEquipmentTypes] = useState<TileTemplate[]>([]);
@@ -9,13 +10,20 @@ export default function DragAndDropMenu() {
         async function fetchEquipmentTypes() {
             try {
                 const types = await getAllEquipmentTypes();
-                const templatesFromApi = types.map(type => ({
-                    equipment: { name: type.name, brand: type.brand ?? undefined },
-                    width: 200,
-                    height: 100,
-                    colour: "EF4444",
-                    equipmentTypeId: type.id,
-                }));
+                const templatesFromApi = types.map(type => {
+                    const structural = getStructuralConfig(type.id);
+                    const width = structural?.defaultWidth ?? 200;
+                    const height = structural?.defaultHeight ?? 100;
+                    const colour = structural?.colour ?? "EF4444";
+
+                    return {
+                        equipment: { name: type.name, brand: type.brand ?? undefined },
+                        width,
+                        height,
+                        colour,
+                        equipmentTypeId: type.id,
+                    };
+                });
                 setEquipmentTypes(templatesFromApi);
             }
             catch (error) {

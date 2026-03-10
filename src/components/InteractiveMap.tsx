@@ -13,6 +13,7 @@ import { createExercise, getExerciseById, updateCustomExercise, upsertExerciseOv
 import { getMuscles } from "../services/muscleService";
 import type { ExerciseOption } from "../types/tile";
 import type { ExerciseDTO, MuscleDTO, UpdateComponentRequest } from "../types/api";
+import { isStructuralTile, getStructuralConfig } from "../constants/structuralTiles";
 
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
@@ -307,13 +308,16 @@ function InteractiveMap({
         }
 
         const tempId = nextIdRef.current;
+        const structuralCfg = getStructuralConfig(template.equipmentTypeId);
+        const tileWidth = structuralCfg?.fixedWidth ?? template.width;
+        const tileHeight = structuralCfg?.fixedHeight ?? template.height;
         const candidate: TileData = {
             id: tempId,
             equipmentTypeId: template.equipmentTypeId,
-            xCoord: Math.max(0, Math.min(snap(xCoord), mapWidth - template.width)),
-            yCoord: Math.max(0, Math.min(snap(yCoord), mapHeight - template.height)),
-            width: template.width,
-            height: template.height,
+            xCoord: Math.max(0, Math.min(snap(xCoord), mapWidth - tileWidth)),
+            yCoord: Math.max(0, Math.min(snap(yCoord), mapHeight - tileHeight)),
+            width: tileWidth,
+            height: tileHeight,
             rotation: 0,
             outOfOrder: false,
             colour: template.colour,
@@ -482,7 +486,6 @@ function InteractiveMap({
                 name: normalizedName,
                 description: normalizedDescription,
                 imageUrl: normalizedVideoUrl,
-                colour: normalizedColour,
             });
 
             const overrideSaves = selectedExerciseIds.map((exerciseId, index) => {
@@ -513,7 +516,7 @@ function InteractiveMap({
 
                 return {
                     ...tile,
-                    colour: selectedMachine.colour,
+                    colour: tile.id === selectedMachine.id ? selectedMachine.colour : tile.colour,
                     outOfOrder: tile.id === selectedMachine.id ? (selectedMachine.outOfOrder ?? false) : tile.outOfOrder,
                     exerciseIds: nextExerciseIds,
                     equipment: {
@@ -800,7 +803,7 @@ function InteractiveMap({
                                         updateTile(tile.id, updates);
                                     }
                                 } : undefined}
-                                onClick={!previewMode ? () => {
+                                onClick={(!previewMode && !isStructuralTile(tile.equipmentTypeId)) ? () => {
                                     setMachineSaveError(null);
                                     setMachineSaveSuccess(null);
                                     setSelectedMachine({ ...tile, onUpdate: () => {} });
