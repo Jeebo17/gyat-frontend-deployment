@@ -2,14 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { FaArrowRotateRight, FaTrash } from "react-icons/fa6";
 import { TileData } from "../types/tile";
 import { useTheme } from "../context/ThemeContext";
-import { isStructuralTile, getStructuralConfig } from "../constants/structuralTiles";
 
 
 type ResizeHandle = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 
 function Tile({
     id,
-    equipmentTypeId,
     equipment,
     xCoord,
     yCoord,
@@ -50,9 +48,6 @@ function Tile({
     }, [xCoord, yCoord, width, height]);
     
     const theme = useTheme();
-
-    const structuralConfig = getStructuralConfig(equipmentTypeId);
-    const isStructural = isStructuralTile(equipmentTypeId);
 
     const handleMouseDown = (e: React.MouseEvent) => {
         if ((!editMode && !previewMode) || !onUpdate) return;
@@ -154,12 +149,8 @@ function Tile({
 
                 const snappedX = snap(newX);
                 const snappedY = snap(newY);
-                let snappedWidth = snap(newWidth);
-                let snappedHeight = snap(newHeight);
-
-                // Enforce fixed dimensions for structural tiles
-                if (structuralConfig?.fixedWidth) snappedWidth = structuralConfig.fixedWidth;
-                if (structuralConfig?.fixedHeight) snappedHeight = structuralConfig.fixedHeight;
+                const snappedWidth = snap(newWidth);
+                const snappedHeight = snap(newHeight);
 
                 if (canPlace && !canPlace(id, { xCoord: snappedX, yCoord: snappedY, width: snappedWidth, height: snappedHeight })) {
                     return;
@@ -203,9 +194,9 @@ function Tile({
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("mouseup", handleMouseUp);
         };
-    }, [isDragging, isResizing, scale, snap, onUpdate, gridSize, liveX, liveY, liveWidth, liveHeight, xCoord, yCoord, width, height, structuralConfig]);
+    }, [isDragging, isResizing, scale, snap, onUpdate, gridSize, liveX, liveY, liveWidth, liveHeight, xCoord, yCoord, width, height]);
 
-    const allResizeHandles: { handle: ResizeHandle; cursor: string; className: string }[] = [
+    const resizeHandles: { handle: ResizeHandle; cursor: string; className: string }[] = [
         { handle: 'n', cursor: 'ns-resize', className: 'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-1' },
         { handle: 's', cursor: 'ns-resize', className: 'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-full h-1' },
         { handle: 'e', cursor: 'ew-resize', className: 'right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-1 h-full' },
@@ -215,18 +206,6 @@ function Tile({
         { handle: 'se', cursor: 'nwse-resize', className: 'bottom-0 right-0 translate-x-1/2 translate-y-1/2 w-2 h-2' },
         { handle: 'sw', cursor: 'nesw-resize', className: 'bottom-0 left-0 -translate-x-1/2 translate-y-1/2 w-2 h-2' },
     ];
-
-    // Filter out resize handles for fixed dimensions on structural tiles
-    const resizeHandles = allResizeHandles.filter(({ handle }) => {
-        if (!structuralConfig) return true;
-        const affectsWidth = ['e', 'w', 'ne', 'nw', 'se', 'sw'].includes(handle);
-        const affectsHeight = ['n', 's', 'ne', 'nw', 'se', 'sw'].includes(handle);
-        if (structuralConfig.fixedWidth && affectsWidth) return false;
-        if (structuralConfig.fixedHeight && affectsHeight) return false;
-        return true;
-    });
-
-    const displayColour = isStructural && structuralConfig ? structuralConfig.colour : colour;
 
     return (
         <div
@@ -250,10 +229,10 @@ function Tile({
                 width: isDragging || isResizing ? liveWidth : width,
                 height: isDragging || isResizing ? liveHeight : height,
                 transform: `rotate(${rotation}deg)`,
-                backgroundColor: `#${displayColour}`,
+                backgroundColor: `#${colour}`,
             }}
             onMouseDown={handleMouseDown}
-            onClick={(!isStructural && onClick) ? (e) => {
+            onClick={onClick ? (e) => {
                 if (isDragging || isResizing) return;
                 if (dragMovedRef.current) {
                     dragMovedRef.current = false;
@@ -266,7 +245,7 @@ function Tile({
         >
             {/* TODO: Truncate? */}
             <p className={`${previewMode ? "text-2xl" : "truncate"}`}>{equipment.name}</p>
-            {!isStructural && equipment.icon && <equipment.icon className="absolute bottom-2 right-2 w-6 h-6 opacity-100" />}
+            {equipment.icon && <equipment.icon className="absolute bottom-2 right-2 w-6 h-6 opacity-100" />}
 
             {editMode && onUpdate && (
                 <div
@@ -280,7 +259,7 @@ function Tile({
                 </div>
             )}
 
-            {editMode && onUpdate && !isStructural && (
+            {editMode && onUpdate && (
                 <div
                     className="absolute top-2 right-2 transform w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
                     onMouseDown={(e) => {

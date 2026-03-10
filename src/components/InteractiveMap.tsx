@@ -1,4 +1,5 @@
 import Tile from "./Tile";
+import WallTile from "./WallTile";
 import { TileData, TileHistoryEntry } from "../types/tile";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { MachineModal } from '../components/index';
@@ -11,9 +12,9 @@ import { updateComponent, createComponent, deleteComponent } from "../services/c
 import { upsertEquipmentTypeOverride } from "../services/equipmentTypeService";
 import { createExercise, getExerciseById, updateCustomExercise, upsertExerciseOverride } from "../services/exerciseService";
 import { getMuscles } from "../services/muscleService";
+import { isStructuralTile, getStructuralDef } from "../constants/structuralComponents";
 import type { ExerciseOption } from "../types/tile";
 import type { ExerciseDTO, MuscleDTO, UpdateComponentRequest } from "../types/api";
-import { isStructuralTile, getStructuralConfig } from "../constants/structuralTiles";
 
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
@@ -308,9 +309,10 @@ function InteractiveMap({
         }
 
         const tempId = nextIdRef.current;
-        const structuralCfg = getStructuralConfig(template.equipmentTypeId);
-        const tileWidth = structuralCfg?.fixedWidth ?? template.width;
-        const tileHeight = structuralCfg?.fixedHeight ?? template.height;
+        const structDef = getStructuralDef(template.equipmentTypeId);
+        const tileWidth = structDef?.defaultWidth ?? template.width;
+        const tileHeight = structDef?.defaultHeight ?? template.height;
+        const tileColour = structDef?.colour ?? template.colour;
         const candidate: TileData = {
             id: tempId,
             equipmentTypeId: template.equipmentTypeId,
@@ -320,9 +322,9 @@ function InteractiveMap({
             height: tileHeight,
             rotation: 0,
             outOfOrder: false,
-            colour: template.colour,
+            colour: tileColour,
             equipment: {
-                name: template.equipment.name,
+                name: structDef?.name ?? template.equipment.name,
                 brand: template.equipment.brand,
                 icon: template.equipment.icon,
             },
@@ -785,40 +787,67 @@ function InteractiveMap({
                             </div>
                         )}
 
-                        {tiles.map(tile => (
-                            <Tile
-                                key={tile.id}
-                                {...tile}
-                                highlighted={highlightedTileId === tile.id}
-                                scale={scale}
-                                gridSize={gridSize}
-                                snap={snap}
-                                canPlace={canPlace}
-                                onUpdate={(editMode || previewMode) ? (updates) => {
-                                    setHistory(prev => {
-                                        const newHistory = [...prev, tile];
-                                        return newHistory.slice(-50); // limit history to last 50 changes
-                                    });
-                                    if (tile.id !== undefined) {
-                                        updateTile(tile.id, updates);
-                                    }
-                                } : undefined}
-                                onClick={(!previewMode && !isStructuralTile(tile.equipmentTypeId)) ? () => {
-                                    setMachineSaveError(null);
-                                    setMachineSaveSuccess(null);
-                                    setSelectedMachine({ ...tile, onUpdate: () => {} });
-                                } : undefined}
-                                editMode={editMode}
-                                onDelete={editMode ? () => {
-                                    setHistory(prev => {
-                                        const newHistory = [...prev, tile];
-                                        return newHistory.slice(-50);
-                                    });
-                                    void deleteTile(tile.id);
-                                } : undefined}
-                                previewMode={previewMode}
-                            />
-                        ))}
+                        {tiles.map(tile => {
+                            const structural = isStructuralTile(tile.equipmentTypeId);
+                            const isWall = tile.equipmentTypeId === 0;
+
+                            const tileUpdateHandler = (editMode || previewMode) ? (updates: Partial<TileData>) => {
+                                setHistory(prev => {
+                                    const newHistory = [...prev, tile];
+                                    return newHistory.slice(-50);
+                                });
+                                if (tile.id !== undefined) {
+                                    updateTile(tile.id, updates);
+                                }
+                            } : undefined;
+
+                            const tileDeleteHandler = editMode ? () => {
+                                setHistory(prev => {
+                                    const newHistory = [...prev, tile];
+                                    return newHistory.slice(-50);
+                                });
+                                void deleteTile(tile.id);
+                            } : undefined;
+
+                            if (isWall) {
+                                return (
+                                    <WallTile
+                                        key={tile.id}
+                                        {...tile}
+                                        highlighted={highlightedTileId === tile.id}
+                                        scale={scale}
+                                        gridSize={gridSize}
+                                        snap={snap}
+                                        canPlace={canPlace}
+                                        onUpdate={tileUpdateHandler}
+                                        editMode={editMode}
+                                        onDelete={tileDeleteHandler}
+                                    />
+                                );
+                            }
+
+                            return (
+                                <Tile
+                                    key={tile.id}
+                                    {...tile}
+                                    highlighted={highlightedTileId === tile.id}
+                                    scale={scale}
+                                    gridSize={gridSize}
+                                    snap={snap}
+                                    canPlace={canPlace}
+                                    canHover={!structural}
+                                    onUpdate={tileUpdateHandler}
+                                    onClick={!structural && !previewMode ? () => {
+                                        setMachineSaveError(null);
+                                        setMachineSaveSuccess(null);
+                                        setSelectedMachine({ ...tile, onUpdate: () => {} });
+                                    } : undefined}
+                                    editMode={editMode}
+                                    onDelete={tileDeleteHandler}
+                                    previewMode={previewMode}
+                                />
+                            );
+                        })}
 
                     </div>
                 </div>
