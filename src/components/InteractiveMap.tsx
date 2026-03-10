@@ -1,4 +1,5 @@
 import Tile from "./Tile";
+import FloatingEditTray from "./FloatingEditTray.tsx";
 import WallTile from "./WallTile";
 import { TileData, TileHistoryEntry } from "../types/tile";
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -164,6 +165,7 @@ function InteractiveMap({
     layoutId = undefined,
 }: InteractiveMapProps) {
     const [selectedMachine, setSelectedMachine] = useState<TileData | null>(null);
+    const [editingTileId, setEditingTileId] = useState<number | null>(null);
     const [isSavingMachine, setIsSavingMachine] = useState(false);
     const [isCreatingExercise, setIsCreatingExercise] = useState(false);
     const [isLoadingMuscles, setIsLoadingMuscles] = useState(false);
@@ -473,7 +475,7 @@ function InteractiveMap({
             const normalizedBenefits = normalizeArray(
                 resolveExerciseNames(selectedMachine, selectedMachine.exerciseIds ?? [])
             ) ?? [];
-            const normalizedVideoUrl = undefined; // Don't use videoUrl for equipment
+            const normalizedImageUrl = normalizeOptionalString(selectedMachine.equipment.imageUrl);
             const normalizedMuscles = normalizeArray(selectedMachine.equipment.musclesTargeted);
             const normalizedColour = selectedMachine.colour ? selectedMachine.colour.replace("#", "") : undefined;
             const selectedExerciseIds = selectedMachine.exerciseIds ?? [];
@@ -487,7 +489,7 @@ function InteractiveMap({
             await upsertEquipmentTypeOverride(equipmentTypeId, {
                 name: normalizedName,
                 description: normalizedDescription,
-                imageUrl: normalizedVideoUrl,
+                imageUrl: normalizedImageUrl,
             });
 
             const overrideSaves = selectedExerciseIds.map((exerciseId, index) => {
@@ -508,7 +510,7 @@ function InteractiveMap({
                 name: normalizedName,
                 description: normalizedDescription,
                 benefits: normalizedBenefits,
-                imageUrl: normalizedVideoUrl,
+                imageUrl: normalizedImageUrl,
                 musclesTargeted: normalizedMuscles,
                 colour: normalizedColour,
             };
@@ -542,8 +544,8 @@ function InteractiveMap({
             const savedMuscles = normalizedMuscles?.length ?? 0;
             setMachineSaveSuccess(
                 savedMuscles > 0
-                    ? "Saved relational data. Muscle edits require backend muscle-id mapping support."
-                    : "Saved relational data."
+                    ? "Component saved successfully. Targeting " + savedMuscles + " muscle" + (savedMuscles > 1 ? "s." : ".")
+                    : "Component saved successfully."
             );
         } catch (error) {
             const message = error instanceof Error ? error.message : "Failed to save machine details.";
@@ -689,6 +691,10 @@ function InteractiveMap({
     };
 
 
+    const editingTile = editingTileId === null
+        ? null
+        : tiles.find((tile) => tile.id === editingTileId) ?? null;
+
     return (
         <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-1 sm:pt-2">
             <div
@@ -709,6 +715,38 @@ function InteractiveMap({
                 )}
 
             </div>
+
+            {editMode && (
+                <FloatingEditTray
+                    tile={editingTile}
+                    onColourChange={(colour: string) => {
+                        if (!editingTile) return;
+                        updateTile(editingTile.id, { colour });
+                    }}
+                    onRotate={() => {
+                        if (!editingTile) return;
+                        setHistory((prev) => {
+                            const newHistory = [...prev, editingTile];
+                            return newHistory.slice(-50);
+                        });
+                        updateTile(editingTile.id, {
+                            width: editingTile.height,
+                            height: editingTile.width,
+                            rotation: editingTile.rotation,
+                        });
+                    }}
+                    onDelete={() => {
+                        if (!editingTile) return;
+                        setHistory((prev) => {
+                            const newHistory = [...prev, editingTile];
+                            return newHistory.slice(-50);
+                        });
+                        setEditingTileId(null);
+                        void deleteTile(editingTile.id);
+                    }}
+                    onDeselect={() => setEditingTileId(null)}
+                />
+            )}
 
             {/* Map container */}
             <div
@@ -748,12 +786,16 @@ function InteractiveMap({
                             linear-gradient(to bottom, var(--grid-line-color, rgba(255,255,255,0.07)) 1px, transparent 1px)
                         `,
                         backgroundSize: `${GRID_SIZE}px ${GRID_SIZE}px`,
+                        backgroundPosition: "4px 4px",
                         position: "absolute",
                         top: 0,
                         left: 0,
                         borderRadius: "16px",
                     }}
-                    onClick={previewMode ? () => setSelectedMachine(null) : undefined}
+                    onClick={() => {
+                        if (previewMode) setSelectedMachine(null);
+                        if (editMode) setEditingTileId(null);
+                    }}
                 >
                     {/* Border */}
                     <div style={{
@@ -809,12 +851,23 @@ function InteractiveMap({
                                 void deleteTile(tile.id);
                             } : undefined;
 
+                            const handleTileClick = () => {
+                                if (editMode) {
+                                    setEditingTileId(prev => prev === tile.id ? null : tile.id);
+                                }
+                                if (!structural && !previewMode) {
+                                    setMachineSaveError(null);
+                                    setMachineSaveSuccess(null);
+                                    setSelectedMachine({ ...tile, onUpdate: () => {} });
+                                }
+                            };
+
                             if (isWall) {
                                 return (
                                     <WallTile
                                         key={tile.id}
                                         {...tile}
-                                        highlighted={highlightedTileId === tile.id}
+                                        highlighted={highlightedTileId === tile.id || editingTileId === tile.id}
                                         scale={scale}
                                         gridSize={gridSize}
                                         snap={snap}
@@ -830,20 +883,15 @@ function InteractiveMap({
                                 <Tile
                                     key={tile.id}
                                     {...tile}
-                                    highlighted={highlightedTileId === tile.id}
+                                    highlighted={highlightedTileId === tile.id || editingTileId === tile.id}
                                     scale={scale}
                                     gridSize={gridSize}
                                     snap={snap}
                                     canPlace={canPlace}
                                     canHover={!structural}
                                     onUpdate={tileUpdateHandler}
-                                    onClick={!structural && !previewMode ? () => {
-                                        setMachineSaveError(null);
-                                        setMachineSaveSuccess(null);
-                                        setSelectedMachine({ ...tile, onUpdate: () => {} });
-                                    } : undefined}
+                                    onClick={handleTileClick}
                                     editMode={editMode}
-                                    onDelete={tileDeleteHandler}
                                     previewMode={previewMode}
                                 />
                             );

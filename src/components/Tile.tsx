@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { FaArrowRotateRight, FaTrash } from "react-icons/fa6";
 import { TileData } from "../types/tile";
 import { useTheme } from "../context/ThemeContext";
 
@@ -23,7 +22,6 @@ function Tile({
     scale = 1,
     gridSize = 20,
     snap = (v) => v,
-    onDelete,
     highlighted = false,
     previewMode = false,
 }: TileData) {
@@ -246,33 +244,6 @@ function Tile({
             {/* TODO: Truncate? */}
             <p className={`${previewMode ? "text-2xl" : "truncate"}`}>{equipment.name}</p>
             {equipment.icon && <equipment.icon className="absolute bottom-2 right-2 w-6 h-6 opacity-100" />}
-
-            {editMode && onUpdate && (
-                <div
-                    className="absolute top-2 left-2 transform w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete?.();
-                    }}
-                >
-                    <FaTrash className="w-5 h-5 text-primary" />
-                </div>
-            )}
-
-            {editMode && onUpdate && (
-                <div
-                    className="absolute top-2 right-2 transform w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-colors"
-                    onMouseDown={(e) => {
-                        e.stopPropagation();
-                        if (onUpdate) {
-                            onUpdate({ width: height, height: width, rotation: rotation });
-                            // onUpdate({ rotation: (rotation + 90) % 360 });
-                        }
-                    }}
-                    >
-                        <FaArrowRotateRight className="w-5 h-5 text-primary"/>
-                </div>
-            )}
 
             {editMode && onUpdate && resizeHandles.map(({ handle, cursor, className }) => (
                 <div

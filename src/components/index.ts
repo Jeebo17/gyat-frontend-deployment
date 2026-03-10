@@ -2,6 +2,7 @@ import CreateExerciseModal from "./CreateExerciseModal";
 import DragAndDropMenu from "./DragAndDropMenu";
 import DropDownMenu from "./DropDownMenu";
 import ExerciseDetailsModal from "./ExerciseDetailsModal";
+import FloatingEditTray from "./FloatingEditTray";
 import Header from "./Header";
 import InteractiveMap from "./InteractiveMap";
 import LogoutButton from "./LogOutButton";
@@ -19,6 +20,7 @@ export {
     DragAndDropMenu,
     DropDownMenu,
     ExerciseDetailsModal,
+    FloatingEditTray,
     Header,
     InteractiveMap,
     LogoutButton,
