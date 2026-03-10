@@ -1,4 +1,5 @@
-import { FaArrowRotateRight, FaTrash } from "react-icons/fa6";
+import { FaArrowRotateRight, FaPen, FaTrash } from "react-icons/fa6";
+import { IoClose } from "react-icons/io5";
 import { isStructuralTile } from "../constants/structuralComponents";
 import type { TileData } from "../types/tile";
 
@@ -13,6 +14,7 @@ interface FloatingEditTrayProps {
     onRotate: () => void;
     onDelete: () => void;
     onDeselect: () => void;
+    onEdit?: () => void;
 }
 
 function FloatingEditTray({
@@ -21,19 +23,20 @@ function FloatingEditTray({
     onRotate,
     onDelete,
     onDeselect,
+    onEdit,
 }: FloatingEditTrayProps) {
     if (!tile) return null;
 
     const structuralTile = isStructuralTile(tile.equipmentTypeId);
 
     return (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 rounded-xl bg-bg-primary/90 backdrop-blur-md border border-border-light shadow-lg px-3 py-2">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 rounded-xl bg-bg-primary/90 backdrop-blur-md border border-border-light shadow-lg px-3 py-2 select-none">
             <span className="text-xs text-text-primary font-medium mr-1 truncate max-w-[120px]">
                 {tile.equipment.name}
             </span>
 
             {!structuralTile && (
-                <div className="flex items-center gap-1 border-l border-border-light pl-2">
+                <div className="flex items-center gap-1 border-l border-r border-border-light px-2">
                     {EDIT_TRAY_COLOURS.map((colour) => (
                         <button
                             key={colour}
@@ -52,7 +55,16 @@ function FloatingEditTray({
 
             <button
                 type="button"
-                className="p-1.5 rounded-lg hover:bg-white/10 text-text-primary transition-colors border-l border-border-light pl-2"
+                className="p-1.5 rounded-lg hover:bg-white/10 text-text-primary transition-colors"
+                title="Edit information"
+                onClick={onEdit}
+            >
+                <FaPen className="w-4 h-4" />
+            </button>
+
+            <button
+                type="button"
+                className="p-1.5 rounded-lg hover:bg-white/10 text-text-primary transition-colors"
                 title="Swap width/height"
                 onClick={onRotate}
             >
@@ -70,11 +82,11 @@ function FloatingEditTray({
 
             <button
                 type="button"
-                className="p-1 rounded-lg hover:bg-white/10 text-text-secondary transition-colors text-xs"
+                className="rounded-lg hover:bg-white/10 text-text-primary transition-colors text-xs"
                 title="Deselect"
                 onClick={onDeselect}
             >
-                x
+                <IoClose className="w-6 h-6" />
             </button>
         </div>
     );
