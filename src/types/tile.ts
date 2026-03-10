@@ -49,8 +49,8 @@ export interface TileData {
     // Whether hover highlighting should be enabled.
     canHover?: boolean;
 
-    // Fired when the tile is clicked.
-    onClick?: () => void;
+    // Fired when the tile is selected (clicked without dragging).
+    onSelect?: () => void;
 
     // Whether the tile is in edit mode.
     editMode?: boolean;

@@ -2,6 +2,18 @@ import { useState, useEffect, useRef } from "react";
 import { TileData } from "../types/tile";
 import { useTheme } from "../context/ThemeContext";
 
+// Helper to lighten a hex color for pastel effect
+function lightenColor(hex: string, amount: number) {
+    hex = hex.replace('#', '');
+    let r = parseInt(hex.substring(0,2), 16);
+    let g = parseInt(hex.substring(2,4), 16);
+    let b = parseInt(hex.substring(4,6), 16);
+    r = Math.round(r + (255 - r) * amount);
+    g = Math.round(g + (255 - g) * amount);
+    b = Math.round(b + (255 - b) * amount);
+    return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
 
 type ResizeHandle = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 
@@ -17,7 +29,7 @@ function Tile({
     onUpdate,
     canPlace,
     canHover = true,
-    onClick,
+    onSelect,
     editMode,
     scale = 1,
     gridSize = 20,
@@ -227,22 +239,26 @@ function Tile({
                 width: isDragging || isResizing ? liveWidth : width,
                 height: isDragging || isResizing ? liveHeight : height,
                 transform: `rotate(${rotation}deg)`,
-                backgroundColor: `#${colour}`,
+                backgroundColor: theme.theme === 'light' ? lightenColor(`#${colour}`, 0.25) : `#${colour}`,
             }}
             onMouseDown={handleMouseDown}
-            onClick={onClick ? (e) => {
+            onClick={onSelect ? (e) => {
                 if (isDragging || isResizing) return;
                 if (dragMovedRef.current) {
                     dragMovedRef.current = false;
                     return;
                 }
                 e.stopPropagation();
-                onClick();
+                onSelect();
             } : undefined}
             aria-label={equipment.name}
         >
             {/* TODO: Truncate? */}
-            <p className={`${previewMode ? "text-2xl" : "truncate"}`}>{equipment.name}</p>
+            <div className="flex flex-col">
+                <p className={`${previewMode ? "text-2xl" : "truncate"}`}>{equipment.name}</p>
+                {editMode && <p className="truncate text-sm font-light">{equipment.brand}</p>}
+            </div>
+            
             {equipment.icon && <equipment.icon className="absolute bottom-2 right-2 w-6 h-6 opacity-100" />}
 
             {editMode && onUpdate && resizeHandles.map(({ handle, cursor, className }) => (

@@ -13,7 +13,7 @@ import { updateComponent, createComponent, deleteComponent } from "../services/c
 import { upsertEquipmentTypeOverride } from "../services/equipmentTypeService";
 import { createExercise, getExerciseById, updateCustomExercise, upsertExerciseOverride } from "../services/exerciseService";
 import { getMuscles } from "../services/muscleService";
-import { isStructuralTile, getStructuralDef } from "../constants/structuralComponents";
+import { getStructuralDef } from "../constants/structuralComponents";
 import type { ExerciseOption } from "../types/tile";
 import type { ExerciseDTO, MuscleDTO, UpdateComponentRequest } from "../types/api";
 
@@ -745,6 +745,12 @@ function InteractiveMap({
                         void deleteTile(editingTile.id);
                     }}
                     onDeselect={() => setEditingTileId(null)}
+                    onEdit={() => {
+                        if (!editingTile) return;
+                        setMachineSaveError(null);
+                        setMachineSaveSuccess(null);
+                        setSelectedMachine({ ...editingTile, onUpdate: () => {} });
+                    }}
                 />
             )}
 
@@ -830,7 +836,6 @@ function InteractiveMap({
                         )}
 
                         {tiles.map(tile => {
-                            const structural = isStructuralTile(tile.equipmentTypeId);
                             const isWall = tile.equipmentTypeId === 0;
 
                             const tileUpdateHandler = (editMode || previewMode) ? (updates: Partial<TileData>) => {
@@ -851,11 +856,10 @@ function InteractiveMap({
                                 void deleteTile(tile.id);
                             } : undefined;
 
-                            const handleTileClick = () => {
+                            const handleTileSelect = () => {
                                 if (editMode) {
                                     setEditingTileId(prev => prev === tile.id ? null : tile.id);
-                                }
-                                if (!structural && !previewMode) {
+                                } else if (!previewMode) {
                                     setMachineSaveError(null);
                                     setMachineSaveSuccess(null);
                                     setSelectedMachine({ ...tile, onUpdate: () => {} });
@@ -888,9 +892,8 @@ function InteractiveMap({
                                     gridSize={gridSize}
                                     snap={snap}
                                     canPlace={canPlace}
-                                    canHover={!structural}
                                     onUpdate={tileUpdateHandler}
-                                    onClick={handleTileClick}
+                                    onSelect={handleTileSelect}
                                     editMode={editMode}
                                     previewMode={previewMode}
                                 />
