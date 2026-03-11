@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { ThemeToggle } from '../ThemeToggle';
+import ThemeToggle from '../ThemeToggle';
 import { useTheme } from '../../context/ThemeContext';
 import { describe, it, expect, vi } from 'vitest';
 

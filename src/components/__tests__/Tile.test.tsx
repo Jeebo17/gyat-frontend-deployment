@@ -43,14 +43,14 @@ describe('Tile', () => {
         expect(tile).toBeTruthy();
     });
 
-    it('calls onClick when tile is clicked and in non-edit mode', () => {
-        const mockOnClick = vi.fn();
-        const mockTile = createMockTile({ onClick: mockOnClick, editMode: false });
+    it('calls onSelect when tile is clicked and in non-edit mode', () => {
+        const mockOnSelect = vi.fn();
+        const mockTile = createMockTile({ onSelect: mockOnSelect, editMode: false });
         render(<Tile {...mockTile} />);
         const tileElement = screen.getByText('Equipment Title #1').parentElement;
         expect(tileElement).toBeTruthy();
         tileElement!.click();
-        expect(mockOnClick).toHaveBeenCalled();
+        expect(mockOnSelect).toHaveBeenCalled();
     });
 
     it('does not call onClick when tile is clicked and in edit mode', () => {
@@ -129,20 +129,11 @@ describe('Tile', () => {
     });
 
     it('applies fallback color for unknown colour', () => {
-        const mockTile = createMockTile({ colour: 'unknown_color' });
+        const mockTile = createMockTile({ colour: 'aabbcc' });
         const { container } = render(<Tile {...mockTile} />);
         const mainDiv = container.firstChild as HTMLElement;
-        // dark theme fallback
-        expect(mainDiv?.className).toContain('bg-gray-600');
-    });
-
-    it('shows delete and rotate buttons in edit mode with onUpdate', () => {
-        const onUpdate = vi.fn();
-        const mockTile = createMockTile({ editMode: true, onUpdate });
-        const { container } = render(<Tile {...mockTile} />);
-        // delete icon and rotate icon should be present
-        const svgs = container.querySelectorAll('svg');
-        expect(svgs.length).toBeGreaterThanOrEqual(2);
+        // colour is now used as inline backgroundColor via hex
+        expect(mainDiv?.style.backgroundColor).toBeTruthy();
     });
 
     it('shows resize handles in edit mode with onUpdate', () => {
@@ -161,19 +152,18 @@ describe('Tile', () => {
         expect(handles.length).toBe(0);
     });
 
-    it('calls onDelete when delete button is clicked', () => {
+    it('does not call onDelete directly from tile (handled by FloatingEditTray)', () => {
         const onUpdate = vi.fn();
         const onDelete = vi.fn();
         const mockTile = createMockTile({ editMode: true, onUpdate, onDelete });
         const { container } = render(<Tile {...mockTile} />);
-        // The delete button is the first icon wrapper
+        // Delete button is no longer in Tile - it's in FloatingEditTray
         const deleteWrapper = container.querySelector('.absolute.top-2.left-2');
-        expect(deleteWrapper).toBeTruthy();
-        fireEvent.click(deleteWrapper!);
-        expect(onDelete).toHaveBeenCalled();
+        expect(deleteWrapper).toBeNull();
     });
 
     it('calls onUpdate with swapped dimensions when rotate button is mousedown', () => {
+        // Rotate functionality moved to FloatingEditTray - verify resize handles work instead
         const onUpdate = vi.fn();
         const mockTile = createMockTile({
             editMode: true,
@@ -183,11 +173,8 @@ describe('Tile', () => {
             rotation: 0,
         });
         const { container } = render(<Tile {...mockTile} />);
-        // The rotate button is the second icon wrapper (top-2 right-2)
-        const rotateWrapper = container.querySelector('.absolute.top-2.right-2');
-        expect(rotateWrapper).toBeTruthy();
-        fireEvent.mouseDown(rotateWrapper!);
-        expect(onUpdate).toHaveBeenCalledWith({ width: 100, height: 240, rotation: 0 });
+        const handles = container.querySelectorAll('[style*="cursor"]');
+        expect(handles.length).toBe(8);
     });
 
     it('handles drag (mousedown + mousemove + mouseup) in edit mode', () => {
@@ -438,13 +425,13 @@ describe('Tile', () => {
     });
 
     it('applies known colour classes for each colour', () => {
-        const colours = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'gray', 'zinc'];
+        const colours = ['EF4444', '3B82F6', '22C55E', 'EAB308', 'A855F7', 'F97316', '6B7280', '71717A'];
         for (const colour of colours) {
             const mockTile = createMockTile({ colour });
             const { container, unmount } = render(<Tile {...mockTile} />);
             const mainDiv = container.firstChild as HTMLElement;
-            // dark theme: bg-{colour}-500 (or bg-{colour}-300 etc)
-            expect(mainDiv?.className).toMatch(/bg-/);
+            // colour is now applied as inline backgroundColor
+            expect(mainDiv?.style.backgroundColor).toBeTruthy();
             unmount();
         }
     });

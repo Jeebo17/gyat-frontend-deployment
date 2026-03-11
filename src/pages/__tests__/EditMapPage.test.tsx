@@ -65,7 +65,7 @@ vi.mock('../../components/InteractiveMap', () => ({
 }));
 
 vi.mock('../../components/DragAndDropMenu', () => ({
-    DragAndDropMenu: () => <div data-testid="drag-drop-menu">DragDrop</div>,
+    default: () => <div data-testid="drag-drop-menu">DragDrop</div>,
 }));
 
 vi.mock('../../components/ToggleSwitch', () => ({
@@ -160,7 +160,7 @@ describe('EditMapPage', () => {
             expect(screen.getByText('Back to View')).toBeTruthy();
         });
         fireEvent.click(screen.getByText('Back to View'));
-        expect(mockNavigate).toHaveBeenCalledWith('/map');
+        expect(mockNavigate).toHaveBeenCalledWith('/map/69');
     });
 
     it('renders snap to grid toggle', async () => {

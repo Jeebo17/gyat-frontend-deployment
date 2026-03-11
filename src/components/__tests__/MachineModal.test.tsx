@@ -118,22 +118,22 @@ describe('MachineModal', () => {
         expect(wrapper.className).toContain('absolute');
     });
 
-    it('renders video preview placeholder when no videoUrl', () => {
+    it('renders image preview placeholder when no imageUrl', () => {
         render(<MachineModal tile={defaultTile} onClose={vi.fn()} />);
-        expect(screen.getByText('Video preview')).toBeInTheDocument();
+        expect(screen.getByText('Image preview')).toBeInTheDocument();
     });
 
-    it('renders iframe when videoUrl is provided', () => {
-        const tileWithVideo = createMockTile({
+    it('renders img when imageUrl is provided', () => {
+        const tileWithImage = createMockTile({
             equipment: {
-                name: 'Video Machine',
-                videoUrl: 'https://example.com/video',
+                name: 'Image Machine',
+                imageUrl: 'https://example.com/image.png',
             },
         });
-        render(<MachineModal tile={tileWithVideo} onClose={vi.fn()} />);
-        const iframe = document.querySelector('iframe');
-        expect(iframe).toBeTruthy();
-        expect(iframe?.getAttribute('src')).toBe('https://example.com/video');
+        render(<MachineModal tile={tileWithImage} onClose={vi.fn()} />);
+        const img = document.querySelector('img');
+        expect(img).toBeTruthy();
+        expect(img?.getAttribute('src')).toBe('https://example.com/image.png');
     });
 
     it('renders section headings', () => {
@@ -141,7 +141,7 @@ describe('MachineModal', () => {
         expect(screen.getByText('Description')).toBeInTheDocument();
         expect(screen.getByText('Muscles trained')).toBeInTheDocument();
         expect(screen.getByText('List of exercises:')).toBeInTheDocument();
-        expect(screen.getByText('Video')).toBeInTheDocument();
+        expect(screen.getByText('Image')).toBeInTheDocument();
     });
 
     it('renders an icon if the tile has one', () => {
