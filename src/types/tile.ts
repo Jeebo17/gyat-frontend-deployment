@@ -1,3 +1,4 @@
+import type { ExerciseDTO } from "./api";
 import { EquipmentProps } from "./equipment";
 
 export interface ExerciseOption {
@@ -16,6 +17,8 @@ export interface TileData {
     exerciseIds?: number[];
     // Full set of selectable exercises for this equipment type.
     exerciseOptions?: ExerciseOption[];
+    // Full exercise DTOs available from layout definitions for read-only display.
+    exerciseDetails?: ExerciseDTO[];
     // Equipment maintenance status for component update payloads.
     outOfOrder?: boolean;
 
