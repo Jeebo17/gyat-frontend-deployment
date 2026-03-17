@@ -88,6 +88,14 @@ const addExerciseIdIfMissing = (exerciseIds: number[] | undefined, nextExerciseI
     return current.includes(nextExerciseId) ? current : [...current, nextExerciseId];
 };
 
+const addOrUpdateExerciseDetail = (details: ExerciseDTO[] | undefined, nextExercise: ExerciseDTO): ExerciseDTO[] => {
+    const current = details ?? [];
+    if (!current.some((exercise) => exercise.id === nextExercise.id)) {
+        return [...current, nextExercise];
+    }
+    return current.map((exercise) => (exercise.id === nextExercise.id ? nextExercise : exercise));
+};
+
 const mergeUniqueStrings = (first: string[] | undefined, second: string[] | undefined): string[] | undefined => {
     const merged = Array.from(new Set([...(first ?? []), ...(second ?? [])].filter(Boolean)));
     return merged.length > 0 ? merged : undefined;
@@ -99,8 +107,9 @@ const applyExerciseResultToTile = (tile: TileData, exercise: ExerciseDTO): TileD
             ? { ...option, name: exercise.name }
             : option
     );
+    const nextExerciseDetails = addOrUpdateExerciseDetail(tile.exerciseDetails, exercise);
     const exerciseIds = tile.exerciseIds ?? [];
-    const updatedTile = { ...tile, exerciseOptions: nextOptions };
+    const updatedTile = { ...tile, exerciseOptions: nextOptions, exerciseDetails: nextExerciseDetails };
 
     return {
         ...updatedTile,
@@ -585,11 +594,13 @@ function InteractiveMap({
                 if (tile.equipmentTypeId !== selectedMachine.equipmentTypeId) return tile;
 
                 const nextOptions = addExerciseOptionIfMissing(tile.exerciseOptions, nextOption);
+                const nextExerciseDetails = addOrUpdateExerciseDetail(tile.exerciseDetails, created);
                 const mergedMuscles = mergeUniqueStrings(tile.equipment.musclesTargeted, selectedMuscleNames);
                 if (tile.id !== selectedMachine.id) {
                     return {
                         ...tile,
                         exerciseOptions: nextOptions,
+                        exerciseDetails: nextExerciseDetails,
                         equipment: {
                             ...tile.equipment,
                             musclesTargeted: mergedMuscles,
@@ -600,11 +611,12 @@ function InteractiveMap({
                 return {
                     ...tile,
                     exerciseOptions: nextOptions,
+                    exerciseDetails: nextExerciseDetails,
                     exerciseIds: nextExerciseIds,
                     equipment: {
                         ...tile.equipment,
                         benefits: resolveExerciseNames(
-                            { ...tile, exerciseOptions: nextOptions, exerciseIds: nextExerciseIds },
+                            { ...tile, exerciseOptions: nextOptions, exerciseDetails: nextExerciseDetails, exerciseIds: nextExerciseIds },
                             nextExerciseIds
                         ),
                         musclesTargeted: mergedMuscles,
@@ -617,15 +629,17 @@ function InteractiveMap({
                 if (!prev) return prev;
 
                 const nextOptions = addExerciseOptionIfMissing(prev.exerciseOptions, nextOption);
+                const nextExerciseDetails = addOrUpdateExerciseDetail(prev.exerciseDetails, created);
                 const updatedExerciseIds = addExerciseIdIfMissing(prev.exerciseIds, created.id);
                 return {
                     ...prev,
                     exerciseOptions: nextOptions,
+                    exerciseDetails: nextExerciseDetails,
                     exerciseIds: updatedExerciseIds,
                     equipment: {
                         ...prev.equipment,
                         benefits: resolveExerciseNames(
-                            { ...prev, exerciseOptions: nextOptions, exerciseIds: updatedExerciseIds },
+                            { ...prev, exerciseOptions: nextOptions, exerciseDetails: nextExerciseDetails, exerciseIds: updatedExerciseIds },
                             updatedExerciseIds
                         ),
                         musclesTargeted: mergeUniqueStrings(prev.equipment.musclesTargeted, selectedMuscleNames),
@@ -938,7 +952,7 @@ function InteractiveMap({
                         setMachineSaveSuccess(null);
                     } : undefined}
                     onCreateExercise={editMode ? handleCreateExercise : undefined}
-                    onLoadExercise={getExerciseById}
+                    onLoadExercise={editMode ? getExerciseById : undefined}
                     onSaveExercise={editMode ? handleSaveExercise : undefined}
                     creatingExercise={isCreatingExercise}
                     muscleOptions={availableMuscles}

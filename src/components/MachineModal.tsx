@@ -76,7 +76,7 @@ function MachineModal({
     saveError = null,
     saveSuccess = null,
 }: MachineModalProps) {
-    const [selectedExerciseForModal, setSelectedExerciseForModal] = useState<{ id?: number; name: string } | null>(null);
+    const [selectedExerciseForModal, setSelectedExerciseForModal] = useState<{ id?: number; name: string; details?: ExerciseDTO } | null>(null);
     const [previewMode, setPreviewMode] = useState(false);
     const [exerciseToAddId, setExerciseToAddId] = useState("");
     const [showCreateExerciseModal, setShowCreateExerciseModal] = useState(false);
@@ -88,6 +88,10 @@ function MachineModal({
     const selectedExerciseIds = tile.exerciseIds ?? [];
     const selectedExerciseIdSet = useMemo(() => new Set(selectedExerciseIds), [selectedExerciseIds]);
     const selectedBenefits = tile.equipment.benefits ?? [];
+    const exerciseDetailById = useMemo(
+        () => new Map((tile.exerciseDetails ?? []).map((exercise) => [exercise.id, exercise])),
+        [tile.exerciseDetails]
+    );
     const exerciseNameById = useMemo(
         () => new Map((tile.exerciseOptions ?? []).map((exercise) => [exercise.id, exercise.name])),
         [tile.exerciseOptions]
@@ -95,16 +99,19 @@ function MachineModal({
     const selectedExercises = selectedExerciseIds.map((exerciseId, index) => ({
         id: exerciseId,
         name: exerciseNameById.get(exerciseId) ?? selectedBenefits[index] ?? `Exercise #${exerciseId}`,
+        details: exerciseDetailById.get(exerciseId),
     }));
     const readOnlyExercises = selectedExercises.length > 0
         ? selectedExercises.map((exercise) => ({
             id: exercise.id,
             name: exercise.name,
+            details: exercise.details,
             key: `selected-${exercise.id}`,
         }))
         : (tile.equipment.benefits ?? []).map((benefit, index) => ({
             id: undefined,
             name: benefit,
+            details: undefined,
             key: `benefit-${index}`,
         }));
     const selectableExerciseOptions = (tile.exerciseOptions ?? [])
@@ -127,8 +134,8 @@ function MachineModal({
         onExerciseIdsChange?.([...selectedExerciseIds, nextExerciseId]);
     };
 
-    const openExerciseModal = (exercise: { id?: number; name: string }) => {
-        setSelectedExerciseForModal({ id: exercise.id, name: exercise.name });
+    const openExerciseModal = (exercise: { id?: number; name: string; details?: ExerciseDTO }) => {
+        setSelectedExerciseForModal({ id: exercise.id, name: exercise.name, details: exercise.details });
     };
 
     const IconComponent = tile.equipment.icon;

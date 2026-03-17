@@ -10,7 +10,7 @@ export interface ExerciseEditDraft {
 }
 
 interface ExerciseDetailsModalProps {
-    exercise: { id?: number; name: string } | null;
+    exercise: { id?: number; name: string; details?: ExerciseDTO } | null;
     onClose: () => void;
     onLoadExercise?: (exerciseId: number) => Promise<ExerciseDTO>;
     onSaveExercise?: (exerciseId: number, draft: ExerciseEditDraft, useOverride: boolean) => Promise<void> | void;
@@ -45,13 +45,15 @@ function ExerciseDetailsModal({
     useEffect(() => {
         if (!exercise) return;
 
-        setDetails(null);
+        const initialDetails = exercise.details ?? null;
+        setDetails(initialDetails);
+        setLoading(false);
         setLoadError(null);
         setSaveError(null);
-        setEditName(exercise.name);
-        setEditDescription("");
-        setEditDifficulty("");
-        setEditVideoUrl("");
+        setEditName(initialDetails?.name ?? exercise.name);
+        setEditDescription(initialDetails?.description ?? "");
+        setEditDifficulty(initialDetails?.difficulty ?? "");
+        setEditVideoUrl(initialDetails?.videoUrl ?? "");
 
         if (typeof exercise.id !== "number" || !onLoadExercise) return;
 
