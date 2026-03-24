@@ -50,7 +50,7 @@ export const mapComponentToTile = (
 
     const musclesFromExercises = Array.from(
         new Set(
-            exercises.flatMap((exercise) => exercise.muscles ?? [])
+            exercises.flatMap((exercise) => (exercise.muscles ?? []).map(m => m.name))
         )
     );
     const musclesTargeted = overrides?.musclesTargeted ?? (musclesFromExercises.length > 0 ? musclesFromExercises : undefined);
