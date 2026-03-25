@@ -8,7 +8,7 @@ export interface ExerciseDTO {
     difficulty: string | null;
     equipmentTypeId: number;
     equipmentTypeName: string;
-    muscles: string[];
+    muscles: MuscleDTO[];
     global?: boolean;
 }
 
