@@ -204,7 +204,7 @@ function ExerciseDetailsModal({
                             ) : (
                                 <div className="flex flex-wrap gap-2">
                                     {details?.muscles.map((muscle, idx) => (
-                                        <span key={`${muscle}-${idx}`} className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-accent-primary/20 text-accent-primary border border-accent-primary/30">{muscle}</span>
+                                        <span key={`${muscle}-${idx}`} className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-accent-primary/20 text-accent-primary border border-accent-primary/30">{muscle.name}</span>
                                     ))}
                                 </div>
                             )}
