@@ -830,21 +830,104 @@ Overall coverage: **90.33% statements, 81.12% branches, 91.37% functions, 93.20%
 ## Running Tests
 
 ```bash
-# Run all tests
-npx vitest run
+# Run all unit/integration tests
+npm run test:unit
 
-# Run tests with coverage
+# Run unit/integration tests with coverage
 npx vitest run --coverage
 
-# Run tests in watch mode
-npx vitest
+# Run tests in watch mode (unit/integration)
+npm run test:unit
 
-# Run a specific test file
+# Run a specific unit test file
 npx vitest run src/components/__tests__/Tile.test.tsx
 
-# Run tests matching a pattern
+# Run unit tests matching a pattern
 npx vitest run --grep "renders"
+
+# Install Playwright browsers (run once per machine)
+npm run test:e2e:install
+
+# Run all E2E tests
+npm run test:e2e
+
+# Run desktop + mobile in one combined run/report
+npm run test:e2e:all
+
+# Run E2E tests by browser project
+npm run test:e2e:chromium
+npm run test:e2e:firefox
+npm run test:e2e:webkit
+
+# Run E2E tests for mobile emulation projects
+npm run test:e2e:mobile
+npm run test:e2e:mobile:chrome
+npm run test:e2e:mobile:safari
+
+# Run E2E tests in headed mode
+npm run test:e2e:headed
+
+# Open Playwright interactive UI
+npm run test:e2e:ui
+
+# Debug E2E tests step-by-step
+npm run test:e2e:debug
+
+# Open the latest HTML E2E report
+npm run test:e2e:report
 ```
+
+## End-to-End (Playwright)
+
+Playwright E2E tests live in `e2e/` and are configured in `playwright.config.ts`.
+
+- The config starts the Vite app automatically on `http://127.0.0.1:4173`.
+- Browser projects currently include:
+	- `chromium` (`Desktop Chrome`)
+	- `firefox` (`Desktop Firefox`)
+	- `webkit` (`Desktop Safari`)
+	- `mobile-chrome` (`Pixel 5` emulation)
+	- `mobile-safari` (`iPhone 12` emulation)
+- Reports are generated to `playwright-report/`.
+- Raw test artifacts are generated in `test-results/`.
+
+Project execution behavior:
+
+- `npm run test:e2e` runs all configured projects in `playwright.config.ts`.
+- `npm run test:e2e:all` explicitly runs desktop + mobile projects in one command.
+- Both commands produce one HTML report covering all executed projects.
+
+Current E2E suites:
+
+- `e2e/app-smoke.spec.ts` validates route-level smoke coverage for `/`, `/login`, `/signup`, and unknown route `404` behavior.
+- `e2e/auth-flow.spec.ts` covers auth journeys (login/signup validations and mocked API-backed success redirects).
+- `e2e/map-flow.spec.ts` covers route recovery and header navigation flows.
+
+Current E2E coverage summary:
+
+- 3 spec files
+- 11 test cases per project
+- 55 total tests when all 5 projects run (`11 x 5`)
+
+How reporting works:
+
+1. Run E2E tests with any browser project command.
+2. Open the generated HTML report using `npm run test:e2e:report`.
+3. Review per-test traces/screenshots from `test-results/` when diagnosing failures.
+
+Cross-browser + mobile report notes:
+
+1. A single `npm run test:e2e` run now includes desktop and mobile projects.
+2. Use `npm run test:e2e:all` when you want an explicit desktop+mobile combined command.
+3. The HTML report groups results by project name (`chromium`, `firefox`, `webkit`, `mobile-chrome`, `mobile-safari`).
+4. Use project-specific commands to isolate regressions to one browser/device profile.
+5. For one consolidated report, run exactly one Playwright command (e.g., `npm run test:e2e:all`) before opening the report.
+
+Recommended workflow:
+
+1. Keep fast unit/integration checks in Vitest.
+2. Add a small number of user-journey Playwright tests for high-value flows (auth, map navigation, edit map).
+3. Run E2E in CI with retries enabled (already configured via `CI` environment detection).
 
 ## Test Patterns & Conventions
 
