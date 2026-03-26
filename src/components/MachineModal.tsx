@@ -147,14 +147,14 @@ function MachineModal({
 
     return (
         <div
-            className={`${containerMode ? 'absolute' : 'fixed'} inset-0 flex items-center justify-center z-40 cursor-pointer ${showEditableFields ? '' : 'select-none'}`}
+            className={`${containerMode ? 'absolute' : 'fixed'} inset-0 flex items-center justify-center z-40 cursor-pointer overflow-y-auto overscroll-contain p-2 sm:p-4 ${showEditableFields ? '' : 'select-none'}`}
             onClick={onClose}
         >
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/60 backdrop-blur-md select-none" />
 
             <div
-                className="relative z-50 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 p-4 sm:p-6 md:p-8 rounded-3xl shadow-2xl w-[95%] sm:w-11/12 md:w-4/5 lg:w-3/4 max-w-5xl h-[90%] sm:h-[85%] cursor-auto overflow-hidden flex flex-col"
+                className="relative z-50 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 p-4 sm:p-6 md:p-8 rounded-3xl shadow-2xl w-[95%] sm:w-11/12 md:w-4/5 lg:w-3/4 max-w-5xl h-[90dvh] sm:h-[85dvh] max-h-[95dvh] cursor-auto overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
 
@@ -244,7 +244,7 @@ function MachineModal({
 
                 <div className="h-px bg-white/10 my-4 flex-shrink-0" />
 
-                <div className={`grid ${showEditableFields ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'} gap-4 sm:gap-5 flex-1 min-h-0 overflow-y-auto pr-1 scrollbar-thumb-only`}>
+                <div className={`grid ${showEditableFields ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'} gap-4 sm:gap-5 flex-1 min-h-0 overflow-y-auto overscroll-contain pr-1 scrollbar-thumb-only`}>
                     <div className={`${showEditableFields ? '' : 'md:col-span-1'} flex flex-col gap-4 min-h-0`}>
 
                         {/* Description Card */}
@@ -288,76 +288,56 @@ function MachineModal({
                         </div>
 
                         {/* Exercises Card */}
-                        <div className="rounded-xl p-4 text-white bg-white/5 border border-white/10 flex flex-col min-h-0">
+                        <div className={`rounded-xl p-4 text-white bg-white/5 border border-white/10 ${showEditableFields ? 'flex flex-col min-h-0' : ''}`}>
                             <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3 flex-shrink-0">List of exercises:</h3>
-                            <div className="flex flex-col min-h-0">
-                                {showEditableFields ? (
-                                    <div className="space-y-3 flex flex-col min-h-0">
-                                        <div className="flex flex-col sm:flex-row gap-2">
-                                            <label htmlFor="machine-exercise-select" className="sr-only">Exercise selector</label>
-                                            <select
-                                                id="machine-exercise-select"
-                                                className={`${inputClasses} pr-8 flex-1`}
-                                                value={exerciseToAddId}
-                                                onChange={(event) => setExerciseToAddId(event.target.value)}
-                                                disabled={selectableExerciseOptions.length === 0}
-                                            >
-                                                {selectableExerciseOptions.length === 0 ? (
-                                                    <option value="">No additional exercises available</option>
-                                                ) : (
-                                                    selectableExerciseOptions.map((exercise) => (
-                                                        <option key={exercise.id} value={String(exercise.id)}>
-                                                            {exercise.name}
-                                                        </option>
-                                                    ))
-                                                )}
-                                            </select>
-                                            <button
-                                                type="button"
-                                                className="px-3 py-2 rounded-lg bg-accent-primary text-white text-sm font-semibold hover:bg-accent-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                                                onClick={handleAddExercise}
-                                                disabled={!exerciseToAddId || selectableExerciseOptions.length === 0}
-                                            >
-                                                Add Exercise
-                                            </button>
-                                        </div>
-                                        
-                                        <div className="flex justify-end">
-                                            <button
-                                                type="button"
-                                                className="px-3 py-1.5 rounded-lg border border-white/20 text-white/80 text-sm font-medium hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                                onClick={() => setShowCreateExerciseModal(true)}
-                                                disabled={creatingExercise}
-                                            >
-                                                Create Exercise
-                                            </button>
-                                        </div>
-
-                                        {selectedExercises.length === 0 ? (
-                                            <p className="text-white/50 text-sm">No exercises selected.</p>
-                                        ) : (
-                                            <ul className="space-y-1.5 overflow-y-auto min-h-0 max-h-52 pr-1 scrollbar-thumb-only">
-                                                {selectedExercises.map((exercise) => (
-                                                    <li key={exercise.id}>
-                                                        <button
-                                                            type="button"
-                                                            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left text-sm text-white transition-all hover:bg-white/10 hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                                                            onClick={() => openExerciseModal(exercise)}
-                                                        >
-                                                            {exercise.name}
-                                                        </button>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        )}
+                            {showEditableFields ? (
+                                <div className="space-y-3 flex flex-col min-h-0">
+                                    <div className="flex flex-col sm:flex-row gap-2">
+                                        <label htmlFor="machine-exercise-select" className="sr-only">Exercise selector</label>
+                                        <select
+                                            id="machine-exercise-select"
+                                            className={`${inputClasses} pr-8 flex-1`}
+                                            value={exerciseToAddId}
+                                            onChange={(event) => setExerciseToAddId(event.target.value)}
+                                            disabled={selectableExerciseOptions.length === 0}
+                                        >
+                                            {selectableExerciseOptions.length === 0 ? (
+                                                <option value="">No additional exercises available</option>
+                                            ) : (
+                                                selectableExerciseOptions.map((exercise) => (
+                                                    <option key={exercise.id} value={String(exercise.id)}>
+                                                        {exercise.name}
+                                                    </option>
+                                                ))
+                                            )}
+                                        </select>
+                                        <button
+                                            type="button"
+                                            className="px-3 py-2 rounded-lg bg-accent-primary text-white text-sm font-semibold hover:bg-accent-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                                            onClick={handleAddExercise}
+                                            disabled={!exerciseToAddId || selectableExerciseOptions.length === 0}
+                                        >
+                                            Add Exercise
+                                        </button>
                                     </div>
-                                ) : (
-                                    readOnlyExercises.length === 0 ? (
-                                        <p className="text-white/50 text-sm">No exercises listed.</p>
+                                    
+                                    <div className="flex justify-end">
+                                        <button
+                                            type="button"
+                                            className="px-3 py-1.5 rounded-lg border border-white/20 text-white/80 text-sm font-medium hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            onClick={() => setShowCreateExerciseModal(true)}
+                                            disabled={creatingExercise}
+                                        >
+                                            Create Exercise
+                                        </button>
+                                    </div>
+
+                                    {selectedExercises.length === 0 ? (
+                                        <p className="text-white/50 text-sm">No exercises selected.</p>
                                     ) : (
-                                        <ul className="space-y-1.5 overflow-y-auto min-h-0 max-h-52 pr-1 scrollbar-thumb-only">
-                                            {readOnlyExercises.map((exercise) => (
-                                                <li key={exercise.key}>
+                                        <ul className="space-y-1.5 min-h-0 pr-1 md:max-h-52 md:overflow-y-auto scrollbar-thumb-only">
+                                            {selectedExercises.map((exercise) => (
+                                                <li key={exercise.id}>
                                                     <button
                                                         type="button"
                                                         className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left text-sm text-white transition-all hover:bg-white/10 hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-accent-primary"
@@ -368,9 +348,27 @@ function MachineModal({
                                                 </li>
                                             ))}
                                         </ul>
-                                    )
-                                )}
-                            </div>
+                                    )}
+                                </div>
+                            ) : (
+                                readOnlyExercises.length === 0 ? (
+                                    <p className="text-white/50 text-sm">No exercises listed.</p>
+                                ) : (
+                                    <ul className="space-y-1.5 pr-1">
+                                        {readOnlyExercises.map((exercise) => (
+                                            <li key={exercise.key}>
+                                                <button
+                                                    type="button"
+                                                    className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left text-sm text-white transition-all hover:bg-white/10 hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                                                    onClick={() => openExerciseModal(exercise)}
+                                                >
+                                                    {exercise.name}
+                                                </button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )
+                            )}
                         </div>
 
                         <div className="rounded-xl p-4 text-white bg-white/5 border border-white/10">
@@ -392,6 +390,13 @@ function MachineModal({
                                 </p>
                             )}
                         </div>
+
+                        {!showEditableFields && (
+                            <div className="md:hidden rounded-xl p-4 text-white bg-white/5 border border-white/10 flex flex-col">
+                                <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3 flex-shrink-0">Image</h3>
+                                <ImagePreview url={tile.equipment.imageUrl} name={tile.equipment.name} />
+                            </div>
+                        )}
 
 
                         {/* Stacked Image Card */}
@@ -415,7 +420,7 @@ function MachineModal({
 
                     
                     {!showEditableFields && (
-                        <div className="md:col-span-2 rounded-xl p-4 text-white bg-white/5 border border-white/10 flex flex-col">
+                        <div className="hidden md:flex md:col-span-2 rounded-xl p-4 text-white bg-white/5 border border-white/10 flex-col">
                             <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3 flex-shrink-0">Image</h3>
                             <ImagePreview url={tile.equipment.imageUrl} name={tile.equipment.name} />
                         </div>
