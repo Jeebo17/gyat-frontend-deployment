@@ -18,11 +18,11 @@ vi.mock('framer-motion', () => ({
 }));
 
 vi.mock('../ThemeToggle', () => ({
-    ThemeToggle: ({ header }: any) => <button data-testid="theme-toggle" data-header={header}>Theme</button>,
+    default: ({ header }: any) => <button data-testid="theme-toggle" data-header={header}>Theme</button>,
 }));
 
 vi.mock('../ProfileButton', () => ({
-    ProfileButton: ({ header }: any) => <button data-testid="profile-button" data-header={header}>Profile</button>,
+    default: ({ header }: any) => <button data-testid="profile-button" data-header={header}>Profile</button>,
 }));
 
 vi.mock('../../hooks/useAppSound', () => ({
@@ -185,7 +185,7 @@ describe('Header', () => {
     });
 
     it('renders selected page icon for /map', () => {
-        Object.defineProperty(window, 'location', { value: { pathname: '/map' }, writable: true });
+        Object.defineProperty(window, 'location', { value: { pathname: '/map/1' }, writable: true });
         render(<Header />);
         expect(screen.getByTestId('io5-map')).toBeInTheDocument();
         expect(screen.getByTestId('io5-home-outline')).toBeInTheDocument();

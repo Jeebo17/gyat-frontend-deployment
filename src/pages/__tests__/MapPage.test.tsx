@@ -67,7 +67,7 @@ vi.mock('../../components/InteractiveMap', () => ({
 }));
 
 vi.mock('../../components/SearchBar', () => ({
-    SearchBar: ({ onSelect }: any) => (
+    default: ({ onSelect }: any) => (
         <div data-testid="search-bar">
             <button onClick={() => onSelect({ id: 1, name: 'Test', floorName: 'Ground' })}>
                 Select Item
@@ -167,7 +167,7 @@ describe('MapPage', () => {
             expect(screen.getByText('Edit Map')).toBeTruthy();
         });
         fireEvent.click(screen.getByText('Edit Map'));
-        expect(mockNavigate).toHaveBeenCalledWith('/map/edit');
+        expect(mockNavigate).toHaveBeenCalledWith('/map/edit/69');
     });
 
     it('displays floor name', async () => {

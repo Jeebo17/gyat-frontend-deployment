@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SearchBar } from '../components/index';
+import { SearchBar } from '../index';
 import type { TileSearchProps } from '../../types/tile';
 
 const mockSearchData: TileSearchProps[] = [

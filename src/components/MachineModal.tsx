@@ -288,11 +288,11 @@ function MachineModal({
                         </div>
 
                         {/* Exercises Card */}
-                        <div className="rounded-xl p-4 text-white bg-white/5 border border-white/10 flex flex-col">
+                        <div className="rounded-xl p-4 text-white bg-white/5 border border-white/10 flex flex-col min-h-0">
                             <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3 flex-shrink-0">List of exercises:</h3>
-                            <div className="flex flex-col">
+                            <div className="flex flex-col min-h-0">
                                 {showEditableFields ? (
-                                    <div className="space-y-3 flex flex-col">
+                                    <div className="space-y-3 flex flex-col min-h-0">
                                         <div className="flex flex-col sm:flex-row gap-2">
                                             <label htmlFor="machine-exercise-select" className="sr-only">Exercise selector</label>
                                             <select
@@ -336,7 +336,7 @@ function MachineModal({
                                         {selectedExercises.length === 0 ? (
                                             <p className="text-white/50 text-sm">No exercises selected.</p>
                                         ) : (
-                                            <ul className="space-y-1.5 overflow-y-auto min-h-0 flex-1 pr-1 scrollbar-thumb-only">
+                                            <ul className="space-y-1.5 overflow-y-auto min-h-0 max-h-52 pr-1 scrollbar-thumb-only">
                                                 {selectedExercises.map((exercise) => (
                                                     <li key={exercise.id}>
                                                         <button
@@ -355,7 +355,7 @@ function MachineModal({
                                     readOnlyExercises.length === 0 ? (
                                         <p className="text-white/50 text-sm">No exercises listed.</p>
                                     ) : (
-                                        <ul className="space-y-1.5 overflow-y-auto min-h-0 flex-1 pr-1 scrollbar-thumb-only">
+                                        <ul className="space-y-1.5 overflow-y-auto min-h-0 max-h-52 pr-1 scrollbar-thumb-only">
                                             {readOnlyExercises.map((exercise) => (
                                                 <li key={exercise.key}>
                                                     <button
@@ -396,7 +396,7 @@ function MachineModal({
 
                         {/* Stacked Image Card */}
                         {showEditableFields && (
-                            <div className="rounded-xl p-4 text-white bg-white/5 border border-white/10 flex flex-col">
+                            <div className="rounded-xl p-4 text-white bg-white/5 border border-white/10 flex flex-col flex-shrink-0">
                                 <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3 flex-shrink-0">Image</h3>
                                 <div className="mb-3">
                                     <label htmlFor="machine-image-url" className="sr-only">Image URL</label>

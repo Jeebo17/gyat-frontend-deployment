@@ -21,7 +21,7 @@ vi.mock('../../components/Header', () => ({
 }));
 
 vi.mock('../../components/LogOutButton', () => ({
-    LogoutButton: () => <button data-testid="logout-button">Logout</button>,
+    default: () => <button data-testid="logout-button">Logout</button>,
 }));
 
 vi.mock('react-router', () => ({

@@ -88,15 +88,15 @@ describe('HomePage', () => {
         expect(screen.getByText(/Navigate your gym smarter/)).toBeTruthy();
     });
 
-    it('renders the Open Gym Map button', () => {
+    it('renders the Search for a gym button', () => {
         render(<HomePage />);
-        expect(screen.getByText('Open Gym Map')).toBeTruthy();
+        expect(screen.getByText('Search for a gym')).toBeTruthy();
     });
 
-    it('navigates to /map when button is clicked', () => {
+    it('navigates to /map/search when button is clicked', () => {
         render(<HomePage />);
-        screen.getByText('Open Gym Map').click();
-        expect(mockNavigate).toHaveBeenCalledWith('/map');
+        screen.getByText('Search for a gym').click();
+        expect(mockNavigate).toHaveBeenCalledWith('/map/search');
     });
 
     it('renders the header component', () => {

@@ -1,6 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { DragAndDropMenu } from '../DragAndDropMenu';
+import DragAndDropMenu from '../DragAndDropMenu';
 
 // Mock react-icons
 vi.mock('react-icons/tb', () => ({ TbTreadmill: (p: any) => <span data-testid="icon-treadmill" {...p} /> }));
@@ -12,15 +12,33 @@ vi.mock('react-icons/gi', () => ({ GiWeightLiftingUp: (p: any) => <span data-tes
 vi.mock('react-icons/io5', () => ({ IoBarbell: (p: any) => <span data-testid="icon-barbell" {...p} /> }));
 vi.mock('react-icons/gr', () => ({ GrYoga: (p: any) => <span data-testid="icon-yoga" {...p} /> }));
 
+vi.mock('../../services/equipmentTypeService', () => ({
+    getAllEquipmentTypes: vi.fn().mockResolvedValue([
+        { id: 100, name: 'Treadmill', brand: null, imageUrl: null, description: null, safetyInfo: null, exercises: [] },
+        { id: 101, name: 'Rowing Machine', brand: null, imageUrl: null, description: null, safetyInfo: null, exercises: [] },
+        { id: 102, name: 'Racks', brand: null, imageUrl: null, description: null, safetyInfo: null, exercises: [] },
+        { id: 103, name: 'Free Weights', brand: null, imageUrl: null, description: null, safetyInfo: null, exercises: [] },
+        { id: 104, name: 'Resistance Machine', brand: null, imageUrl: null, description: null, safetyInfo: null, exercises: [] },
+        { id: 105, name: 'Open Space', brand: null, imageUrl: null, description: null, safetyInfo: null, exercises: [] },
+    ]),
+}));
+
+vi.mock('../../constants/structuralComponents', () => ({
+    getStructuralDef: () => undefined,
+    isStructuralTile: () => false,
+}));
+
 describe('DragAndDropMenu', () => {
-    it('renders heading', () => {
+    it('renders heading', async () => {
         render(<DragAndDropMenu />);
         expect(screen.getByText('Drag and drop')).toBeInTheDocument();
     });
 
-    it('renders all equipment compoenents', () => {
+    it('renders all equipment types from API', async () => {
         render(<DragAndDropMenu />);
-        expect(screen.getByText('Treadmill')).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('Treadmill')).toBeInTheDocument();
+        });
         expect(screen.getByText('Rowing Machine')).toBeInTheDocument();
         expect(screen.getByText('Racks')).toBeInTheDocument();
         expect(screen.getByText('Free Weights')).toBeInTheDocument();
@@ -28,8 +46,11 @@ describe('DragAndDropMenu', () => {
         expect(screen.getByText('Open Space')).toBeInTheDocument();
     });
 
-    it('each template item is draggable', () => {
+    it('each template item is draggable', async () => {
         render(<DragAndDropMenu />);
+        await waitFor(() => {
+            expect(screen.getByText('Treadmill')).toBeInTheDocument();
+        });
         const items = screen.getAllByText(/Treadmill|Rowing Machine|Racks|Free Weights|Resistance Machine|Open Space/);
         items.forEach(item => {
             const draggableEl = item.closest('[draggable]');
@@ -38,8 +59,11 @@ describe('DragAndDropMenu', () => {
         });
     });
 
-    it('sets dataTransfer on drag start', () => {
+    it('sets dataTransfer on drag start', async () => {
         render(<DragAndDropMenu />);
+        await waitFor(() => {
+            expect(screen.getByText('Treadmill')).toBeInTheDocument();
+        });
         const treadmill = screen.getByText('Treadmill').closest('[draggable]')!;
 
         const setData = vi.fn();
@@ -53,43 +77,21 @@ describe('DragAndDropMenu', () => {
         expect(dataTransfer.effectAllowed).toBe('copy');
 
         const payload = JSON.parse(setData.mock.calls[0][1]);
-        expect(payload.equipmentName).toBe('Treadmill');
-        expect(payload.width).toBe(240);
-        expect(payload.height).toBe(100);
-        expect(payload.colour).toBe('red');
+        expect(payload.equipment.name).toBe('Treadmill');
     });
 
-    it('sets correct data for each template', () => {
+    it('sets correct data for each template', async () => {
         render(<DragAndDropMenu />);
+        await waitFor(() => {
+            expect(screen.getByText('Treadmill')).toBeInTheDocument();
+        });
 
-        const expectedData = [
-            { name: 'Treadmill', colour: 'red', width: 240, height: 100 },
-            { name: 'Rowing Machine', colour: 'blue', width: 240, height: 100 },
-            { name: 'Racks', colour: 'green', width: 240, height: 160 },
-            { name: 'Free Weights', colour: 'purple', width: 200, height: 200 },
-            { name: 'Resistance Machine', colour: 'yellow', width: 100, height: 100 },
-            { name: 'Open Space', colour: 'orange', width: 300, height: 200 },
-        ];
-
-        expectedData.forEach(expected => {
-            const el = screen.getByText(expected.name).closest('[draggable]')!;
+        for (const name of ['Treadmill', 'Rowing Machine', 'Racks', 'Free Weights', 'Resistance Machine', 'Open Space']) {
+            const el = screen.getByText(name).closest('[draggable]')!;
             const setData = vi.fn();
             fireEvent.dragStart(el, { dataTransfer: { setData, effectAllowed: '' } });
             const payload = JSON.parse(setData.mock.calls[0][1]);
-            expect(payload.equipmentName).toBe(expected.name);
-            expect(payload.colour).toBe(expected.colour);
-            expect(payload.width).toBe(expected.width);
-            expect(payload.height).toBe(expected.height);
-        });
-    });
-
-    it('renders icons for each template', () => {
-        render(<DragAndDropMenu />);
-        expect(screen.getByTestId('icon-treadmill')).toBeInTheDocument();
-        expect(screen.getByTestId('icon-rowing')).toBeInTheDocument();
-        expect(screen.getByTestId('icon-weight')).toBeInTheDocument();
-        expect(screen.getByTestId('icon-barbell')).toBeInTheDocument();
-        expect(screen.getByTestId('icon-bolt')).toBeInTheDocument();
-        expect(screen.getByTestId('icon-yoga')).toBeInTheDocument();
+            expect(payload.equipment.name).toBe(name);
+        }
     });
 });

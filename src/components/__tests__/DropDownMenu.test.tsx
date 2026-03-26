@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DropDownMenu } from '../DropDownMenu';
+import DropDownMenu from '../DropDownMenu';
 
 // Mock framer-motion to render plain elements
 vi.mock('framer-motion', () => ({
@@ -12,11 +12,11 @@ vi.mock('framer-motion', () => ({
 }));
 
 vi.mock('../ThemeToggle', () => ({
-    ThemeToggle: () => <button data-testid="theme-toggle">Theme</button>,
+    default: () => <button data-testid="theme-toggle">Theme</button>,
 }));
 
 vi.mock('../ProfileButton', () => ({
-    ProfileButton: () => <button data-testid="profile-button">Profile</button>,
+    default: () => <button data-testid="profile-button">Profile</button>,
 }));
 
 vi.mock('react-icons/io5', () => ({

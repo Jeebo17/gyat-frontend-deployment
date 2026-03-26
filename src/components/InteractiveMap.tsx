@@ -23,6 +23,9 @@ const PREVIEW_BASE_WIDTH = 1200;
 const PREVIEW_BASE_HEIGHT = 800;
 const GRID_SIZE = 20;
 const CELL_SIZE = 200; // spatial hash cell size (px)
+const TAILWIND_SM_MIN_WIDTH = 640;
+const ZOOM_STEP = 0.2;
+const DEFAULT_AUTO_ZOOM_STEPS = 3;
 
 const rectanglesOverlap = (a: TileData, b: TileData) => {
     const aRight = a.xCoord + a.width;
@@ -159,6 +162,8 @@ interface InteractiveMapProps {
     highlightedTileId?: number | null;
     previewMode?: boolean;
     layoutId?: number;
+    desktopMinWidth?: number;
+    defaultAutoZoomSteps?: number;
 }
 
 function InteractiveMap({
@@ -172,6 +177,8 @@ function InteractiveMap({
     highlightedTileId = null,
     previewMode = false,
     layoutId = undefined,
+    desktopMinWidth = TAILWIND_SM_MIN_WIDTH,
+    defaultAutoZoomSteps = DEFAULT_AUTO_ZOOM_STEPS,
 }: InteractiveMapProps) {
     const [selectedMachine, setSelectedMachine] = useState<TileData | null>(null);
     const [editingTileId, setEditingTileId] = useState<number | null>(null);
@@ -219,14 +226,28 @@ function InteractiveMap({
     const mapHeight = previewMode ? PREVIEW_BASE_HEIGHT : BASE_HEIGHT;
     const [scale, setScale] = useState(1);
     const [autoScale, setAutoScale] = useState(true);
+    const [isDesktopViewport, setIsDesktopViewport] = useState(() =>
+        typeof window === "undefined" ? true : window.innerWidth >= desktopMinWidth
+    );
     const [, setHistory] = useState<TileHistoryEntry[]>([]);
     const nextIdRef = useRef(1);
+    const canEdit = editMode && isDesktopViewport;
 
     const { theme } = useTheme();
 
     useEffect(() => {
         setGridSize(snapToGrid ? GRID_SIZE : 1);
     }, [snapToGrid]);
+
+    useEffect(() => {
+        const handleViewportChange = () => {
+            setIsDesktopViewport(window.innerWidth >= desktopMinWidth);
+        };
+
+        handleViewportChange();
+        window.addEventListener("resize", handleViewportChange);
+        return () => window.removeEventListener("resize", handleViewportChange);
+    }, [desktopMinWidth]);
 
     useEffect(() => {
         spatialIndexRef.current = buildSpatialIndex(tiles);
@@ -237,6 +258,8 @@ function InteractiveMap({
 
     useEffect(() => {
         if (!autoScale) return;
+        let frameId: number | null = null;
+
         const updateScale = () => {
             if (!containerRef.current) return;
 
@@ -245,18 +268,29 @@ function InteractiveMap({
 
             const containerWidth = container.clientWidth;
             const containerHeight = container.clientHeight;
+            if (containerWidth === 0 || containerHeight === 0) return;
 
             const scaleX = containerWidth / mapWidth;
             const scaleY = containerHeight / mapHeight;
-            const newScale = Math.min(scaleX, scaleY, 1);
+            const containScale = Math.min(scaleX, scaleY, 1);
+            const shouldApplyDefaultZoomIn = containScale < 1;
+            const newScale = shouldApplyDefaultZoomIn
+                ? Math.min(containScale + (ZOOM_STEP * defaultAutoZoomSteps), 3)
+                : containScale;
 
             setScale(newScale);
         };
 
         updateScale();
+        frameId = window.requestAnimationFrame(updateScale);
         window.addEventListener('resize', updateScale);
-        return () => window.removeEventListener('resize', updateScale);
-    }, [autoScale, mapHeight, mapWidth]);
+        return () => {
+            window.removeEventListener('resize', updateScale);
+            if (frameId !== null) {
+                window.cancelAnimationFrame(frameId);
+            }
+        };
+    }, [autoScale, defaultAutoZoomSteps, mapHeight, mapWidth]);
 
     // Listen for Ctrl+Z / Cmd+Z to undo the last tile change
     useEffect(() => {
@@ -285,12 +319,12 @@ function InteractiveMap({
 
     const zoomIn = () => {
         setAutoScale(false);
-        setScale(prev => Math.min(prev + 0.2, 3));
+        setScale(prev => Math.min(prev + ZOOM_STEP, 3));
     };
 
     const zoomOut = () => {
         setAutoScale(false);
-        setScale(prev => Math.max(prev - 0.2, 0.3));
+        setScale(prev => Math.max(prev - ZOOM_STEP, 0.3));
     };
 
     const resetZoom = () => {
@@ -299,7 +333,7 @@ function InteractiveMap({
 
     /** Save a single tile's position to the backend (debounced per tile). */
     const saveComponentPosition = useCallback((tile: TileData) => {
-        if (!editMode) return;
+        if (!canEdit) return;
         const pending = saveTimersRef.current.get(tile.id);
         if (pending) clearTimeout(pending);
         const timeout = setTimeout(() => {
@@ -309,7 +343,7 @@ function InteractiveMap({
             });
         }, 500);
         saveTimersRef.current.set(tile.id, timeout);
-    }, [editMode]);
+    }, [canEdit]);
 
     const snap = (value: number) => Math.round(value / gridSize) * gridSize;
 
@@ -437,7 +471,7 @@ function InteractiveMap({
     };
 
     useEffect(() => {
-        if (!editMode || !selectedMachine) return;
+        if (!canEdit || !selectedMachine) return;
 
         let active = true;
         const loadMuscles = async () => {
@@ -464,7 +498,7 @@ function InteractiveMap({
 
         void loadMuscles();
         return () => { active = false; };
-    }, [editMode, selectedMachine]);
+    }, [canEdit, selectedMachine]);
 
     const handleMachineSave = async () => {
         if (!selectedMachine) return;
@@ -501,7 +535,7 @@ function InteractiveMap({
                 imageUrl: normalizedImageUrl,
             });
 
-            const overrideSaves = selectedExerciseIds.map((exerciseId, index) => {
+            const overrideSaves = selectedExerciseIds.map((exerciseId) => {
                 const payload = {
                     videoUrl: undefined,
                 };
@@ -730,7 +764,7 @@ function InteractiveMap({
 
             </div>
 
-            {editMode && (
+            {canEdit && (
                 <FloatingEditTray
                     tile={editingTile}
                     onColourChange={(colour: string) => {
@@ -780,8 +814,8 @@ function InteractiveMap({
                     scrollbarColor: theme === 'dark' ? '#999999 transparent' : '#808080 transparent',
                     scrollbarWidth: 'thin'
                 }}
-                onDragOver={editMode ? (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; } : undefined}
-                onDrop={editMode ? (e) => {
+                onDragOver={canEdit ? (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; } : undefined}
+                onDrop={canEdit ? (e) => {
                     e.preventDefault();
                     const raw = e.dataTransfer.getData("application/tile-template");
                     if (!raw) return;
@@ -814,7 +848,7 @@ function InteractiveMap({
                     }}
                     onClick={() => {
                         if (previewMode) setSelectedMachine(null);
-                        if (editMode) setEditingTileId(null);
+                        if (canEdit) setEditingTileId(null);
                     }}
                 >
                     {/* Border */}
@@ -852,7 +886,7 @@ function InteractiveMap({
                         {tiles.map(tile => {
                             const isWall = tile.equipmentTypeId === 0;
 
-                            const tileUpdateHandler = (editMode || previewMode) ? (updates: Partial<TileData>) => {
+                            const tileUpdateHandler = (canEdit || previewMode) ? (updates: Partial<TileData>) => {
                                 setHistory(prev => {
                                     const newHistory = [...prev, tile];
                                     return newHistory.slice(-50);
@@ -862,7 +896,7 @@ function InteractiveMap({
                                 }
                             } : undefined;
 
-                            const tileDeleteHandler = editMode ? () => {
+                            const tileDeleteHandler = canEdit ? () => {
                                 setHistory(prev => {
                                     const newHistory = [...prev, tile];
                                     return newHistory.slice(-50);
@@ -871,7 +905,7 @@ function InteractiveMap({
                             } : undefined;
 
                             const handleTileSelect = () => {
-                                if (editMode) {
+                                if (canEdit) {
                                     setEditingTileId(prev => prev === tile.id ? null : tile.id);
                                 } else if (!previewMode) {
                                     setMachineSaveError(null);
@@ -891,7 +925,7 @@ function InteractiveMap({
                                         snap={snap}
                                         canPlace={canPlace}
                                         onUpdate={tileUpdateHandler}
-                                        editMode={editMode}
+                                        editMode={canEdit}
                                         onDelete={tileDeleteHandler}
                                     />
                                 );
@@ -908,7 +942,7 @@ function InteractiveMap({
                                     canPlace={canPlace}
                                     onUpdate={tileUpdateHandler}
                                     onSelect={handleTileSelect}
-                                    editMode={editMode}
+                                    editMode={canEdit}
                                     previewMode={previewMode}
                                 />
                             );
@@ -923,14 +957,14 @@ function InteractiveMap({
                     tile={selectedMachine}
                     onClose={closeMachineModal}
                     containerMode={previewMode}
-                    editMode={editMode}
-                    onTileChange={editMode ? (equipmentUpdates) => {
+                    editMode={canEdit}
+                    onTileChange={canEdit ? (equipmentUpdates) => {
                         const updatedEquipment = { ...selectedMachine.equipment, ...equipmentUpdates };
                         setSelectedMachine({ ...selectedMachine, equipment: updatedEquipment });
                         setMachineSaveError(null);
                         setMachineSaveSuccess(null);
                     } : undefined}
-                    onColourChange={editMode ? (colour) => {
+                    onColourChange={canEdit ? (colour) => {
                         setSelectedMachine({ ...selectedMachine, colour });
                         setTiles((prev) => prev.map((t) =>
                             t.id === selectedMachine.id ? { ...t, colour } : t
@@ -938,7 +972,7 @@ function InteractiveMap({
                         setMachineSaveError(null);
                         setMachineSaveSuccess(null);
                     } : undefined}
-                    onExerciseIdsChange={editMode ? (exerciseIds) => {
+                    onExerciseIdsChange={canEdit ? (exerciseIds) => {
                         const exerciseNames = resolveExerciseNames(selectedMachine, exerciseIds);
                         setSelectedMachine({
                             ...selectedMachine,
@@ -951,15 +985,15 @@ function InteractiveMap({
                         setMachineSaveError(null);
                         setMachineSaveSuccess(null);
                     } : undefined}
-                    onCreateExercise={editMode ? handleCreateExercise : undefined}
-                    onLoadExercise={editMode ? getExerciseById : undefined}
-                    onSaveExercise={editMode ? handleSaveExercise : undefined}
+                    onCreateExercise={canEdit ? handleCreateExercise : undefined}
+                    onLoadExercise={canEdit ? getExerciseById : undefined}
+                    onSaveExercise={canEdit ? handleSaveExercise : undefined}
                     creatingExercise={isCreatingExercise}
                     muscleOptions={availableMuscles}
                     musclesLoading={isLoadingMuscles}
                     muscleLoadError={muscleLoadError}
-                    onSave={editMode ? handleMachineSave : undefined}
-                    onOutOfOrderChange={editMode ? (outOfOrder) => {
+                    onSave={canEdit ? handleMachineSave : undefined}
+                    onOutOfOrderChange={canEdit ? (outOfOrder) => {
                         setSelectedMachine({ ...selectedMachine, outOfOrder });
                         setMachineSaveError(null);
                         setMachineSaveSuccess(null);

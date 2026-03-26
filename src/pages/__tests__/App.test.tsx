@@ -40,6 +40,7 @@ vi.mock('../../pages', () => ({
     SignUpPage: () => <div data-testid="signup-page">SignUp</div>,
     NotFoundPage: () => <div data-testid="not-found-page">NotFound</div>,
     ProfilePage: () => <div data-testid="profile-page">Profile</div>,
+    SearchMapPage: () => <div data-testid="search-map-page">SearchMap</div>,
 }));
 
 describe('App', () => {
@@ -52,18 +53,18 @@ describe('App', () => {
         expect(screen.getByTestId('home-page')).toBeInTheDocument();
     });
 
-    it('renders MapPage at /map', () => {
+    it('renders MapPage at /map/:id', () => {
         render(
-            <MemoryRouter initialEntries={['/map']}>
+            <MemoryRouter initialEntries={['/map/1']}>
                 <App />
             </MemoryRouter>
         );
         expect(screen.getByTestId('map-page')).toBeInTheDocument();
     });
 
-    it('renders EditMapPage at /map/edit', () => {
+    it('renders EditMapPage at /map/edit/:id', () => {
         render(
-            <MemoryRouter initialEntries={['/map/edit']}>
+            <MemoryRouter initialEntries={['/map/edit/1']}>
                 <App />
             </MemoryRouter>
         );

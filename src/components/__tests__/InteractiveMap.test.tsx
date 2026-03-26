@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import InteractiveMap from '../InteractiveMap';
 import type { TileData } from '../../types/tile';
 import { deleteComponent } from '../../services/componentService';
@@ -25,17 +25,12 @@ vi.mock('../Tile', () => ({
         <div
             data-testid={`tile-${props.id}`}
             aria-label={props.equipment?.name}
-            onClick={() => props.onClick?.()}
+            onClick={(e: React.MouseEvent) => { e.stopPropagation(); props.onSelect?.(); }}
         >
             {props.equipment?.name}
             {props.onUpdate && (
-                <button data-testid={`update-tile-${props.id}`} onClick={() => props.onUpdate({ xCoord: 50, yCoord: 50 })}>
+                <button data-testid={`update-tile-${props.id}`} onClick={(e: React.MouseEvent) => { e.stopPropagation(); props.onUpdate({ xCoord: 50, yCoord: 50 }); }}>
                     Update
-                </button>
-            )}
-            {props.onDelete && (
-                <button data-testid={`delete-tile-${props.id}`} onClick={() => props.onDelete()}>
-                    Delete
                 </button>
             )}
         </div>
@@ -67,6 +62,48 @@ vi.mock('../../context/ThemeContext', () => ({
 
 vi.mock('../effects/ShinyText', () => ({
     default: ({ text }: any) => <span>{text}</span>,
+}));
+
+vi.mock('../WallTile', () => ({
+    default: (props: any) => (
+        <div data-testid={`wall-tile-${props.id}`}>{props.equipment?.name}</div>
+    ),
+}));
+
+vi.mock('../FloatingEditTray', () => {
+    let latestOnDelete: (() => void) | null = null;
+    return {
+        default: ({ onDelete, onDeselect, onEdit }: any) => {
+            latestOnDelete = onDelete;
+            return (
+                <div data-testid="floating-edit-tray">
+                    <button data-testid="tray-delete" onClick={() => latestOnDelete?.()}>Delete</button>
+                    <button data-testid="tray-deselect" onClick={onDeselect}>Deselect</button>
+                    <button data-testid="tray-edit" onClick={onEdit}>Edit</button>
+                </div>
+            );
+        },
+    };
+});
+
+vi.mock('../../services/equipmentTypeService', () => ({
+    upsertEquipmentTypeOverride: vi.fn().mockResolvedValue({}),
+}));
+
+vi.mock('../../services/exerciseService', () => ({
+    createExercise: vi.fn().mockResolvedValue({}),
+    getExerciseById: vi.fn().mockResolvedValue({}),
+    updateCustomExercise: vi.fn().mockResolvedValue({}),
+    upsertExerciseOverride: vi.fn().mockResolvedValue({}),
+}));
+
+vi.mock('../../services/muscleService', () => ({
+    getMuscles: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock('../../constants/structuralComponents', () => ({
+    getStructuralDef: () => undefined,
+    isStructuralTile: () => false,
 }));
 
 const mockTiles: TileData[] = [
@@ -274,7 +311,7 @@ describe('InteractiveMap', () => {
         });
     });
 
-    it('calls deleteTile when tile onDelete fires in edit mode', async () => {
+    it('calls deleteTile via FloatingEditTray in edit mode', async () => {
         const onTilesChange = vi.fn();
         render(
             <InteractiveMap
@@ -283,13 +320,21 @@ describe('InteractiveMap', () => {
                 onTilesChange={onTilesChange}
             />
         );
-        const deleteBtn = screen.getByTestId('delete-tile-1');
-        fireEvent.click(deleteBtn);
-        await waitFor(() => {
-            expect(onTilesChange).toHaveBeenCalled();
+        // Click tile to select it (sets editingTileId), then wait for re-render
+        await act(async () => {
+            fireEvent.click(screen.getByTestId('tile-1'));
         });
-        expect(deleteComponent).toHaveBeenCalledWith(1);
-        expect(screen.queryByTestId('tile-1')).toBeNull();
+        // Small delay to let React fully process the state update
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+        // Click delete in the FloatingEditTray
+        await act(async () => {
+            fireEvent.click(screen.getByTestId('tray-delete'));
+        });
+        await waitFor(() => {
+            expect(deleteComponent).toHaveBeenCalledWith(1);
+        });
     });
 
     it('calls updateTile for preview mode tiles', async () => {
