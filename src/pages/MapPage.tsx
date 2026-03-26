@@ -6,10 +6,14 @@ import { useNavigate } from 'react-router-dom';
 import { isAdminTEST } from '../services/isAdmin';
 import type { GymFloorDTO, GymLayoutDTO } from '../types/api';
 import { FaRegCaretSquareUp, FaRegCaretSquareDown } from 'react-icons/fa';
+import { IoSearch, IoClose } from 'react-icons/io5';
 import { getLayoutPublic } from "../services/layoutService";
 import { mapComponentToTile } from "../services/tileService";
 import type { TileSearchProps } from '../types/tile';
 import { useAuth } from '../context/AuthContext';
+
+const MAP_DESKTOP_MIN_WIDTH = 640;
+const MAP_DEFAULT_AUTO_ZOOM_STEPS = 3;
 
 function MapPage() {
     const [loading, setLoading] = useState(true);
@@ -21,6 +25,10 @@ function MapPage() {
     const [highlightedTileId, setHighlightedTileId] = useState<number | null>(null);
     const [isLayoutLoading, setIsLayoutLoading] = useState(true);
     const [layoutLoadError, setLayoutLoadError] = useState<string | null>(null);
+    const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+    const [isMobileViewport, setIsMobileViewport] = useState(() =>
+        typeof window === 'undefined' ? false : window.innerWidth < MAP_DESKTOP_MIN_WIDTH
+    );
     const { isLoggedIn } = useAuth();
     const layoutId = Number(window.location.pathname.split("/").pop());
     const resolvedLayoutId = layoutId && layoutId > 0 ? layoutId : 69;
@@ -94,7 +102,24 @@ function MapPage() {
             setFloor(floorIdx);
         }
         setHighlightedTileId(item.id);
-    }, [floors, floor]);
+        if (isMobileViewport) {
+            setIsMobileSearchOpen(false);
+        }
+    }, [floor, floors, isMobileViewport]);
+
+    useEffect(() => {
+        const handleViewportChange = () => {
+            const isMobile = window.innerWidth < MAP_DESKTOP_MIN_WIDTH;
+            setIsMobileViewport(isMobile);
+            if (!isMobile) {
+                setIsMobileSearchOpen(false);
+            }
+        };
+
+        handleViewportChange();
+        window.addEventListener('resize', handleViewportChange);
+        return () => window.removeEventListener('resize', handleViewportChange);
+    }, []);
 
     useEffect(() => {
         const init = async () => {
@@ -118,12 +143,13 @@ function MapPage() {
 
             <Header />
 
-            <div className="mt-14 relative flex flex-col sm:flex-row items-center w-full py-2 sm:py-3 px-3 sm:px-4 flex-shrink-0 select-none gap-2 sm:gap-0">
-                <div className="w-full sm:w-auto">
+            <div className="mt-14 relative flex flex-col sm:flex-row items-stretch sm:items-center w-full py-2 sm:py-3 px-3 sm:px-4 flex-shrink-0 select-none gap-2 sm:gap-0">
+                <div className="hidden sm:block w-full sm:w-auto">
                     <SearchBar<TileSearchProps>
                         searchData={searchData}
                         onSelect={handleSearchSelect}
                         placeholder="Search for equipment..."
+                        containerClassName="sm:w-56"
                         filterFn={(item, q) => {
                             const lower = q.toLowerCase();
                             return item.name.toLowerCase().includes(lower) || item.description.toLowerCase().includes(lower);
@@ -141,8 +167,78 @@ function MapPage() {
                     />
                 </div>
 
-                {/* Floor buttons - centered on desktop, inline on mobile */}
-                <div className="sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center gap-3 whitespace-nowrap">
+                <div className="flex sm:hidden items-center gap-2 w-full">
+                    {!isMobileSearchOpen && (
+                        <button
+                            type="button"
+                            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-bg-tertiary text-text-primary text-sm shadow"
+                            onClick={() => setIsMobileSearchOpen(true)}
+                            aria-label="Open search"
+                        >
+                            <IoSearch size={20} />  
+                        </button>
+                    )}
+
+                    {isMobileSearchOpen && (
+                        <>
+                            <SearchBar<TileSearchProps>
+                                searchData={searchData}
+                                onSelect={handleSearchSelect}
+                                placeholder="Search for equipment..."
+                                containerClassName="flex-1 sm:w-56"
+                                filterFn={(item, q) => {
+                                    const lower = q.toLowerCase();
+                                    return item.name.toLowerCase().includes(lower) || item.description.toLowerCase().includes(lower);
+                                }}
+                                renderItem={(item) => (
+                                    <>
+                                        <span>
+                                            <span className="font-medium">{item.name}</span>
+                                            <span className="font-light ml-1 text-xs">#{item.id}</span>
+                                        </span>
+                                        <span className="ml-2 text-xs opacity-60">Floor: {item.floorName}</span>
+                                        <span className="ml-2 text-xs opacity-60">{item.description}</span>
+                                    </>
+                                )}
+                            />
+                            <button
+                                type="button"
+                                className="inline-flex items-center justify-center p-2 rounded-lg bg-bg-tertiary text-text-primary"
+                                onClick={() => setIsMobileSearchOpen(false)}
+                                aria-label="Close search"
+                            >
+                                <IoClose size={18} />
+                            </button>
+                        </>
+                    )}
+
+                    <div className={`${isMobileSearchOpen ? 'hidden' : 'flex'} absolute items-center gap-1 whitespace-nowrap ml-auto left-1/2 -translate-x-1/2`}>
+                        <button
+                            type="button"
+                            className="flex items-center justify-center text-text-primary hover:text-accent-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                            onClick={() => setFloor(prev => Math.max(0, prev - 1))}
+                            disabled={floor <= 0}
+                            aria-label="Previous floor"
+                        >
+                            <FaRegCaretSquareDown size={28} className="sm:w-8 sm:h-8" />
+                        </button>
+                        <span className="select-none min-w-24 text-center flex-shrink-0 font-semibold text-sm">
+                            {currentFloor?.name ?? `Floor ${floor + 1}`}
+                        </span>
+                        <button
+                            type="button"
+                            className="flex items-center justify-center text-text-primary hover:text-accent-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                            onClick={() => setFloor(prev => Math.min(maxFloorIndex, prev + 1))}
+                            disabled={floor >= maxFloorIndex}
+                            aria-label="Next floor"
+                        >
+                            <FaRegCaretSquareUp size={28} className="sm:w-8 sm:h-8" />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Floor buttons - centered on desktop */}
+                <div className="hidden sm:flex sm:absolute sm:left-1/2 sm:-translate-x-1/2 items-center gap-3 whitespace-nowrap">
                     <button
                         type="button"
                         className="flex items-center justify-center text-text-primary hover:text-accent-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
@@ -170,7 +266,7 @@ function MapPage() {
                 {isAdmin && isLoggedIn && (
                     <button
                         onClick={() => navigate(`/map/edit/${resolvedLayoutId}`)}
-                        className="sm:ml-auto px-3 sm:px-4 py-2 rounded-lg bg-accent-primary text-white text-xs sm:text-sm font-medium shadow hover:opacity-90 transition-opacity flex-shrink-0"
+                        className="hidden sm:inline-flex sm:ml-auto px-3 sm:px-4 py-2 rounded-lg bg-accent-primary text-white text-xs sm:text-sm font-medium shadow hover:opacity-90 transition-opacity flex-shrink-0 items-center gap-1"
                     >
                         Edit Map
                     </button>
@@ -184,6 +280,8 @@ function MapPage() {
                     floorLoading={isLayoutLoading}
                     floorLoadError={layoutLoadError}
                     highlightedTileId={highlightedTileId}
+                    desktopMinWidth={MAP_DESKTOP_MIN_WIDTH}
+                    defaultAutoZoomSteps={MAP_DEFAULT_AUTO_ZOOM_STEPS}
                 />
             </div>
         </div>

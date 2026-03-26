@@ -6,6 +6,7 @@ interface SearchBarProps<T extends { id: number | string; name: string }> {
     placeholder?: string;
     filterFn?: (item: T, query: string) => boolean;
     renderItem?: (item: T) => ReactNode;
+    containerClassName?: string;
 }
 
 function defaultFilter<T extends { id: number | string; name: string }>(item: T, query: string): boolean {
@@ -26,6 +27,7 @@ export default function SearchBar<T extends { id: number | string; name: string 
     placeholder = "Search...",
     filterFn = defaultFilter,
     renderItem = defaultRenderItem,
+    containerClassName,
 }: SearchBarProps<T>) {
     const [query, setQuery] = useState("");
     const [open, setOpen] = useState(false);
@@ -46,7 +48,7 @@ export default function SearchBar<T extends { id: number | string; name: string 
     }, []);
 
     return (
-        <div ref={wrapperRef} className="relative w-full sm:w-64">
+        <div ref={wrapperRef} className={`relative w-full sm:w-64 ${containerClassName ?? ""}`.trim()}>
             <input
                 type="text"
                 placeholder={placeholder}
