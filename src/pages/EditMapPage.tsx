@@ -182,9 +182,9 @@ function EditMapPage() {
                 <div className="flex-1 min-w-0 flex flex-col">
 
                     {/* Edit-mode toolbar */}
-                    <div className="z-30 relative flex flex-col gap-3 w-full">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
-                            <span className="flex flex-row items-center gap-2 sm:gap-4 flex-wrap">
+                    <div className="z-30 relative w-full">
+                        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start md:items-center gap-3 md:gap-4">
+                            <span className="flex flex-row items-center gap-2 sm:gap-4 flex-wrap min-w-0">
                                 <p className="text-xs sm:text-sm font-semibold select-none px-2 py-1 rounded bg-accent-primary text-white">
                                     Edit Mode
                                 </p>
@@ -199,7 +199,7 @@ function EditMapPage() {
                                     <label htmlFor="layout-name-input" className="sr-only">Layout name</label>
                                     <input
                                         id="layout-name-input"
-                                        className="w-full rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-lg font-semibold text-text-primary outline-none transition-colors placeholder:text-text-primary/40 focus:border-accent-primary focus:bg-white/10 disabled:cursor-wait disabled:opacity-70"
+                                        className="text-lg font-bold bg-transparent border-b-2 border-white/30 focus:border-accent-primary text-text-primary placeholder:text-text-primary/40 outline-none transition-colors disabled:cursor-wait disabled:opacity-70"
                                         value={isLayoutLoading ? "Loading layout..." : layoutNameDraft}
                                         onChange={(e) => setLayoutNameDraft(e.target.value)}
                                         placeholder="Layout name"
@@ -209,35 +209,35 @@ function EditMapPage() {
                                 </div>
                             </span>
 
-                            <div className="sm:ml-auto flex flex-row items-center gap-2 sm:gap-4">
+                            {/* Floor buttons */}
+                            <div className="justify-self-start md:justify-self-center flex items-center gap-2 sm:gap-3 whitespace-nowrap">
+                                <button
+                                    type="button"
+                                    className="flex items-center justify-center text-text-primary hover:text-accent-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                                    onClick={() => setFloor(prev => Math.max(0, prev - 1))}
+                                    disabled={floor <= 0}
+                                    aria-label="Previous floor"
+                                >
+                                    <FaRegCaretSquareDown size={28} />
+                                </button>
+                                <span className="select-none min-w-24 sm:min-w-32 text-center flex-shrink-0 font-semibold text-sm sm:text-base">
+                                    {currentFloor?.name ?? `Floor ${floor + 1}`}
+                                </span>
+                                <button
+                                    type="button"
+                                    className="flex items-center justify-center text-text-primary hover:text-accent-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                                    onClick={() => setFloor(prev => Math.min(maxFloorIndex, prev + 1))}
+                                    disabled={floor >= maxFloorIndex}
+                                    aria-label="Next floor"
+                                >
+                                    <FaRegCaretSquareUp size={28} />
+                                </button>
+                            </div>
+
+                            <div className="md:justify-self-end flex flex-row items-center gap-2 sm:gap-4">
                                 <span className="text-xs sm:text-sm select-none">Snap to grid</span>
                                 <ToggleSwitch checked={snapToGridState} onChange={setSnapToGridState} />
                             </div>
-                        </div>
-
-                        {/* Floor buttons */}
-                        <div className="self-center flex items-center gap-2 sm:gap-3 whitespace-nowrap">
-                            <button
-                                type="button"
-                                className="flex items-center justify-center text-text-primary hover:text-accent-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-                                onClick={() => setFloor(prev => Math.max(0, prev - 1))}
-                                disabled={floor <= 0}
-                                aria-label="Previous floor"
-                            >
-                                <FaRegCaretSquareDown size={28} />
-                            </button>
-                            <span className="select-none min-w-24 sm:min-w-32 text-center flex-shrink-0 font-semibold text-sm sm:text-base">
-                                {currentFloor?.name ?? `Floor ${floor + 1}`}
-                            </span>
-                            <button
-                                type="button"
-                                className="flex items-center justify-center text-text-primary hover:text-accent-primary disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-                                onClick={() => setFloor(prev => Math.min(maxFloorIndex, prev + 1))}
-                                disabled={floor >= maxFloorIndex}
-                                aria-label="Next floor"
-                            >
-                                <FaRegCaretSquareUp size={28} />
-                            </button>
                         </div>
                     </div>
                     
