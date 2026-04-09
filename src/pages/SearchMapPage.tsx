@@ -5,15 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { getAllPublicLayouts } from '../services/layoutService';
 import { useEffect, useMemo, useState } from 'react';
 
-function shuffleArray<T>(array: T[]): T[] {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-}
-
 function SearchMapPage() {
     const navigate = useNavigate();
     const [layoutList, setLayoutList] = useState<GymLayoutSearchProps[]>([]);
@@ -34,7 +25,10 @@ function SearchMapPage() {
         fetchLayouts();
     }, []);
 
-    const recommended = useMemo(() => shuffleArray(layoutList).slice(0, 6), [layoutList]);
+    const recommended = useMemo(
+        () => [...layoutList].sort((a, b) => a.id - b.id),
+        [layoutList]
+    );
 
     return (
         <div className="min-h-screen bg-bg-primary text-text-primary">
@@ -68,7 +62,7 @@ function SearchMapPage() {
             {/* Recommended section */}
             <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 pb-16">
                 <h2 className="text-lg sm:text-xl font-semibold mb-4 text-text-primary">
-                    Recommended Gyms
+                    All Gyms
                 </h2>
 
                 {loading ? (
@@ -112,10 +106,10 @@ function SearchMapPage() {
                 )}
 
                 {/* Browse all */}
-                {!loading && layoutList.length > 6 && (
+                {!loading && layoutList.length > 0 && (
                     <div className="mt-6 text-center">
                         <p className="text-sm text-text-secondary">
-                            Showing {recommended.length} of {layoutList.length} layouts. Use the search bar to find more.
+                            Showing {recommended.length} layouts sorted by ID. Use the search bar to find a specific gym.
                         </p>
                     </div>
                 )}

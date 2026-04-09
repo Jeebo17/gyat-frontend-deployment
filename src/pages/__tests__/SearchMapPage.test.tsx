@@ -69,17 +69,26 @@ describe('SearchMapPage', () => {
         expect(skeletons.length).toBe(6);
     });
 
-    it('displays recommended gyms after loading', async () => {
+    it('displays gyms after loading sorted by id', async () => {
         vi.mocked(getAllPublicLayouts).mockResolvedValue([
-            { id: 1, name: 'Iron Palace', managerId: 1, floors: [], components: [] },
+            { id: 5, name: 'Iron Palace', managerId: 1, floors: [], components: [] },
             { id: 2, name: 'Gold Gym', managerId: 1, floors: [], components: [] },
+            { id: 9, name: 'Peak Performance', managerId: 1, floors: [], components: [] },
         ]);
 
         render(<SearchMapPage />);
 
         await waitFor(() => {
-            expect(screen.getByText('Iron Palace')).toBeTruthy();
             expect(screen.getByText('Gold Gym')).toBeTruthy();
+            expect(screen.getByText('Iron Palace')).toBeTruthy();
+            expect(screen.getByText('Peak Performance')).toBeTruthy();
+
+            const headings = screen.getAllByRole('heading', { level: 3 });
+            expect(headings.map((heading) => heading.textContent)).toEqual([
+                'Gold Gym',
+                'Iron Palace',
+                'Peak Performance',
+            ]);
         });
     });
 
@@ -93,13 +102,13 @@ describe('SearchMapPage', () => {
         });
     });
 
-    it('renders Recommended Gyms heading', async () => {
+    it('renders All Gyms heading', async () => {
         vi.mocked(getAllPublicLayouts).mockResolvedValue([]);
 
         render(<SearchMapPage />);
 
         await waitFor(() => {
-            expect(screen.getByText('Recommended Gyms')).toBeTruthy();
+            expect(screen.getByText('All Gyms')).toBeTruthy();
         });
     });
 
