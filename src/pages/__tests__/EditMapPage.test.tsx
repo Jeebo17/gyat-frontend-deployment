@@ -98,6 +98,20 @@ vi.mock('../../services/layoutService', () => ({
             1: { id: 1, name: 'Treadmill', brand: null, imageUrl: null, description: 'Running', safetyInfo: null, exercises: [] },
         },
     }),
+    updateLayout: vi.fn().mockResolvedValue({
+        id: 1,
+        name: 'Renamed Layout',
+        isPublic: true,
+        floors: [
+            { id: 10, layoutId: 1, name: 'Ground', levelOrder: 0, width: 800, height: 600 },
+        ],
+        components: [
+            { id: 1, layoutId: 1, floorId: 10, xCoord: 0, yCoord: 0, width: 100, height: 100, rotation: 0, equipmentTypeId: 1 },
+        ],
+        definitions: {
+            1: { id: 1, name: 'Treadmill', brand: null, imageUrl: null, description: 'Running', safetyInfo: null, exercises: [] },
+        },
+    }),
 }));
 
 vi.mock('../../services/tileService', () => ({
@@ -238,6 +252,30 @@ describe('EditMapPage', () => {
         render(<EditMapPage />);
         await waitFor(() => {
             expect(screen.getByText('Ground')).toBeTruthy();
+        });
+    });
+
+    it('renders editable layout name input', async () => {
+        render(<EditMapPage />);
+        await waitFor(() => {
+            const input = screen.getByLabelText('Layout name') as HTMLInputElement;
+            expect(input.value).toBe('Test Layout');
+        });
+    });
+
+    it('saves the layout name when requested', async () => {
+        const { updateLayout } = await import('../../services/layoutService');
+        render(<EditMapPage />);
+
+        await waitFor(() => {
+            expect(screen.getByLabelText('Layout name')).toBeTruthy();
+        });
+
+        fireEvent.change(screen.getByLabelText('Layout name'), { target: { value: 'Renamed Layout' } });
+        fireEvent.click(screen.getByRole('button', { name: 'Save title' }));
+
+        await waitFor(() => {
+            expect(updateLayout).toHaveBeenCalledWith(1, { name: 'Renamed Layout' });
         });
     });
 });

@@ -240,6 +240,12 @@ function MapPage() {
                     </div>
                 </div>
 
+                <div className={`${isMobileSearchOpen ? 'hidden' : 'flex'} min-w-0 items-center sm:ml-2 sm:mr-4`}>
+                    <span className="inline-flex max-w-full items-center rounded-full border border-border-light bg-bg-tertiary px-3 py-1 text-sm font-semibold text-text-primary shadow-sm sm:text-base truncate">
+                        {layout?.name ?? `Gym Layout #${layout?.id ?? "Unknown"}`}
+                    </span>
+                </div>
+
                 {/* Floor buttons - centered on desktop */}
                 <div className="hidden sm:flex sm:absolute sm:left-1/2 sm:-translate-x-1/2 items-center gap-3 whitespace-nowrap">
                     <button

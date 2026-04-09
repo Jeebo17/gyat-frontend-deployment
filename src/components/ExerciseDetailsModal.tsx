@@ -217,7 +217,7 @@ function ExerciseDetailsModal({
                                     </div>
                                 )}
                                 {showEditableFields && details && (
-                                    <p className="text-xs text-white/50 bg-white/5 rounded-lg px-3 py-2 border border-white/10">{details.global ? "This is a preset exercise. Saving creates an override for your gym." : "You own this exercise. Saving updates it directly."}</p>
+                                    <p className="text-xs text-white/50 bg-white/5 rounded-lg px-3 py-2 border border-white/10">{details.global ? "This is a preset exercise. Saving creates an override for your gym." : "You created this exercise. Saving updates it directly."}</p>
                                 )}
                             </div>
                         )}

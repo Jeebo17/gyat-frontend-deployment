@@ -7,7 +7,7 @@ import { FaRegCaretSquareUp, FaRegCaretSquareDown } from "react-icons/fa";
 import { IoChevronForward, IoChevronBack } from "react-icons/io5";
 import type { GymFloorDTO, GymLayoutDTO } from "../types/api";
 import type { TileData } from "../types/tile";
-import { getLayout } from "../services/layoutService";
+import { getLayout, updateLayout } from "../services/layoutService";
 import { mapComponentToTile } from "../services/tileService";
 import { useAuth } from "../context/AuthContext";
 
@@ -25,6 +25,10 @@ function EditMapPage() {
     const [snapToGridState, setSnapToGridState] = useState(true);
     const [floor, setFloor] = useState<number>(0);
     const [layout, setLayout] = useState<GymLayoutDTO | null>(null);
+    const [layoutNameDraft, setLayoutNameDraft] = useState("");
+    const [isSavingLayoutName, setIsSavingLayoutName] = useState(false);
+    const [layoutSaveError, setLayoutSaveError] = useState<string | null>(null);
+    const [layoutSaveSuccess, setLayoutSaveSuccess] = useState<string | null>(null);
     const [isLayoutLoading, setIsLayoutLoading] = useState(true);
     const [layoutLoadError, setLayoutLoadError] = useState<string | null>(null);
     const [tileOverrides, setTileOverrides] = useState<TileData[] | null>(null);
@@ -75,6 +79,7 @@ function EditMapPage() {
                 const data = await getLayout(resolvedLayoutId);
                 if (!active) return;
                 setLayout(data);
+                setLayoutNameDraft(data.name ?? "");
                 setTileOverrides(null);
             } catch (error) {
                 if (!active) return;
@@ -92,6 +97,38 @@ function EditMapPage() {
     const handleTilesChange = useCallback((newTiles: TileData[]) => {
         setTileOverrides(newTiles);
     }, []);
+
+    const handleSaveLayoutName = useCallback(async () => {
+        if (!layout) return;
+
+        const normalizedName = layoutNameDraft.trim();
+        if (!normalizedName) {
+            setLayoutSaveError("Layout name cannot be empty.");
+            setLayoutSaveSuccess(null);
+            return;
+        }
+
+        if (normalizedName === layout.name) {
+            setLayoutSaveError(null);
+            setLayoutSaveSuccess("Layout name is unchanged.");
+            return;
+        }
+
+        setIsSavingLayoutName(true);
+        setLayoutSaveError(null);
+        setLayoutSaveSuccess(null);
+
+        try {
+            const updatedLayout = await updateLayout(layout.id, { name: normalizedName });
+            setLayout(updatedLayout);
+            setLayoutNameDraft(updatedLayout.name);
+            setLayoutSaveSuccess("Layout name saved.");
+        } catch (error) {
+            setLayoutSaveError(error instanceof Error ? error.message : "Failed to save layout name.");
+        } finally {
+            setIsSavingLayoutName(false);
+        }
+    }, [layout, layoutNameDraft]);
 
     // Admin gate: redirect non-admins back to the map view
     useEffect(() => {
@@ -157,6 +194,40 @@ function EditMapPage() {
                                 Back to View
                             </button>
                         </span>
+
+                        <div className="w-full sm:max-w-md sm:ml-4">
+                            <label htmlFor="layout-name-input" className="sr-only">Layout name</label>
+                            <input
+                                id="layout-name-input"
+                                className="w-full rounded-lg border border-border-light bg-bg-secondary px-3 py-2 text-sm sm:text-base font-semibold text-text-primary placeholder:text-text-primary/50 focus:outline-none focus:ring-2 focus:ring-accent-primary"
+                                value={layoutNameDraft}
+                                onChange={(e) => setLayoutNameDraft(e.target.value)}
+                                onBlur={() => { void handleSaveLayoutName(); }}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        void handleSaveLayoutName();
+                                    }
+                                }}
+                                placeholder="Layout name"
+                            />
+                            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                                <span className="text-text-primary/60">Visible to users as the gym title.</span>
+                                <button
+                                    type="button"
+                                    className="rounded-md border border-border-light px-2.5 py-1 font-medium text-text-primary hover:bg-bg-tertiary disabled:opacity-50"
+                                    onClick={() => { void handleSaveLayoutName(); }}
+                                    disabled={isSavingLayoutName || !layout}
+                                >
+                                    {isSavingLayoutName ? 'Saving...' : 'Save title'}
+                                </button>
+                            </div>
+                            {(layoutSaveError || layoutSaveSuccess) && (
+                                <p className={`mt-1 text-xs ${layoutSaveError ? 'text-red-400' : 'text-green-500'}`}>
+                                    {layoutSaveError ?? layoutSaveSuccess}
+                                </p>
+                            )}
+                        </div>
 
                         {/* Floor buttons */}
                         <div className="sm:absolute sm:left-1/2 sm:-translate-x-1/2 flex items-center gap-2 sm:gap-3 whitespace-nowrap">
