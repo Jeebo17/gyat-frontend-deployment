@@ -700,7 +700,11 @@ function InteractiveMap({
         : tiles.find((tile) => tile.id === editingTileId) ?? null;
 
     return (
-        <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-1 sm:pt-2">
+        <div
+            className={`relative overflow-visible w-full h-full justify-center items-center flex ${
+                previewMode ? '' : 'pt-1 sm:pt-2'
+            }`}
+        >
             <div
                 style={{
                     position: "absolute",

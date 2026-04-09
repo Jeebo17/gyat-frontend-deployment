@@ -61,15 +61,17 @@ function HomePage() {
                     </motion.div>
                 </div>
 
-                <div className="px-2 sm:px-6 w-full lg:w-auto">
+                <div className="hidden xl:block px-2 sm:px-6 w-full lg:w-auto">
                     <div className="mx-auto w-full max-w-6xl px-2 sm:px-4">
-                        <div className="w-full aspect-[3/2] max-w-4xl mx-auto relative overflow-hidden">
+                        <div className="w-full aspect-[3/2] max-w-4xl mx-auto relative rounded-2xl">
                             <EnhancedInteractiveMap
                                 editMode={false}
                                 previewMode={true}
                                 floorTiles={getPreviewTiles()}
                                 enableZoom={false}
-                                initialScale={1}
+                                initialScale={0.73}
+                                wheelStep={0.025}
+                                pinchStep={2}
                             />
                         </div>
                     </div>

@@ -98,7 +98,7 @@ function SearchMapPage() {
                                 </div>
                                 <div className="mt-3 flex items-center gap-2">
                                     <span className="inline-block w-2 h-2 rounded-full bg-green-400" />
-                                    <span className="text-xs text-text-secondary">Available</span>
+                                    <span className="text-xs text-text-secondary">Open</span>
                                 </div>
                             </button>
                         ))}
