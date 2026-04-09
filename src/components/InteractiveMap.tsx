@@ -3,19 +3,18 @@ import FloatingEditTray from "./FloatingEditTray.tsx";
 import WallTile from "./WallTile";
 import { TileData, TileHistoryEntry } from "../types/tile";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MachineModal } from '../components/index';
-import { type CreateExerciseDraft }  from "../components/MachineModal";
-import ZoomControls from "./ZoomControls";
+import { MachineModal } from "../components/index";
+import { type CreateExerciseDraft } from "../components/MachineModal";
 import { useTheme } from "../context/ThemeContext";
 import type { TileTemplate } from "../types/tile";
 import ShinyText from "./effects/ShinyText";
 import { updateComponent, createComponent, deleteComponent } from "../services/componentService";
-import { upsertEquipmentTypeOverride } from "../services/equipmentTypeService";
+import { upsertEquipmentTypeOverride, getEquipmentType, updateCustomEquipmentType } from "../services/equipmentTypeService";
 import { createExercise, getExerciseById, updateCustomExercise, upsertExerciseOverride } from "../services/exerciseService";
 import { getMuscles } from "../services/muscleService";
 import { getStructuralDef } from "../constants/structuralComponents";
 import type { ExerciseOption } from "../types/tile";
-import type { ExerciseDTO, MuscleDTO, UpdateComponentRequest } from "../types/api";
+import type { ExerciseDTO, MuscleDTO, UpdateComponentRequest, UpdateEquipmentTypeRequest } from "../types/api";
 
 const BASE_WIDTH = 1600;
 const BASE_HEIGHT = 800;
@@ -24,8 +23,6 @@ const PREVIEW_BASE_HEIGHT = 800;
 const GRID_SIZE = 20;
 const CELL_SIZE = 200; // spatial hash cell size (px)
 const TAILWIND_SM_MIN_WIDTH = 640;
-const ZOOM_STEP = 0.2;
-const DEFAULT_AUTO_ZOOM_STEPS = 3;
 
 const rectanglesOverlap = (a: TileData, b: TileData) => {
     const aRight = a.xCoord + a.width;
@@ -163,7 +160,6 @@ interface InteractiveMapProps {
     previewMode?: boolean;
     layoutId?: number;
     desktopMinWidth?: number;
-    defaultAutoZoomSteps?: number;
 }
 
 function InteractiveMap({
@@ -178,7 +174,6 @@ function InteractiveMap({
     previewMode = false,
     layoutId = undefined,
     desktopMinWidth = TAILWIND_SM_MIN_WIDTH,
-    defaultAutoZoomSteps = DEFAULT_AUTO_ZOOM_STEPS,
 }: InteractiveMapProps) {
     const [selectedMachine, setSelectedMachine] = useState<TileData | null>(null);
     const [editingTileId, setEditingTileId] = useState<number | null>(null);
@@ -224,20 +219,14 @@ function InteractiveMap({
     const [gridSize, setGridSize] = useState(GRID_SIZE);
     const mapWidth = previewMode ? PREVIEW_BASE_WIDTH : BASE_WIDTH;
     const mapHeight = previewMode ? PREVIEW_BASE_HEIGHT : BASE_HEIGHT;
-    const [scale, setScale] = useState(1);
-    const [autoScale, setAutoScale] = useState(true);
-    const [isDesktopViewport, setIsDesktopViewport] = useState(() =>
-        typeof window === "undefined" ? true : window.innerWidth >= desktopMinWidth
-    );
     const [, setHistory] = useState<TileHistoryEntry[]>([]);
     const nextIdRef = useRef(1);
+    const [isDesktopViewport, setIsDesktopViewport] = useState(() =>
+        typeof window === 'undefined' ? true : window.innerWidth >= desktopMinWidth
+    );
     const canEdit = editMode && isDesktopViewport;
 
     const { theme } = useTheme();
-
-    useEffect(() => {
-        setGridSize(snapToGrid ? GRID_SIZE : 1);
-    }, [snapToGrid]);
 
     useEffect(() => {
         const handleViewportChange = () => {
@@ -245,52 +234,19 @@ function InteractiveMap({
         };
 
         handleViewportChange();
-        window.addEventListener("resize", handleViewportChange);
-        return () => window.removeEventListener("resize", handleViewportChange);
+        window.addEventListener('resize', handleViewportChange);
+        return () => window.removeEventListener('resize', handleViewportChange);
     }, [desktopMinWidth]);
+
+    useEffect(() => {
+        setGridSize(snapToGrid ? GRID_SIZE : 1);
+    }, [snapToGrid]);
 
     useEffect(() => {
         spatialIndexRef.current = buildSpatialIndex(tiles);
         const maxId = tiles.reduce((max, tile) => Math.max(max, tile.id), 0);
         nextIdRef.current = maxId + 1;
     }, [tiles]);
-
-
-    useEffect(() => {
-        if (!autoScale) return;
-        let frameId: number | null = null;
-
-        const updateScale = () => {
-            if (!containerRef.current) return;
-
-            const container = containerRef.current.parentElement;
-            if (!container) return;
-
-            const containerWidth = container.clientWidth;
-            const containerHeight = container.clientHeight;
-            if (containerWidth === 0 || containerHeight === 0) return;
-
-            const scaleX = containerWidth / mapWidth;
-            const scaleY = containerHeight / mapHeight;
-            const containScale = Math.min(scaleX, scaleY, 1);
-            const shouldApplyDefaultZoomIn = containScale < 1;
-            const newScale = shouldApplyDefaultZoomIn
-                ? Math.min(containScale + (ZOOM_STEP * defaultAutoZoomSteps), 3)
-                : containScale;
-
-            setScale(newScale);
-        };
-
-        updateScale();
-        frameId = window.requestAnimationFrame(updateScale);
-        window.addEventListener('resize', updateScale);
-        return () => {
-            window.removeEventListener('resize', updateScale);
-            if (frameId !== null) {
-                window.cancelAnimationFrame(frameId);
-            }
-        };
-    }, [autoScale, defaultAutoZoomSteps, mapHeight, mapWidth]);
 
     // Listen for Ctrl+Z / Cmd+Z to undo the last tile change
     useEffect(() => {
@@ -317,19 +273,7 @@ function InteractiveMap({
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
-    const zoomIn = () => {
-        setAutoScale(false);
-        setScale(prev => Math.min(prev + ZOOM_STEP, 3));
-    };
-
-    const zoomOut = () => {
-        setAutoScale(false);
-        setScale(prev => Math.max(prev - ZOOM_STEP, 0.3));
-    };
-
-    const resetZoom = () => {
-        setAutoScale(true);
-    };
+    const snap = (value: number) => Math.round(value / gridSize) * gridSize;
 
     /** Save a single tile's position to the backend (debounced per tile). */
     const saveComponentPosition = useCallback((tile: TileData) => {
@@ -344,8 +288,6 @@ function InteractiveMap({
         }, 500);
         saveTimersRef.current.set(tile.id, timeout);
     }, [canEdit]);
-
-    const snap = (value: number) => Math.round(value / gridSize) * gridSize;
 
     const addTile = useCallback(async (template: TileTemplate, xCoord: number, yCoord: number) => {
         if (!layoutId || !floorId) {
@@ -519,6 +461,7 @@ function InteractiveMap({
                 resolveExerciseNames(selectedMachine, selectedMachine.exerciseIds ?? [])
             ) ?? [];
             const normalizedImageUrl = normalizeOptionalString(selectedMachine.equipment.imageUrl);
+            const normalizedSafetyInfo = normalizeOptionalString(selectedMachine.equipment.safetyInfo);
             const normalizedMuscles = normalizeArray(selectedMachine.equipment.musclesTargeted);
             const normalizedColour = selectedMachine.colour ? selectedMachine.colour.replace("#", "") : undefined;
             const selectedExerciseIds = selectedMachine.exerciseIds ?? [];
@@ -529,11 +472,23 @@ function InteractiveMap({
 
             await updateComponent(selectedMachine.id, buildComponentPayload(selectedMachine));
 
-            await upsertEquipmentTypeOverride(equipmentTypeId, {
+            const updatePayload: UpdateEquipmentTypeRequest = {
                 name: normalizedName,
                 description: normalizedDescription,
                 imageUrl: normalizedImageUrl,
-            });
+                safetyInfo: normalizedSafetyInfo,
+            };
+
+            const equipmentType = await getEquipmentType(equipmentTypeId);
+
+            if (equipmentType.global) {
+                await upsertEquipmentTypeOverride(equipmentTypeId, updatePayload);
+            } else {
+                const cleanPayload = Object.fromEntries(
+                    Object.entries(updatePayload).filter(([, value]) => value !== null && value !== undefined)
+                ) as UpdateEquipmentTypeRequest;
+                await updateCustomEquipmentType(equipmentTypeId, cleanPayload);
+            }
 
             const overrideSaves = selectedExerciseIds.map((exerciseId) => {
                 const payload = {
@@ -552,6 +507,7 @@ function InteractiveMap({
                 ...selectedMachine.equipment,
                 name: normalizedName,
                 description: normalizedDescription,
+                safetyInfo: normalizedSafetyInfo,
                 benefits: normalizedBenefits,
                 imageUrl: normalizedImageUrl,
                 musclesTargeted: normalizedMuscles,
@@ -744,7 +700,11 @@ function InteractiveMap({
         : tiles.find((tile) => tile.id === editingTileId) ?? null;
 
     return (
-        <div className="relative overflow-visible w-full h-full justify-center items-center flex pt-1 sm:pt-2">
+        <div
+            className={`relative overflow-visible w-full h-full justify-center items-center flex ${
+                previewMode ? '' : 'pt-1 sm:pt-2'
+            }`}
+        >
             <div
                 style={{
                     position: "absolute",
@@ -753,14 +713,6 @@ function InteractiveMap({
                     backgroundColor: "transparent",
                 }}
             >
-                {!previewMode && (
-                    <ZoomControls
-                        scale={scale}
-                        onZoomIn={zoomIn}
-                        onZoomOut={zoomOut}
-                        onReset={resetZoom}
-                    />
-                )}
 
             </div>
 
@@ -821,9 +773,9 @@ function InteractiveMap({
                     if (!raw) return;
                     const template: TileTemplate = JSON.parse(raw);
                     const rect = containerRef.current!.getBoundingClientRect();
-                    // Account for scroll and scale so tile lands where the cursor is
-                    const x = (e.clientX - rect.left + containerRef.current!.scrollLeft) / scale - template.width / 2;
-                    const y = (e.clientY - rect.top + containerRef.current!.scrollTop) / scale - template.height / 2;
+                    // Calculate tile position accounting for scroll
+                    const x = (e.clientX - rect.left + containerRef.current!.scrollLeft) - template.width / 2;
+                    const y = (e.clientY - rect.top + containerRef.current!.scrollTop) - template.height / 2;
                     addTile(template, x, y);
                 } : undefined}
             >
@@ -831,8 +783,6 @@ function InteractiveMap({
                 {/* Internal map */}
                 <div
                     style={{
-                        transform: `scale(${scale})`,
-                        transformOrigin: "top left",
                         width: mapWidth,
                         height: mapHeight,
                         backgroundImage: `
@@ -920,7 +870,6 @@ function InteractiveMap({
                                         key={tile.id}
                                         {...tile}
                                         highlighted={highlightedTileId === tile.id || editingTileId === tile.id}
-                                        scale={scale}
                                         gridSize={gridSize}
                                         snap={snap}
                                         canPlace={canPlace}
@@ -936,7 +885,6 @@ function InteractiveMap({
                                     key={tile.id}
                                     {...tile}
                                     highlighted={highlightedTileId === tile.id || editingTileId === tile.id}
-                                    scale={scale}
                                     gridSize={gridSize}
                                     snap={snap}
                                     canPlace={canPlace}
@@ -956,7 +904,6 @@ function InteractiveMap({
                 <MachineModal
                     tile={selectedMachine}
                     onClose={closeMachineModal}
-                    containerMode={previewMode}
                     editMode={canEdit}
                     onTileChange={canEdit ? (equipmentUpdates) => {
                         const updatedEquipment = { ...selectedMachine.equipment, ...equipmentUpdates };

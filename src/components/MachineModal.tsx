@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { RxCross2 } from "react-icons/rx";
 import ExerciseDetailsModal, { type ExerciseEditDraft } from "./ExerciseDetailsModal";
 import CreateExerciseModal, { type CreateExerciseDraft } from "./CreateExerciseModal";
@@ -36,7 +37,6 @@ interface MuscleOption {
 interface MachineModalProps {
     tile: TileData;
     onClose: () => void;
-    containerMode?: boolean;
     editMode?: boolean;
     onTileChange?: (equipmentUpdates: Partial<EquipmentProps>) => void;
     onColourChange?: (colour: string) => void;
@@ -58,7 +58,6 @@ interface MachineModalProps {
 function MachineModal({
     tile,
     onClose,
-    containerMode = false,
     editMode = false,
     onTileChange,
     onColourChange,
@@ -128,10 +127,11 @@ function MachineModal({
         }
     }, [exerciseToAddId, selectableExerciseOptions]);
 
-    const handleAddExercise = () => {
-        const nextExerciseId = Number(exerciseToAddId);
-        if (!Number.isFinite(nextExerciseId) || selectedExerciseIdSet.has(nextExerciseId)) return;
-        onExerciseIdsChange?.([...selectedExerciseIds, nextExerciseId]);
+    const handleRemoveExercise = (exerciseId: number) => {
+        onExerciseIdsChange?.(selectedExerciseIds.filter((id) => id !== exerciseId));
+        if (selectedExerciseForModal?.id === exerciseId) {
+            setSelectedExerciseForModal(null);
+        }
     };
 
     const openExerciseModal = (exercise: { id?: number; name: string; details?: ExerciseDTO }) => {
@@ -145,9 +145,13 @@ function MachineModal({
         console.log("Tile data changed, updating modal state:", tile);
     }, [tile]);
 
-    return (
+    if (typeof document === "undefined") {
+        return null;
+    }
+
+    const modalContent = (
         <div
-            className={`${containerMode ? 'absolute' : 'fixed'} inset-0 flex items-center justify-center z-40 cursor-pointer ${showEditableFields ? '' : 'select-none'}`}
+            className={`fixed inset-0 flex items-center justify-center z-40 cursor-pointer ${showEditableFields ? '' : 'select-none'}`}
             onClick={onClose}
         >
             {/* Backdrop */}
@@ -244,8 +248,27 @@ function MachineModal({
 
                 <div className="h-px bg-white/10 my-4 flex-shrink-0" />
 
-                <div className={`grid ${showEditableFields ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'} gap-4 sm:gap-5 flex-1 min-h-0 overflow-y-auto pr-1 scrollbar-thumb-only`}>
-                    <div className={`${showEditableFields ? '' : 'md:col-span-1'} flex flex-col gap-4 min-h-0`}>
+                <div className={`grid ${showEditableFields ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'} gap-4 sm:gap-5 flex-1 min-h-0 overflow-y-auto pr-1 scrollbar-thumb-only items-start md:auto-rows-max`}>
+                    {/* Image Card - First on small screens, spans 2 columns on right for large screens */}
+                    <div className={`${!showEditableFields ? 'md:col-start-2 md:col-span-2 md:row-start-1' : 'col-start-1'} rounded-xl p-4 text-white bg-white/5 border border-white/10 flex flex-col h-fit`}>
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3 flex-shrink-0">Image</h3>
+                        {showEditableFields && (
+                            <div className="mb-3">
+                                <label htmlFor="machine-image-url" className="sr-only">Image URL</label>
+                                <input
+                                    id="machine-image-url"
+                                    className={inputClasses}
+                                    value={tile.equipment.imageUrl ?? ""}
+                                    onChange={(e) => onTileChange?.({ imageUrl: e.target.value || undefined })}
+                                    placeholder="https://example.com/image.jpg"
+                                />
+                            </div>
+                        )}
+                        <ImagePreview url={tile.equipment.imageUrl} name={tile.equipment.name} />
+                    </div>
+
+                    {/* Panels Card - Second on small screens, left column on large screens */}
+                    <div className={`${!showEditableFields ? 'md:col-start-1 md:col-span-1 md:row-start-1' : 'col-start-1'} flex flex-col gap-4 min-h-0`}>
 
                         {/* Description Card */}
                         <div className="rounded-xl p-4 text-white bg-white/5 border border-white/10">
@@ -289,63 +312,51 @@ function MachineModal({
 
                         {/* Exercises Card */}
                         <div className="rounded-xl p-4 text-white bg-white/5 border border-white/10 flex flex-col">
-                            <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3 flex-shrink-0">List of exercises:</h3>
+                            <div className="flex items-start justify-between gap-4 mb-3">
+                                <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 flex-shrink-0">List of exercises:</h3>
+                                {showEditableFields && (
+                                    <div className="flex justify-end">
+                                        <button
+                                            type="button"
+                                            className="px-3 py-1.5 rounded-lg border border-white/20 text-white/80 text-sm font-medium hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                            onClick={() => setShowCreateExerciseModal(true)}
+                                            disabled={creatingExercise}
+                                        >
+                                            Create Exercise
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                            
                             <div className="flex flex-col">
                                 {showEditableFields ? (
                                     <div className="space-y-3 flex flex-col">
-                                        <div className="flex flex-col sm:flex-row gap-2">
-                                            <label htmlFor="machine-exercise-select" className="sr-only">Exercise selector</label>
-                                            <select
-                                                id="machine-exercise-select"
-                                                className={`${inputClasses} pr-8 flex-1`}
-                                                value={exerciseToAddId}
-                                                onChange={(event) => setExerciseToAddId(event.target.value)}
-                                                disabled={selectableExerciseOptions.length === 0}
-                                            >
-                                                {selectableExerciseOptions.length === 0 ? (
-                                                    <option value="">No additional exercises available</option>
-                                                ) : (
-                                                    selectableExerciseOptions.map((exercise) => (
-                                                        <option key={exercise.id} value={String(exercise.id)}>
-                                                            {exercise.name}
-                                                        </option>
-                                                    ))
-                                                )}
-                                            </select>
-                                            <button
-                                                type="button"
-                                                className="px-3 py-2 rounded-lg bg-accent-primary text-white text-sm font-semibold hover:bg-accent-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                                                onClick={handleAddExercise}
-                                                disabled={!exerciseToAddId || selectableExerciseOptions.length === 0}
-                                            >
-                                                Add Exercise
-                                            </button>
-                                        </div>
-                                        
-                                        <div className="flex justify-end">
-                                            <button
-                                                type="button"
-                                                className="px-3 py-1.5 rounded-lg border border-white/20 text-white/80 text-sm font-medium hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                                onClick={() => setShowCreateExerciseModal(true)}
-                                                disabled={creatingExercise}
-                                            >
-                                                Create Exercise
-                                            </button>
-                                        </div>
-
                                         {selectedExercises.length === 0 ? (
                                             <p className="text-white/50 text-sm">No exercises selected.</p>
                                         ) : (
                                             <ul className="space-y-1.5 overflow-y-auto min-h-0 flex-1 pr-1 scrollbar-thumb-only">
                                                 {selectedExercises.map((exercise) => (
                                                     <li key={exercise.id}>
-                                                        <button
-                                                            type="button"
-                                                            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left text-sm text-white transition-all hover:bg-white/10 hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-accent-primary"
-                                                            onClick={() => openExerciseModal(exercise)}
-                                                        >
-                                                            {exercise.name}
-                                                        </button>
+                                                        <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 hover:bg-white/10 hover:border-white/20 transition-all">
+                                                            <button
+                                                                type="button"
+                                                                className="flex-1 px-1 py-1 text-left text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent-primary rounded"
+                                                                onClick={() => openExerciseModal(exercise)}
+                                                            >
+                                                                {exercise.name}
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className="rounded-md text-white text-xs font-medium hover:text-red-500 transition-colors"
+                                                                onClick={(event) => {
+                                                                    event.stopPropagation();
+                                                                    handleRemoveExercise(exercise.id);
+                                                                }}
+                                                                aria-label={`Remove ${exercise.name}`}
+                                                            >
+                                                                <RxCross2 className="w-7 h-7" />
+                                                            </button>
+                                                        </div>
                                                     </li>
                                                 ))}
                                             </ul>
@@ -392,34 +403,7 @@ function MachineModal({
                                 </p>
                             )}
                         </div>
-
-
-                        {/* Stacked Image Card */}
-                        {showEditableFields && (
-                            <div className="rounded-xl p-4 text-white bg-white/5 border border-white/10 flex flex-col">
-                                <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3 flex-shrink-0">Image</h3>
-                                <div className="mb-3">
-                                    <label htmlFor="machine-image-url" className="sr-only">Image URL</label>
-                                    <input
-                                        id="machine-image-url"
-                                        className={inputClasses}
-                                        value={tile.equipment.imageUrl ?? ""}
-                                        onChange={(e) => onTileChange?.({ imageUrl: e.target.value || undefined })}
-                                        placeholder="https://example.com/image.jpg"
-                                    />
-                                </div>
-                                <ImagePreview url={tile.equipment.imageUrl} name={tile.equipment.name} />
-                            </div>
-                        )}
                     </div>
-
-                    
-                    {!showEditableFields && (
-                        <div className="md:col-span-2 rounded-xl p-4 text-white bg-white/5 border border-white/10 flex flex-col">
-                            <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3 flex-shrink-0">Image</h3>
-                            <ImagePreview url={tile.equipment.imageUrl} name={tile.equipment.name} />
-                        </div>
-                    )}
                 </div>
 
                 {editMode && (
@@ -485,6 +469,8 @@ function MachineModal({
             />
         </div>
     );
+
+    return createPortal(modalContent, document.body);
 }
 
 export default MachineModal;

@@ -31,7 +31,6 @@ function Tile({
     canHover = true,
     onSelect,
     editMode,
-    scale = 1,
     gridSize = 20,
     snap = (v) => v,
     highlighted = false,
@@ -93,8 +92,8 @@ function Tile({
 
         const handleMouseMove = (e: MouseEvent) => {
             if (isDragging) {
-                const deltaX = (e.clientX - dragStartRef.current.x) / scale;
-                const deltaY = (e.clientY - dragStartRef.current.y) / scale;
+                const deltaX = e.clientX - dragStartRef.current.x;
+                const deltaY = e.clientY - dragStartRef.current.y;
                 if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
                     dragMovedRef.current = true;
                 }
@@ -109,8 +108,8 @@ function Tile({
                 setLiveX(newX);
                 setLiveY(newY);
             } else if (isResizing) {
-                const deltaX = (e.clientX - resizeStartRef.current.x) / scale;
-                const deltaY = (e.clientY - resizeStartRef.current.y) / scale;
+                const deltaX = e.clientX - resizeStartRef.current.x;
+                const deltaY = e.clientY - resizeStartRef.current.y;
 
                 const start = resizeStartRef.current;
                 let newX = start.tileX;
@@ -204,7 +203,7 @@ function Tile({
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("mouseup", handleMouseUp);
         };
-    }, [isDragging, isResizing, scale, snap, onUpdate, gridSize, liveX, liveY, liveWidth, liveHeight, xCoord, yCoord, width, height]);
+    }, [isDragging, isResizing, snap, onUpdate, gridSize, liveX, liveY, liveWidth, liveHeight, xCoord, yCoord, width, height]);
 
     const resizeHandles: { handle: ResizeHandle; cursor: string; className: string }[] = [
         { handle: 'n', cursor: 'ns-resize', className: 'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-1' },
