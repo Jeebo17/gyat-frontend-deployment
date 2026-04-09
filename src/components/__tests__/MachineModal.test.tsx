@@ -106,16 +106,10 @@ describe('MachineModal', () => {
         expect(onClose).toHaveBeenCalled();
     });
 
-    it('uses fixed position by default', () => {
-        const { container } = render(<MachineModal tile={defaultTile} onClose={vi.fn()} />);
-        const wrapper = container.firstChild as HTMLElement;
+    it('uses fixed position container', () => {
+        render(<MachineModal tile={defaultTile} onClose={vi.fn()} />);
+        const wrapper = document.body.firstElementChild as HTMLElement;
         expect(wrapper.className).toContain('fixed');
-    });
-
-    it('uses absolute position in container mode', () => {
-        const { container } = render(<MachineModal tile={defaultTile} onClose={vi.fn()} containerMode={true} />);
-        const wrapper = container.firstChild as HTMLElement;
-        expect(wrapper.className).toContain('absolute');
     });
 
     it('renders image preview placeholder when no imageUrl', () => {

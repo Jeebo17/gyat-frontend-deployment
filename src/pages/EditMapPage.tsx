@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { isAdminTEST } from "../services/isAdmin";
 import { LoadingPage } from "../pages";
-import { DragAndDropMenu, InteractiveMap, Header, ToggleSwitch } from "../components/index";
+import { DragAndDropMenu, EnhancedInteractiveMap, Header, ToggleSwitch } from "../components/index";
 import { FaRegCaretSquareUp, FaRegCaretSquareDown } from "react-icons/fa";
 import { IoChevronForward, IoChevronBack } from "react-icons/io5";
 import type { GymFloorDTO, GymLayoutDTO } from "../types/api";
@@ -189,7 +189,7 @@ function EditMapPage() {
                         </div>
                     </div>
                     
-                    <InteractiveMap
+                    <EnhancedInteractiveMap
                         editMode={true}
                         snapToGrid={snapToGridState}
                         floorId={currentFloor?.id}

@@ -1,7 +1,7 @@
 import '../styles/App.scss';
 import { useNavigate } from 'react-router';
 import { motion } from 'framer-motion';
-import { Header, InteractiveMap } from '../components/index';
+import { Header, EnhancedInteractiveMap } from '../components/index';
 import Silk from '../backgrounds/Silk';
 import { useTheme } from '../context/ThemeContext';
 import { useSettings } from '../context/SettingsContext';
@@ -64,7 +64,13 @@ function HomePage() {
                 <div className="px-2 sm:px-6 w-full lg:w-auto">
                     <div className="mx-auto w-full max-w-6xl px-2 sm:px-4">
                         <div className="w-full aspect-[3/2] max-w-4xl mx-auto relative overflow-hidden">
-                            <InteractiveMap editMode={false} previewMode={true} floorTiles={getPreviewTiles()} />
+                            <EnhancedInteractiveMap
+                                editMode={false}
+                                previewMode={true}
+                                floorTiles={getPreviewTiles()}
+                                enableZoom={false}
+                                initialScale={1}
+                            />
                         </div>
                     </div>
                 </div>
