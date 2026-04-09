@@ -43,6 +43,7 @@ function SearchMapPage() {
 
                 <div className="mt-8 w-full max-w-lg">
                     <SearchBar searchData={layoutList}
+                        containerClassName="mx-auto sm:w-full"
                         onSelect={(item) => { navigate(`/map/${item.id}`); }}
                         filterFn={(item, q) => {
                             const lower = q.toLowerCase();
