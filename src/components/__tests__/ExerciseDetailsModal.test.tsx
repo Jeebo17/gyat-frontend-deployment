@@ -11,7 +11,10 @@ const exerciseDTO: ExerciseDTO = {
     difficulty: 'Intermediate',
     equipmentTypeId: 5,
     equipmentTypeName: 'Bench',
-    muscles: ['Chest', 'Triceps'],
+    muscles: [
+        { id: 1, name: 'Chest' },
+        { id: 2, name: 'Triceps' },
+    ],
     global: true,
 };
 
@@ -118,6 +121,28 @@ describe('ExerciseDetailsModal', () => {
 
         await waitFor(() => {
             expect(screen.getByText('No video available')).toBeTruthy();
+        });
+    });
+
+    it('rewrites YouTube watch URLs to embed URLs', async () => {
+        const onLoadExercise = vi.fn().mockResolvedValue({
+            ...exerciseDTO,
+            videoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        });
+
+        const { container } = render(
+            <ExerciseDetailsModal
+                exercise={{ id: 10, name: 'Bench Press' }}
+                onClose={vi.fn()}
+                onLoadExercise={onLoadExercise}
+                showEditableFields={false}
+            />
+        );
+
+        await waitFor(() => {
+            const iframe = container.querySelector('iframe');
+            expect(iframe).toBeTruthy();
+            expect(iframe?.getAttribute('src')).toContain('www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
         });
     });
 

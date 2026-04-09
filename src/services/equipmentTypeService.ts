@@ -24,3 +24,7 @@ export async function updateCustomEquipmentType(
 export async function getAllEquipmentTypes(): Promise<EquipmentTypeDTO[]> {
     return request<EquipmentTypeDTO[]>("/api/equipment-types");
 }
+
+export async function getEquipmentType(id: number): Promise<EquipmentTypeDTO> {
+    return request<EquipmentTypeDTO>(`/api/equipment-types/${id}`);
+}

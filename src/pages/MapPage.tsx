@@ -1,6 +1,6 @@
 import '../styles/App.scss';
 import { LoadingPage } from '.';
-import { InteractiveMap, SearchBar, Header } from '../components/index';
+import { EnhancedInteractiveMap, SearchBar, Header } from '../components/index';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { isAdminTEST } from '../services/isAdmin';
@@ -13,7 +13,10 @@ import type { TileSearchProps } from '../types/tile';
 import { useAuth } from '../context/AuthContext';
 
 const MAP_DESKTOP_MIN_WIDTH = 640;
-const MAP_DEFAULT_AUTO_ZOOM_STEPS = 3;
+const MAP_MIN_SCALE = 0.7;
+const MAP_MAX_SCALE = 2;
+const MAP_WHEEL_STEP = 0.03;
+const MAP_PINCH_STEP = 3;
 
 function MapPage() {
     const [loading, setLoading] = useState(true);
@@ -237,6 +240,12 @@ function MapPage() {
                     </div>
                 </div>
 
+                <div className={`${isMobileSearchOpen ? 'hidden' : 'flex'} min-w-0 items-center sm:ml-2 sm:mr-4`}>
+                    <span className="inline-flex max-w-full px-2 items-center text-lg font-semibold text-text-primary sm:text-base truncate">
+                        {layout?.name ?? `Loading layout...`}
+                    </span>
+                </div>
+
                 {/* Floor buttons - centered on desktop */}
                 <div className="hidden sm:flex sm:absolute sm:left-1/2 sm:-translate-x-1/2 items-center gap-3 whitespace-nowrap">
                     <button
@@ -275,13 +284,16 @@ function MapPage() {
 
             {/* Map container */}
             <div className="flex-1 min-h-0 overflow-hidden">
-                <InteractiveMap
+                <EnhancedInteractiveMap
                     floorTiles={tiles}
                     floorLoading={isLayoutLoading}
                     floorLoadError={layoutLoadError}
                     highlightedTileId={highlightedTileId}
                     desktopMinWidth={MAP_DESKTOP_MIN_WIDTH}
-                    defaultAutoZoomSteps={MAP_DEFAULT_AUTO_ZOOM_STEPS}
+                    minScale={MAP_MIN_SCALE}
+                    maxScale={MAP_MAX_SCALE}
+                    wheelStep={MAP_WHEEL_STEP}
+                    pinchStep={MAP_PINCH_STEP}
                 />
             </div>
         </div>

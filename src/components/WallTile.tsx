@@ -6,7 +6,6 @@ const WALL_THICKNESS = 10;
 const HANDLE_SIZE = 14;
 
 interface WallTileProps extends TileData {
-    scale?: number;
     gridSize?: number;
     snap?: (v: number) => number;
 }
@@ -22,7 +21,6 @@ export default function WallTile({
     onUpdate,
     canPlace,
     editMode,
-    scale = 1,
     snap = (v) => v,
     onDelete,
     highlighted = false,
@@ -65,8 +63,8 @@ export default function WallTile({
 
         const handleMouseMove = (e: MouseEvent) => {
             if (isDragging) {
-                const dx = (e.clientX - dragStartRef.current.x) / scale;
-                const dy = (e.clientY - dragStartRef.current.y) / scale;
+                const dx = e.clientX - dragStartRef.current.x;
+                const dy = e.clientY - dragStartRef.current.y;
                 if (Math.abs(dx) > 2 || Math.abs(dy) > 2) dragMovedRef.current = true;
 
                 const newX = snap(dragStartRef.current.tileX + dx);
@@ -78,8 +76,8 @@ export default function WallTile({
                 setLiveY(newY);
             } else if (resizingEnd) {
                 const start = resizeStartRef.current;
-                const dx = (e.clientX - start.x) / scale;
-                const dy = (e.clientY - start.y) / scale;
+                const dx = e.clientX - start.x;
+                const dy = e.clientY - start.y;
                 const minLength = 20;
 
                 const horiz = start.width >= start.height;
@@ -134,7 +132,7 @@ export default function WallTile({
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("mouseup", handleMouseUp);
         };
-    }, [isDragging, resizingEnd, scale, snap, onUpdate, canPlace, id, liveX, liveY, liveWidth, liveHeight, xCoord, yCoord, width, height]);
+    }, [isDragging, resizingEnd, snap, onUpdate, canPlace, id, liveX, liveY, liveWidth, liveHeight, xCoord, yCoord, width, height]);
 
     const displayX = isDragging || resizingEnd ? liveX : xCoord;
     const displayY = isDragging || resizingEnd ? liveY : yCoord;
