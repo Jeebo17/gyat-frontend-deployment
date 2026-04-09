@@ -199,7 +199,7 @@ function EditMapPage() {
                                     <label htmlFor="layout-name-input" className="sr-only">Layout name</label>
                                     <input
                                         id="layout-name-input"
-                                        className="text-lg font-bold bg-transparent border-b-2 border-white/30 focus:border-accent-primary text-text-primary placeholder:text-text-primary/40 outline-none transition-colors disabled:cursor-wait disabled:opacity-70"
+                                        className="text-lg font-semibold bg-transparent border-b-2 border-white/30 focus:border-accent-primary text-text-primary placeholder:text-text-primary/40 outline-none transition-colors disabled:cursor-wait disabled:opacity-70"
                                         value={isLayoutLoading ? "Loading layout..." : layoutNameDraft}
                                         onChange={(e) => setLayoutNameDraft(e.target.value)}
                                         placeholder="Layout name"

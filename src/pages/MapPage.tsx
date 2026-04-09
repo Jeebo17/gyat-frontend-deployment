@@ -241,8 +241,8 @@ function MapPage() {
                 </div>
 
                 <div className={`${isMobileSearchOpen ? 'hidden' : 'flex'} min-w-0 items-center sm:ml-2 sm:mr-4`}>
-                    <span className="inline-flex max-w-full items-center rounded-full border border-border-light bg-bg-tertiary px-3 py-1 text-sm font-semibold text-text-primary shadow-sm sm:text-base truncate">
-                        {layout?.name ?? `Gym Layout #${layout?.id ?? "Unknown"}`}
+                    <span className="inline-flex max-w-full px-2 items-center text-lg font-semibold text-text-primary sm:text-base truncate">
+                        {layout?.name ?? `Loading layout...`}
                     </span>
                 </div>
 
