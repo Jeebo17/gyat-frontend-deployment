@@ -263,7 +263,7 @@ describe('EditMapPage', () => {
         });
     });
 
-    it('saves the layout name when requested', async () => {
+    it('auto-saves the layout name when edited', async () => {
         const { updateLayout } = await import('../../services/layoutService');
         render(<EditMapPage />);
 
@@ -272,7 +272,6 @@ describe('EditMapPage', () => {
         });
 
         fireEvent.change(screen.getByLabelText('Layout name'), { target: { value: 'Renamed Layout' } });
-        fireEvent.click(screen.getByRole('button', { name: 'Save title' }));
 
         await waitFor(() => {
             expect(updateLayout).toHaveBeenCalledWith(1, { name: 'Renamed Layout' });
