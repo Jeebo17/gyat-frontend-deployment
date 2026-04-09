@@ -154,9 +154,9 @@ function ExerciseDetailsModal({
 
     if (!exercise) return null;
     return (
-        <div className="fixed inset-0 z-[70] flex items-start justify-center overflow-y-auto py-4 sm:py-6 cursor-pointer" onClick={e => { e.stopPropagation(); handleClose(); }}>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto py-4 sm:py-6 cursor-pointer" onClick={e => { e.stopPropagation(); handleClose(); }}>
             <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
-            <div className="relative z-10 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 p-4 sm:p-6 md:p-8 rounded-3xl shadow-2xl w-[95%] sm:w-11/12 md:w-4/5 lg:w-[72%] max-w-5xl max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-3rem)] cursor-auto overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="relative z-10 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 p-4 sm:p-6 md:p-8 rounded-3xl shadow-2xl w-[95%] sm:w-11/12 md:w-3/4 lg:w-2/3 max-w-4xl max-h-[88vh] sm:max-h-[86vh] cursor-auto overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
                 <button aria-label="Close exercise details" className="absolute top-3 right-3 sm:top-5 sm:right-5 text-white/70 hover:text-red-400 transition-colors duration-200 z-10 disabled:opacity-50" onClick={handleClose} disabled={saving}>
                     <RxCross2 className="w-6 h-6 sm:w-8 sm:h-8" />
                 </button>
@@ -186,23 +186,37 @@ function ExerciseDetailsModal({
                                         <p className="text-white">{details?.name ?? exercise?.name}</p>
                                     </div>
                                 )}
-                                <div>
-                                    <label htmlFor="edit-exercise-description" className="block text-sm font-medium text-white/70 mb-1">Description</label>
-                                    {showEditableFields ? (
-                                        <textarea id="edit-exercise-description" className={TEXTAREA_CLASSES} value={editDescription} onChange={e => setEditDescription(e.target.value)} placeholder="Exercise description..." />
-                                    ) : (
-                                        <p className="text-sm text-white/80 leading-relaxed">{details?.description ?? "No description."}</p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label htmlFor="edit-exercise-difficulty" className="block text-sm font-medium text-white/70 mb-1">Difficulty</label>
-                                    {showEditableFields ? (
-                                        <input id="edit-exercise-difficulty" className={INPUT_CLASSES} value={editDifficulty} onChange={e => setEditDifficulty(e.target.value)} placeholder="e.g. Beginner" />
-                                    ) : (
-                                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${details?.difficulty ? "bg-white/10 text-white/80 border border-white/20" : "text-white/50"}`}>{details?.difficulty ?? "Not specified."}</span>
-                                    )}
-                                </div>
-                                {details && (
+                                {(showEditableFields || details?.description) && (
+                                    <div>
+                                        {showEditableFields ? (
+                                            <>
+                                                <label htmlFor="edit-exercise-description" className="block text-sm font-medium text-white/70 mb-1">Description</label>
+                                                <textarea id="edit-exercise-description" className={TEXTAREA_CLASSES} value={editDescription} onChange={e => setEditDescription(e.target.value)} placeholder="Exercise description..." />
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="block text-sm font-medium text-white/70 mb-1">Description</span>
+                                                <p className="text-sm text-white/80 leading-relaxed">{details?.description}</p>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                                {(showEditableFields || details?.difficulty) && (
+                                    <div>
+                                        {showEditableFields ? (
+                                            <>
+                                                <label htmlFor="edit-exercise-difficulty" className="block text-sm font-medium text-white/70 mb-1">Difficulty</label>
+                                                <input id="edit-exercise-difficulty" className={INPUT_CLASSES} value={editDifficulty} onChange={e => setEditDifficulty(e.target.value)} placeholder="e.g. Beginner" />
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="block text-sm font-medium text-white/70 mb-1">Difficulty</span>
+                                                <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/10 text-white/80 border border-white/20">{details?.difficulty}</span>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+                                {showEditableFields && details && (
                                     <p className="text-xs text-white/50 bg-white/5 rounded-lg px-3 py-2 border border-white/10">{details.global ? "This is a preset exercise. Saving creates an override for your gym." : "You own this exercise. Saving updates it directly."}</p>
                                 )}
                             </div>
