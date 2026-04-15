@@ -4,6 +4,7 @@ export interface ExerciseDTO {
     id: number;
     name: string;
     description: string | null;
+    instructions?: string | null;
     videoUrl: string | null;
     difficulty: string | null;
     equipmentTypeId: number;
@@ -119,6 +120,7 @@ export interface UpdateEquipmentTypeRequest {
 export interface CreateExerciseRequest {
     name: string;
     description?: string | null;
+    instructions?: string | null;
     videoUrl?: string | null;
     difficulty?: string | null;
     muscleIds: number[];
@@ -128,6 +130,7 @@ export interface CreateExerciseRequest {
 export interface UpdateExerciseOverrideRequest {
     name?: string;
     description?: string;
+    instructions?: string;
     videoUrl?: string;
     difficulty?: string;
 }
@@ -135,6 +138,7 @@ export interface UpdateExerciseOverrideRequest {
 export interface UpdateExerciseRequest {
     name?: string;
     description?: string;
+    instructions?: string;
     videoUrl?: string;
     difficulty?: string;
     muscleIds?: number[];

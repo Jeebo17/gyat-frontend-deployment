@@ -177,6 +177,13 @@ describe('MapPage', () => {
         });
     });
 
+    it('displays the layout name', async () => {
+        render(<MapPage />);
+        await waitFor(() => {
+            expect(screen.getByText('Test Layout')).toBeTruthy();
+        });
+    });
+
     it('can navigate between floors', async () => {
         render(<MapPage />);
         await waitFor(() => {
