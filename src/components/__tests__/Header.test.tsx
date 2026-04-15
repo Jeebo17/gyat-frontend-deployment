@@ -34,7 +34,18 @@ vi.mock('../../context/AuthContext', () => ({
     useAuth: () => mockAuth,
 }));
 
-const mockSettings = { fontScale: 1, setFontScale: vi.fn(), reducedMotion: false, setReducedMotion: vi.fn(), highContrast: false, setHighContrast: vi.fn(), soundEnabled: true, setSoundEnabled: vi.fn() };
+const mockSettings = {
+    fontScale: 1,
+    setFontScale: vi.fn(),
+    reducedMotion: false,
+    setReducedMotion: vi.fn(),
+    highContrast: false,
+    setHighContrast: vi.fn(),
+    soundEnabled: true,
+    setSoundEnabled: vi.fn(),
+    instructionDisplayMode: 'video' as const,
+    setInstructionDisplayMode: vi.fn(),
+};
 vi.mock('../../context/SettingsContext', () => ({
     useSettings: () => mockSettings,
 }));

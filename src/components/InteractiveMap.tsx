@@ -652,6 +652,7 @@ function InteractiveMap({
         exercise: {
             name: string;
             description?: string;
+            instructions?: string;
             videoUrl?: string;
             difficulty?: string;
         },
@@ -664,19 +665,28 @@ function InteractiveMap({
         setMachineSaveError(null);
         setMachineSaveSuccess(null);
 
+        const exerciseDetails = selectedMachine.exerciseDetails?.find((item) => item.id === exerciseId);
+        const muscleIds = (exerciseDetails?.muscles ?? []).map((muscle) => muscle.id);
+        const safeDescription = exercise.description ?? "";
+        const safeInstructions = exercise.instructions ?? "";
+        const safeVideoUrl = exercise.videoUrl ?? "";
+        const safeDifficulty = exercise.difficulty ?? "";
         const normalizedVideoUrl = exercise.videoUrl?.trim() === "" ? undefined : exercise.videoUrl;
         const saved = useOverride
             ? await upsertExerciseOverride(exerciseId, {
                 name: exercise.name,
                 description: exercise.description,
+                instructions: exercise.instructions,
                 videoUrl: normalizedVideoUrl,
                 difficulty: exercise.difficulty,
             })
             : await updateCustomExercise(exerciseId, {
                 name: exercise.name,
-                description: exercise.description,
-                videoUrl: normalizedVideoUrl,
-                difficulty: exercise.difficulty,
+                description: safeDescription,
+                instructions: safeInstructions,
+                videoUrl: safeVideoUrl,
+                difficulty: safeDifficulty,
+                muscleIds,
             });
 
         const equipmentTypeId = selectedMachine.equipmentTypeId;

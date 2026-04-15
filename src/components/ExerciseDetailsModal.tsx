@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { RxCross2 } from "react-icons/rx";
 import type { ExerciseDTO } from "../types/api";
+import { useSettings } from "../context/SettingsContext";
 
 export interface ExerciseEditDraft {
     name: string;
     description?: string;
+    instructions?: string;
     videoUrl?: string;
     difficulty?: string;
 }
@@ -23,6 +25,14 @@ const TEXTAREA_CLASSES = `${INPUT_CLASSES} resize-y min-h-[120px]`;
 const normalizeOptionalString = (value: string): string | undefined => {
     const trimmed = value.trim();
     return trimmed ? trimmed : undefined;
+};
+
+const getInstructionSteps = (value: string): string[] => {
+    return value
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => line.replace(/^[-*\u2022]\s+/, "").replace(/^\d+[.)]\s+/, ""));
 };
 
 const getEmbeddableVideoUrl = (value: string): string => {
@@ -64,6 +74,13 @@ function ExerciseDetailsModal({
     onSaveExercise,
     showEditableFields,
 }: ExerciseDetailsModalProps) {
+    let instructionDisplayMode: "video" | "text" = "video";
+    try {
+        instructionDisplayMode = useSettings().instructionDisplayMode;
+    } catch {
+        // Allow isolated renders (such as unit tests) when no provider is mounted.
+    }
+
     const [details, setDetails] = useState<ExerciseDTO | null>(null);
     const [loading, setLoading] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
@@ -71,6 +88,7 @@ function ExerciseDetailsModal({
     const [saving, setSaving] = useState(false);
     const [editName, setEditName] = useState("");
     const [editDescription, setEditDescription] = useState("");
+    const [editInstructions, setEditInstructions] = useState("");
     const [editDifficulty, setEditDifficulty] = useState("");
     const [editVideoUrl, setEditVideoUrl] = useState("");
 
@@ -84,6 +102,7 @@ function ExerciseDetailsModal({
         setSaveError(null);
         setEditName(initialDetails?.name ?? exercise.name);
         setEditDescription(initialDetails?.description ?? "");
+        setEditInstructions(initialDetails?.instructions ?? "");
         setEditDifficulty(initialDetails?.difficulty ?? "");
         setEditVideoUrl(initialDetails?.videoUrl ?? "");
 
@@ -94,8 +113,10 @@ function ExerciseDetailsModal({
             try {
                 setLoading(true);
                 const data = await onLoadExercise(exercise.id as number);
+                setDetails(data);
                 setEditName(data.name ?? exercise.name);
                 setEditDescription(data.description ?? "");
+                setEditInstructions(data.instructions ?? "");
                 setEditDifficulty(data.difficulty ?? "");
                 setEditVideoUrl(data.videoUrl ?? "");
             } catch (err) {
@@ -114,6 +135,10 @@ function ExerciseDetailsModal({
         if (saving) return;
         onClose();
     };
+
+    const instructionsText = (details?.instructions ?? "").trim();
+    const instructionSteps = instructionsText ? getInstructionSteps(instructionsText) : [];
+    const showTextInstructions = !showEditableFields && instructionDisplayMode === "text";
 
     const handleSave = async () => {
         if (typeof exercise?.id !== "number") {
@@ -139,6 +164,7 @@ function ExerciseDetailsModal({
                 {
                     name: normalizedName,
                     description: normalizeOptionalString(editDescription),
+                    instructions: normalizeOptionalString(editInstructions),
                     difficulty: normalizeOptionalString(editDifficulty),
                     videoUrl: normalizeOptionalString(editVideoUrl),
                 },
@@ -216,6 +242,18 @@ function ExerciseDetailsModal({
                                         )}
                                     </div>
                                 )}
+                                {showEditableFields && (
+                                    <div>
+                                        <label htmlFor="edit-exercise-instructions" className="block text-sm font-medium text-white/70 mb-1">Step-by-step instructions</label>
+                                        <textarea
+                                            id="edit-exercise-instructions"
+                                            className={TEXTAREA_CLASSES}
+                                            value={editInstructions}
+                                            onChange={e => setEditInstructions(e.target.value)}
+                                            placeholder={"1. Setup position\n2. Perform the movement\n3. Return to start"}
+                                        />
+                                    </div>
+                                )}
                                 {showEditableFields && details && (
                                     <p className="text-xs text-white/50 bg-white/5 rounded-lg px-3 py-2 border border-white/10">{details.global ? "This is a preset exercise. Saving creates an override for your gym." : "You created this exercise. Saving updates it directly."}</p>
                                 )}
@@ -236,30 +274,49 @@ function ExerciseDetailsModal({
                             </div>
                         )}
                     </div>
-                    <div className="rounded-xl p-4 text-white bg-white/5 border border-white/10 shrink-0">
-                        <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3">Video</h3>
-                        {showEditableFields && (
-                            <div className="mb-3">
-                                <label htmlFor="edit-exercise-video-url" className="block text-sm font-medium text-white/70 mb-1">Video URL</label>
-                                <input id="edit-exercise-video-url" className={INPUT_CLASSES} value={editVideoUrl} onChange={e => setEditVideoUrl(e.target.value)} placeholder="https://..." />
+                    {showTextInstructions ? (
+                        <div className="rounded-xl p-4 text-white bg-white/5 border border-white/10 shrink-0">
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3">Instructions</h3>
+                            <div className="w-full max-h-[42vh] overflow-y-auto rounded-xl border border-white/10 bg-black/20 p-4">
+                                {instructionSteps.length > 0 ? (
+                                    <ol className="list-decimal pl-5 space-y-2 text-sm text-white/85 leading-relaxed">
+                                        {instructionSteps.map((step, index) => (
+                                            <li key={`${step}-${index}`}>{step}</li>
+                                        ))}
+                                    </ol>
+                                ) : instructionsText ? (
+                                    <p className="text-sm text-white/80 whitespace-pre-wrap leading-relaxed">{instructionsText}</p>
+                                ) : (
+                                    <span className="text-sm text-white/40">No step-by-step instructions available</span>
+                                )}
                             </div>
-                        )}
-                        <div className="w-full max-h-[42vh] bg-black/30 rounded-xl text-white aspect-video flex items-center justify-center overflow-hidden border border-white/10">
-                            {(showEditableFields ? editVideoUrl : (details?.videoUrl ?? "")) ? (
-                                <iframe
-                                    width="100%"
-                                    height="100%"
-                                    src={getEmbeddableVideoUrl(showEditableFields ? editVideoUrl : (details?.videoUrl ?? ""))}
-                                    title={`Exercise video for ${exercise?.name}`}
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                    allowFullScreen
-                                    className="block rounded-xl"
-                                />
-                            ) : (
-                                <span className="text-sm text-white/40">No video available</span>
-                            )}
                         </div>
-                    </div>
+                    ) : (
+                        <div className="rounded-xl p-4 text-white bg-white/5 border border-white/10 shrink-0">
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-white/60 mb-3">Video</h3>
+                            {showEditableFields && (
+                                <div className="mb-3">
+                                    <label htmlFor="edit-exercise-video-url" className="block text-sm font-medium text-white/70 mb-1">Video URL</label>
+                                    <input id="edit-exercise-video-url" className={INPUT_CLASSES} value={editVideoUrl} onChange={e => setEditVideoUrl(e.target.value)} placeholder="https://..." />
+                                </div>
+                            )}
+                            <div className="w-full max-h-[42vh] bg-black/30 rounded-xl text-white aspect-video flex items-center justify-center overflow-hidden border border-white/10">
+                                {(showEditableFields ? editVideoUrl : (details?.videoUrl ?? "")) ? (
+                                    <iframe
+                                        width="100%"
+                                        height="100%"
+                                        src={getEmbeddableVideoUrl(showEditableFields ? editVideoUrl : (details?.videoUrl ?? ""))}
+                                        title={`Exercise video for ${exercise?.name}`}
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                        allowFullScreen
+                                        className="block rounded-xl"
+                                    />
+                                ) : (
+                                    <span className="text-sm text-white/40">No video available</span>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
                 <div className="h-px bg-white/10 mt-4 mb-3 flex-shrink-0" />
                 <div className="flex items-center justify-end gap-2 flex-shrink-0">

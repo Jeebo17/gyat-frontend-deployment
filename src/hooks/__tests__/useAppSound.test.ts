@@ -32,6 +32,8 @@ describe('useAppSound', () => {
             highContrast: false,
             setHighContrast: vi.fn(),
             setSoundEnabled: vi.fn(),
+            instructionDisplayMode: 'video',
+            setInstructionDisplayMode: vi.fn(),
         });
 
         const { result } = renderHook(() => useAppSound('/test.mp3'));
@@ -49,6 +51,8 @@ describe('useAppSound', () => {
             highContrast: false,
             setHighContrast: vi.fn(),
             setSoundEnabled: vi.fn(),
+            instructionDisplayMode: 'video',
+            setInstructionDisplayMode: vi.fn(),
         });
 
         renderHook(() => useAppSound('/click.mp3', { volume: 0.5 }));
@@ -72,6 +76,8 @@ describe('useAppSound', () => {
             highContrast: false,
             setHighContrast: vi.fn(),
             setSoundEnabled: vi.fn(),
+            instructionDisplayMode: 'video',
+            setInstructionDisplayMode: vi.fn(),
         });
 
         renderHook(() => useAppSound('/click.mp3'));
@@ -92,6 +98,8 @@ describe('useAppSound', () => {
             highContrast: false,
             setHighContrast: vi.fn(),
             setSoundEnabled: vi.fn(),
+            instructionDisplayMode: 'video',
+            setInstructionDisplayMode: vi.fn(),
         });
 
         const { result } = renderHook(() => useAppSound('/click.mp3'));
@@ -112,6 +120,8 @@ describe('useAppSound', () => {
             highContrast: false,
             setHighContrast: vi.fn(),
             setSoundEnabled: vi.fn(),
+            instructionDisplayMode: 'video',
+            setInstructionDisplayMode: vi.fn(),
         });
 
         renderHook(() => useAppSound('/click.mp3', { volume: 0.8 }));
@@ -132,6 +142,8 @@ describe('useAppSound', () => {
             highContrast: false,
             setHighContrast: vi.fn(),
             setSoundEnabled: vi.fn(),
+            instructionDisplayMode: 'video',
+            setInstructionDisplayMode: vi.fn(),
         });
 
         const { result } = renderHook(() => useAppSound('/click.mp3'));

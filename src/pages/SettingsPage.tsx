@@ -5,11 +5,19 @@ import { motion } from "framer-motion";
 
 
 function SettingsPage() {
-  const { fontScale, setFontScale, soundEnabled, setSoundEnabled } = useSettings();
+  const {
+    fontScale,
+    setFontScale,
+    soundEnabled,
+    setSoundEnabled,
+    reducedMotion,
+    setReducedMotion,
+    highContrast,
+    setHighContrast,
+    instructionDisplayMode,
+    setInstructionDisplayMode,
+  } = useSettings();
   const navigate = useNavigate();
-  const { reducedMotion } = useSettings();
-  const { setReducedMotion } = useSettings();
-  const { highContrast, setHighContrast } = useSettings();
 
   return (
     <div className="min-h-screen bg-bg-primary text-text-primary transition-colors duration-300 flex flex-col">
@@ -57,6 +65,22 @@ function SettingsPage() {
                 onChange={(e) => setSoundEnabled(e.target.checked)}
                 className="w-5 h-5 accent-accent-primary"
             />
+          </div>
+
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <label htmlFor="instruction-display-mode" className="font-medium">
+              Exercise Instructions Format
+            </label>
+
+            <select
+              id="instruction-display-mode"
+              value={instructionDisplayMode}
+              onChange={(e) => setInstructionDisplayMode(e.target.value as "video" | "text")}
+              className="rounded-lg border border-neutral-600 bg-bg-primary px-3 py-2 text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary"
+            >
+              <option value="video">Video</option>
+              <option value="text">Step-by-step text</option>
+            </select>
           </div>
 
           <div className="mb-6 flex items-center justify-between">

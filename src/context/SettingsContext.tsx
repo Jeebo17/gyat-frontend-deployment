@@ -11,6 +11,8 @@ type Settings = {
   setHighContrast: (value: boolean) => void;
   soundEnabled: boolean;
   setSoundEnabled: (value: boolean) => void;
+  instructionDisplayMode: "video" | "text";
+  setInstructionDisplayMode: (value: "video" | "text") => void;
 };
 
 const SettingsContext = createContext<Settings | undefined>(undefined);
@@ -20,6 +22,7 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
   const [reducedMotion, setReducedMotion] = useState(false);
   const [highContrast, setHighContrast] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [instructionDisplayMode, setInstructionDisplayMode] = useState<"video" | "text">("video");
 
   useEffect(() => {
     if (highContrast) {
@@ -40,7 +43,18 @@ export const SettingsProvider = ({ children }: { children: React.ReactNode }) =>
 
   return (
     <SettingsContext.Provider
-      value={{ fontScale, setFontScale, reducedMotion, setReducedMotion, highContrast, setHighContrast, soundEnabled, setSoundEnabled }}
+      value={{
+        fontScale,
+        setFontScale,
+        reducedMotion,
+        setReducedMotion,
+        highContrast,
+        setHighContrast,
+        soundEnabled,
+        setSoundEnabled,
+        instructionDisplayMode,
+        setInstructionDisplayMode,
+      }}
     >
         {children}
     </SettingsContext.Provider>
